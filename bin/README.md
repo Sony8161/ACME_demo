@@ -120,6 +120,7 @@ Added for the ACME Project Tracker demo and its checks (Linux only; the demo scr
 | `demo-ready.sh` | Empties the demo data, loads the sample company through the API, and sets short, memorable logins (see `docs/DEMO.md`). About 5 seconds |
 | `demo-reset.sh` | Empties all demo data (first admin only, `admin1` / `ChangeMe123!`). About 1 second |
 | `test-backend.sh [pytest args]` | Lint (ruff), security scan (bandit, tracked files only, like CI) and the backend tests with a coverage gate of 80% |
+| `demo-local.sh [start \| stop \| status \| reset \| ready \| logs]` | The whole demo on one machine without LocalStack or AWS: PostgreSQL (Docker, or a local one with `DEMO_USE_DOCKER=0`), the API under uvicorn and the website under Vite, with the same sample company. Written for macOS and Linux (bash 3.2). Tested on Linux only |
 
 The frontend has its own commands (`npm test`, `npm run test:coverage`, `npm run e2e`); see `frontend/README.md` and `docs/TESTING.md`.
 

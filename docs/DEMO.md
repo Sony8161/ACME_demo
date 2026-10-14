@@ -147,6 +147,19 @@ Act 1 (steps 1 to 4), Act 3 steps 3, 5 and 6 only, then Act 5 steps 3 and 4.
 | `./bin/demo-postgres.sh --stop` | Stops the database container |
 | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | Full API test (run `./bin/demo-reset.sh` first, and `./bin/demo-ready.sh` after). Expect 151 requests, 611 assertions, 0 failures |
 
+### Without LocalStack (for example on a Mac)
+
+```sh
+./bin/demo-local.sh            # needs Python 3.11+ and Node 20+; uses Docker for PostgreSQL if it is running
+./bin/demo-local.sh ready      # put the sample company back between runs
+./bin/demo-local.sh stop
+```
+
+It serves http://localhost:3000 with the same accounts as above. Without Docker, start a local PostgreSQL and set
+`DEMO_USE_DOCKER=0` (it then uses `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASS`). On a Mac:
+`brew install python@3.13 node`. It was tested on Linux, with both database options and the end-to-end browser test;
+it has not been run on a Mac, so try it once before relying on it there.
+
 ## 7. Why it is set up this way
 
 The Lambda container reaches the host at `172.17.0.1`, but the system PostgreSQL listens on `127.0.0.1` only, and changing

@@ -158,9 +158,10 @@ start_api() {
     port_in_use "$API_PORT" && die "Port $API_PORT is in use. Stop what uses it, or set DEMO_API_PORT to a free port."
     say "API: starting on http://127.0.0.1:$API_PORT ..."
     # SERIALIZE_REQUESTS: the API shares one database connection per process, so uvicorn must take one request at a time (Lambda does anyway).
-    (cd "$API_DIR" && IS_LOCAL=true APP_ENV=local SERIALIZE_REQUESTS=true \
-        nohup "$VENV/bin/python" -m uvicorn app.main:app --host 127.0.0.1 --port "$API_PORT" > "$STATE/api.log" 2>&1 &
-        echo $! > "$STATE/api.pid")
+    # exec replaces the subshell with the server, so $! is the server's own pid and "stop" kills the right process.
+    (cd "$API_DIR" && IS_LOCAL=true APP_ENV=local SERIALIZE_REQUESTS=true exec nohup "$VENV/bin/python" -m uvicorn app.main:app \
+        --host 127.0.0.1 --port "$API_PORT") > "$STATE/api.log" 2>&1 &
+    echo $! > "$STATE/api.pid"
     wait_for_http "http://127.0.0.1:$API_PORT/health" 60 || { tail -20 "$STATE/api.log"; die "The API did not start. Log: $STATE/api.log"; }
 }
 
@@ -172,9 +173,9 @@ start_web() {
     port_in_use "$WEB_PORT" && die "Port $WEB_PORT is in use. Stop what uses it, or set DEMO_WEB_PORT to a free port."
     say "Website: starting on http://localhost:$WEB_PORT ..."
     # VITE_API_URL is set empty so a frontend/.env.local left by the LocalStack demo cannot send the browser to another API.
-    (cd "$WEB_DIR" && VITE_API_URL= VITE_PROXY_TARGET="http://127.0.0.1:$API_PORT" \
-        nohup ./node_modules/.bin/vite --port "$WEB_PORT" --strictPort --host 127.0.0.1 > "$STATE/web.log" 2>&1 &
-        echo $! > "$STATE/web.pid")
+    (cd "$WEB_DIR" && VITE_API_URL= VITE_PROXY_TARGET="http://127.0.0.1:$API_PORT" exec nohup ./node_modules/.bin/vite \
+        --port "$WEB_PORT" --strictPort --host 127.0.0.1) > "$STATE/web.log" 2>&1 &
+    echo $! > "$STATE/web.pid"
     wait_for_http "http://127.0.0.1:$WEB_PORT/" 60 || { tail -20 "$STATE/web.log"; die "The website did not start. Log: $STATE/web.log"; }
 }
 
