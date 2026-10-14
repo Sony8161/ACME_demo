@@ -42,7 +42,7 @@ and their status, dependency between deliverables (milestones), and budget consu
 ## What exists
 | Area | State |
 |---|---|
-| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, demo-data. 146 tests, 96.7% coverage, no DELETE endpoints |
+| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, demo-data. 154 tests, 97.1% coverage, no DELETE endpoints |
 | `docs/postman` | Done: 138-request collection with saved example JSON, verified with Newman (554 assertions) |
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; not applied to AWS |
 | LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (138 requests, 554 assertions) |
@@ -53,7 +53,7 @@ and their status, dependency between deliverables (milestones), and budget consu
 
 ## Run it
 ```sh
-./bin/test-backend.sh                       # lint + security scan + 146 tests (needs local Postgres)
+./bin/test-backend.sh                       # lint + security scan + 154 tests (needs local Postgres)
 cd backend/pm-api && source .venv/bin/activate
 POSTGRES_NAME=pm_dev uvicorn app.main:app --port 8000   # then open http://localhost:8000/docs
 # first login: admin1 / ChangeMe123!  (you must change it); POST /admin/seed-demo loads sample data
