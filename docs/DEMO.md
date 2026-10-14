@@ -113,7 +113,7 @@ costs, and whether it is late."**
 
 ### Close (30 seconds)
 
-"The API behind this passes 142 tests and a 138-request Postman run with no failures, both locally and on LocalStack.
+"The API behind this passes 146 tests and a 138-request Postman run with no failures, both locally and on LocalStack.
 What is left: the AWS deployment, and growing this demo UI into the full app."
 
 ### 5-minute cut

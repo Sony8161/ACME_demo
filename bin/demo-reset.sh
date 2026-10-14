@@ -31,7 +31,7 @@ fi
 "$SCRIPT_DIR/demo-postgres.sh" --reset
 
 # The Lambda process remembers that it already created the tables, so it must be restarted too.
-docker ps --format '{{.Names}}' | grep -i lambda | xargs -r docker rm -f > /dev/null || true
+docker ps -q --filter 'name=lambda-coding-workshop-pm-api' | xargs -r docker rm -f > /dev/null || true
 
 echo "Waiting for the API to start again (the first call after a restart can take up to a minute)..."
 for i in $(seq 1 6); do
