@@ -87,7 +87,7 @@ export function TimelineChart({ rows, today, label, footer }: { rows: TimelineRo
                       title={`${r.label}: ${formatDate(r.start!)} to ${formatDate(r.end!)}`}
                       sx={{
                         position: 'absolute', top: '50%', height: r.indent ? 14 : 20, mt: r.indent ? '-7px' : '-10px', left: `${box.left}%`, width: `${box.width}%`,
-                        borderRadius: 999, bgcolor: COLOR[r.tone], opacity: 0.28, overflow: 'hidden',
+                        borderRadius: '2px', bgcolor: COLOR[r.tone], opacity: 0.28, overflow: 'hidden',
                       }}
                     />
                   )}
@@ -95,7 +95,7 @@ export function TimelineChart({ rows, today, label, footer }: { rows: TimelineRo
                     <Box
                       sx={{
                         position: 'absolute', top: '50%', height: r.indent ? 14 : 20, mt: r.indent ? '-7px' : '-10px', left: `${box.left}%`, width: `${box.width}%`,
-                        borderRadius: 999, border: '2px solid', borderColor: COLOR[r.tone], overflow: 'hidden',
+                        borderRadius: '2px', border: '2px solid', borderColor: COLOR[r.tone], overflow: 'hidden',
                       }}
                     >
                       {r.progress ? <Box sx={{ height: '100%', width: `${Math.min(100, r.progress)}%`, bgcolor: COLOR[r.tone], opacity: 0.85 }} /> : null}

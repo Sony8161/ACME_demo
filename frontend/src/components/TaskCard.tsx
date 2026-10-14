@@ -45,7 +45,7 @@ export function TaskCard({ task, who, showProject, onMove, onEdit }: Props) {
     <Paper
       draggable={draggable}
       onDragStart={(e) => { e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed = 'move' }}
-      sx={{ p: 1.5, cursor: draggable ? 'grab' : 'default', '&:active': { cursor: draggable ? 'grabbing' : 'default' } }}
+      sx={{ p: 1.5, borderLeft: 4, borderLeftColor: PRIORITY_COLOR[task.priority], cursor: draggable ? 'grab' : 'default', '&:active': { cursor: draggable ? 'grabbing' : 'default' } }}
     >
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -70,7 +70,7 @@ export function TaskCard({ task, who, showProject, onMove, onEdit }: Props) {
         <Box sx={{ flexGrow: 1 }} />
         {task.assigneeName ? (
           <Tooltip title={task.assigneeName}>
-            <Avatar sx={{ width: 26, height: 26, fontSize: 11, fontWeight: 700, bgcolor: 'rgba(94,234,212,.5)', color: 'text.primary' }}>
+            <Avatar variant="rounded" sx={{ width: 26, height: 26, borderRadius: '3px', fontSize: 11, fontWeight: 700, bgcolor: 'rgba(94,234,212,.5)', color: 'text.primary' }}>
               {initials(task.assigneeName)}
             </Avatar>
           </Tooltip>

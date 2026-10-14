@@ -124,9 +124,9 @@ export function DashboardPage() {
 
 function Kpi({ label, value, hint, tone }: { label: string; value: string; hint: string; tone?: string }) {
   return (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="body2" color="text.secondary">{label}</Typography>
-      <Typography variant="h4" sx={{ color: tone }}>{value}</Typography>
+    <Paper sx={{ p: 2, borderTop: 3, borderTopColor: 'primary.light' }}>
+      <Typography variant="overline" component="p">{label}</Typography>
+      <Typography variant="h4" component="p" sx={{ color: tone }}>{value}</Typography>
       <Typography variant="caption" color="text.secondary">{hint}</Typography>
     </Paper>
   )

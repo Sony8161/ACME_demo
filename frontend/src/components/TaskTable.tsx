@@ -34,7 +34,7 @@ export function TaskTable({ tasks, who, onMove, onEdit }: Props) {
               <TableCell>
                 {t.assigneeName ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar sx={{ width: 24, height: 24, fontSize: 10, fontWeight: 700, bgcolor: 'rgba(94,234,212,.5)', color: 'text.primary' }}>{initials(t.assigneeName)}</Avatar>
+                    <Avatar variant="rounded" sx={{ width: 24, height: 24, borderRadius: '3px', fontSize: 10, fontWeight: 700, bgcolor: 'rgba(94,234,212,.5)', color: 'text.primary' }}>{initials(t.assigneeName)}</Avatar>
                     {t.assigneeName}
                   </Box>
                 ) : 'Unassigned'}

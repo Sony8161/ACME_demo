@@ -180,7 +180,7 @@ for (const item of ['Floor plan', 'Vendor shortlist', 'Move schedule']) {
   await card('Planning').getByRole('checkbox', { name: item }).waitFor() // the checklist row, not the description text
 }
 await card('Planning').getByRole('checkbox', { name: 'Floor plan' }).click()
-await page.waitForFunction(() => document.body.innerText.includes('1 of 3 done'))
+await page.waitForFunction(() => /1 of 3 done/i.test(document.body.innerText))
 await shot(3, '3b-milestone-with-dates-and-deliverable-checklist')
 
 // MVP 4: assign people; no double booking
@@ -232,7 +232,7 @@ await shot(6, '6e-why-this-project-is-overdue')
 await page.getByRole('link', { name: 'Projects', exact: true }).first().click()
 await openProject('Website Redesign')
 await card('Build').getByRole('checkbox', { name: 'Dashboard' }).click()
-await page.waitForFunction(() => document.body.innerText.includes('2 of 2 done'))
+await page.waitForFunction(() => /2 of 2 done/i.test(document.body.innerText))
 await card('Build').getByRole('button', { name: 'Complete milestone' }).click()
 await dialog().getByLabel('Review note').fill('Reviewed with the client; both screens signed off')
 await page.getByRole('button', { name: 'Sign off and complete' }).click()

@@ -144,8 +144,8 @@ export function ProjectDetailPage() {
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="body2" color="text.secondary">{label}</Typography>
+    <Paper sx={{ p: 2, borderTop: 3, borderTopColor: 'primary.light' }}>
+      <Typography variant="overline" component="p">{label}</Typography>
       <Typography variant="h6" component="p">{value}</Typography>
       <Typography variant="caption" color="text.secondary">{hint}</Typography>
     </Paper>

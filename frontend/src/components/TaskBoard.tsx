@@ -4,6 +4,8 @@ import type { Task, TaskStatus } from '../api/types'
 import { COLUMNS, canMove, type Actor } from '../tasks'
 import { TaskCard } from './TaskCard'
 
+const EDGE = { todo: 'text.disabled', in_progress: 'primary.light', done: 'success.main' } as const
+
 interface Props {
   tasks: Task[]
   who: Actor
@@ -33,10 +35,10 @@ export function TaskBoard({ tasks, who, onMove, onEdit }: Props) {
             onDragOver={(e) => { e.preventDefault(); setOver(col.value) }}
             onDragLeave={() => setOver((o) => (o === col.value ? null : o))}
             onDrop={(e) => { e.preventDefault(); drop(col.value, e.dataTransfer.getData('text/plain')) }}
-            sx={{ p: 1.5, minHeight: 160, bgcolor: over === col.value ? 'rgba(94,234,212,.22)' : 'rgba(255,255,255,.6)', transition: 'background-color .12s' }}
+            sx={{ p: 1.5, minHeight: 160, borderTop: 4, borderTopColor: EDGE[col.value], bgcolor: over === col.value ? 'rgba(94,234,212,.28)' : 'rgba(255,255,255,.7)', transition: 'background-color .12s' }}
           >
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5, px: 0.5 }}>
-              <Typography variant="subtitle2" component="h3">{col.label}</Typography>
+              <Typography variant="overline" component="h3">{col.label}</Typography>
               <Chip size="small" label={items.length} />
             </Stack>
             <Stack spacing={1.25}>

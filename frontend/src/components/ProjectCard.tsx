@@ -5,6 +5,8 @@ import { dateRange, money, percent } from '../format'
 import { PulseBar } from './PulseBar'
 import { RiskChip } from './RiskChip'
 
+const EDGE = { on_track: 'success.main', at_risk: 'warning.main', overdue: 'error.main', done: 'text.disabled' } as const
+
 /** One project at a glance: health, pulse bar, the reasons behind the health, and the key numbers. */
 export function ProjectCard({ project }: { project: Project }) {
   const s = project.summary
@@ -12,7 +14,7 @@ export function ProjectCard({ project }: { project: Project }) {
     <Paper
       component={RouterLink}
       to={`/projects/${project.id}`}
-      sx={{ display: 'block', p: 2.5, textDecoration: 'none', color: 'inherit', transition: 'border-color .15s, box-shadow .15s, transform .15s', '&:hover': { borderColor: 'rgba(45,212,191,.8)', boxShadow: '0 16px 40px -16px rgba(11,127,120,.55)', transform: 'translateY(-2px)' } }}
+      sx={{ display: 'block', p: 2.5, textDecoration: 'none', color: 'inherit', borderLeft: 6, borderLeftColor: EDGE[s.riskLevel], '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(94,234,212,.08)' } }}
     >
       <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box sx={{ minWidth: 0 }}>
@@ -48,8 +50,8 @@ export function ProjectCard({ project }: { project: Project }) {
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{label}</Typography>
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>{value}</Typography>
+      <Typography variant="overline" sx={{ display: 'block' }}>{label}</Typography>
+      <Typography variant="body2" sx={{ fontWeight: 700 }}>{value}</Typography>
     </Box>
   )
 }

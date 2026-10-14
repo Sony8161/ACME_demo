@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import {
-  AppBar, BottomNavigation, BottomNavigationAction, Box, Chip, Drawer, IconButton, List, ListItemButton,
+  AppBar, BottomNavigation, BottomNavigationAction, Box, Chip, IconButton, List, ListItemButton,
   ListItemIcon, ListItemText, Paper, Toolbar, Tooltip, Typography,
 } from '@mui/material'
 import DashboardIcon from '@mui/icons-material/SpaceDashboardOutlined'
@@ -28,7 +28,6 @@ const ICONS: Record<NavItem['icon'], ReactElement> = {
   timeline: <TimelineIcon />,
 }
 
-const DRAWER_WIDTH = 224
 
 /** Frame around every signed-in page: a side menu on a laptop, a bottom tab bar on a phone. */
 export function AppShell() {
@@ -41,27 +40,31 @@ export function AppShell() {
 
   return (
     <Box sx={{ minHeight: '100vh' }}>
-      <AppBar
-        position="fixed" color="inherit" elevation={0}
-        sx={{
-          borderBottom: 1, borderColor: 'divider', zIndex: (t) => t.zIndex.drawer + 1, backgroundImage: 'none', color: 'text.primary',
-          bgcolor: 'rgba(255,255,255,.72)', backdropFilter: 'blur(12px)',
-          '&::after': { content: '""', position: 'absolute', left: 0, right: 0, bottom: -1, height: '2px', background: 'linear-gradient(90deg, #2dd4bf, rgba(45,212,191,0) 60%)' },
-        }}
-      >
-        <Toolbar sx={{ gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 30, height: 30, borderRadius: '50%', position: 'relative', flexShrink: 0,
-              background: 'linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%)', boxShadow: '0 6px 16px -6px rgba(11,127,120,.7)',
-            }}
-            aria-hidden
-          >
-            <Box sx={{ position: 'absolute', left: 7, right: 7, bottom: 9, height: 3, borderRadius: 2, bgcolor: 'rgba(5,46,43,.25)' }} />
-            <Box sx={{ position: 'absolute', left: 7, width: 9, bottom: 9, height: 3, borderRadius: 2, bgcolor: '#052e2b' }} />
-            <Box sx={{ position: 'absolute', right: 7, top: 7, width: 6, height: 6, borderRadius: '50%', bgcolor: '#fff' }} />
+      <AppBar position="fixed" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', backgroundImage: 'none', bgcolor: '#ffffff', color: 'text.primary' }}>
+        <Toolbar sx={{ gap: 2, minHeight: { xs: 56, md: 60 } }}>
+          <Box aria-hidden sx={{ width: 28, height: 28, borderRadius: '3px', bgcolor: 'primary.light', border: '1px solid', borderColor: 'primary.main', position: 'relative', flexShrink: 0 }}>
+            <Box sx={{ position: 'absolute', left: 5, right: 5, bottom: 7, height: 3, bgcolor: 'rgba(5,46,43,.25)' }} />
+            <Box sx={{ position: 'absolute', left: 5, width: 9, bottom: 7, height: 3, bgcolor: '#052e2b' }} />
+            <Box sx={{ position: 'absolute', right: 5, top: 5, width: 5, height: 5, bgcolor: '#fff' }} />
           </Box>
-          <Typography variant="h6" sx={{ flexGrow: 1 }} noWrap>ACME Projects</Typography>
+          <Typography variant="h6" noWrap sx={{ mr: isDesktop ? 2 : 0, flexGrow: isDesktop ? 0 : 1 }}>ACME Projects</Typography>
+          {isDesktop && (
+            <List component="nav" aria-label="Main" sx={{ display: 'flex', flexGrow: 1, p: 0, gap: 0.5, alignSelf: 'stretch' }}>
+              {items.map((item) => (
+                <ListItemButton
+                  key={item.to} component={NavLink} to={item.to} selected={current === item.to}
+                  sx={{
+                    flexGrow: 0, px: 1.75, borderRadius: 0, borderBottom: '3px solid transparent', mt: '3px', fontWeight: 600,
+                    '&.Mui-selected': { bgcolor: 'rgba(94,234,212,.22)', borderBottomColor: 'primary.main', color: 'primary.dark', fontWeight: 800 },
+                    '&.Mui-selected:hover': { bgcolor: 'rgba(94,234,212,.34)' },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 28, color: 'inherit' }}>{ICONS[item.icon]}</ListItemIcon>
+                  <ListItemText primary={item.label} slotProps={{ primary: { sx: { fontWeight: 'inherit', fontSize: '0.875rem' } } }} />
+                </ListItemButton>
+              ))}
+            </List>
+          )}
           {isDesktop && <Typography variant="body2" color="text.secondary">{user.name}</Typography>}
           <Chip size="small" label={user.role} sx={{ textTransform: 'capitalize' }} />
           <Tooltip title="Sign out">
@@ -70,38 +73,14 @@ export function AppShell() {
         </Toolbar>
       </AppBar>
 
-      {isDesktop && (
-        <Drawer
-          variant="permanent"
-          sx={{ width: DRAWER_WIDTH, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box', borderRight: 1, borderColor: 'divider', bgcolor: 'rgba(255,255,255,.55)', backdropFilter: 'blur(8px)', backgroundImage: 'none' } }}
-        >
-          <Toolbar />
-          <List component="nav" aria-label="Main" sx={{ p: 1.5 }}>
-            {items.map((item) => (
-              <ListItemButton key={item.to} component={NavLink} to={item.to} selected={current === item.to}
-                sx={{
-                  borderRadius: 999, mb: 0.5, position: 'relative',
-                  '&.Mui-selected': { bgcolor: 'rgba(94,234,212,.32)', color: 'primary.dark', fontWeight: 700 },
-                  '&.Mui-selected:hover': { bgcolor: 'rgba(94,234,212,.42)' },
-                  '&.Mui-selected .MuiListItemIcon-root': { color: 'primary.dark' },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 40 }}>{ICONS[item.icon]}</ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            ))}
-          </List>
-        </Drawer>
-      )}
-
-      <Box component="main" sx={{ pt: 11, pb: isDesktop ? 6 : 12, px: { xs: 2, md: 4 }, ml: isDesktop ? `${DRAWER_WIDTH}px` : 0 }}>
-        <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
+      <Box component="main" sx={{ pt: { xs: 9.5, md: 11 }, pb: isDesktop ? 6 : 12, px: { xs: 2, md: 4 } }}>
+        <Box sx={{ maxWidth: 1180, mx: 'auto' }}>
           <Outlet />
         </Box>
       </Box>
 
       {!isDesktop && items.length > 1 && (
-        <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: (t) => t.zIndex.appBar }} elevation={3}>
+        <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: (t) => t.zIndex.appBar, borderRadius: 0 }}>
           <BottomNavigation showLabels value={current}>
             {items.map((item) => (
               <BottomNavigationAction key={item.to} component={NavLink} to={item.to} value={item.to} label={item.label} icon={ICONS[item.icon]} />
