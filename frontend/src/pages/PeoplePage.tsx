@@ -29,7 +29,6 @@ export function PeoplePage() {
 
   const state = useApi(() => api.get<UserList>('/users', { q }), [q])
   const managers = useApi(isAdmin ? () => api.get<UserList>('/users', { role: 'manager' }) : null, [isAdmin])
-  const nameOf = (id: string | null) => managers.data?.items.find((m) => m.id === id)?.name ?? (id ? '…' : '—')
 
   return (
     <>
@@ -62,7 +61,7 @@ export function PeoplePage() {
                     </TableCell>
                     <TableCell><Chip size="small" variant="outlined" label={p.role} sx={{ textTransform: 'capitalize' }} /></TableCell>
                     <TableCell sx={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>{p.username}</TableCell>
-                    <TableCell>{nameOf(p.managerId)}</TableCell>
+                    <TableCell>{list.items.find((u) => u.id === p.managerId)?.name ?? managers.data?.items.find((m) => m.id === p.managerId)?.name ?? '—'}</TableCell>
                     {isAdmin && <TableCell align="right">{p.salary === null ? '—' : `${money(p.salary)}/h`}</TableCell>}
                     {isAdmin && (
                       <TableCell align="right">

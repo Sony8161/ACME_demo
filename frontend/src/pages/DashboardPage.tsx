@@ -26,6 +26,7 @@ export function DashboardPage() {
     try {
       const result = await api.post<DemoSeedResult>('/admin/seed-demo')
       setSeeded(result)
+      if (!result.created) setSeedError(result.message)
       state.reload()
     } catch (err) {
       setSeedError(errorText(err))

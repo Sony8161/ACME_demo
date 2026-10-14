@@ -16,5 +16,14 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**'],
+      // Wiring and look-and-feel only: the entry file and the MUI theme hold no logic.
+      exclude: ['src/**/*.test.*', 'src/test/**', 'src/main.tsx', 'src/theme.ts'],
+      reporter: ['text-summary', 'text'],
+      // The full-stack guide's goal for frontend components; the build fails below it.
+      thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
+    },
   },
 })

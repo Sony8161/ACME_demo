@@ -55,7 +55,7 @@ export function MilestoneCard({ project, milestone: m, canManage, onChanged }: P
     <Paper sx={{ p: 2.5 }}>
       <Stack direction="row" spacing={2} useFlexGap sx={{ justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6">{m.name}</Typography>
+          <Typography variant="h6" component="h2">{m.name}</Typography>
           <Typography variant="body2" color="text.secondary">{dateRange(m.startDate, m.dueDate)}</Typography>
         </Box>
         <Stack direction="row" spacing={1}>

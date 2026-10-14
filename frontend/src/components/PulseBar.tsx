@@ -42,7 +42,7 @@ export function PulseBar({ schedulePct, workPct, risk, ticks = [], showLabels = 
       <Box sx={{ position: 'relative', height: 12, borderRadius: 6, bgcolor: 'grey.200', overflow: 'visible' }}>
         <Box sx={{ height: '100%', width: `${work}%`, borderRadius: 6, bgcolor: FILL[risk], transition: 'width .3s' }} />
         {ticks.map((tick) => (
-          <Tooltip key={tick.id} title={tick.name} arrow>
+          <Tooltip key={tick.id} title={tick.name} arrow describeChild>
             <Box
               sx={{
                 position: 'absolute', top: -3, left: `${clamp(tick.at)}%`, width: 8, height: 18, ml: '-4px',

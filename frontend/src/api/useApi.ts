@@ -40,7 +40,7 @@ export function useApi<T>(load: (() => Promise<T>) | null, deps: unknown[]): Loa
   const reload = useCallback(() => setVersion((v) => v + 1), [])
   return {
     data: settled?.data ?? null,
-    error: settled?.error ?? null,
+    error: settled?.key === key ? settled.error : null,
     loading: load !== null && settled?.key !== key,
     reload,
   }
@@ -48,6 +48,10 @@ export function useApi<T>(load: (() => Promise<T>) | null, deps: unknown[]): Loa
 
 /** The text to show a person for any failure: the server's own sentence when it has one. */
 export function errorText(err: unknown): string {
-  if (err instanceof ApiError) return err.message
+  if (err instanceof ApiError) {
+    // "Request validation failed" alone tells nobody what to fix; the reasons are in `details`.
+    const reasons = err.code === 'validation_error' ? err.details.map((d) => d.message).filter(Boolean) : []
+    return reasons.length ? `${err.message}: ${reasons.join('; ')}` : err.message
+  }
   return 'Something went wrong. Please try again.'
 }
