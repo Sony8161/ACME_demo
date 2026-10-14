@@ -39,7 +39,7 @@ export function PulseBar({ schedulePct, workPct, risk, ticks = [], showLabels = 
 
   return (
     <Box role="img" aria-label={label} sx={{ width: '100%' }}>
-      <Box sx={{ position: 'relative', height: 12, borderRadius: 6, bgcolor: 'action.selected', overflow: 'visible' }}>
+      <Box sx={{ position: 'relative', height: 12, borderRadius: 6, bgcolor: 'rgba(45,212,191,.2)', overflow: 'visible' }}>
         <Box sx={{ height: '100%', width: `${work}%`, borderRadius: 6, bgcolor: FILL[risk], transition: 'width .3s' }} />
         {ticks.map((tick) => (
           <Tooltip key={tick.id} title={tick.name} arrow describeChild>

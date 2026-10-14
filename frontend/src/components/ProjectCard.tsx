@@ -12,7 +12,7 @@ export function ProjectCard({ project }: { project: Project }) {
     <Paper
       component={RouterLink}
       to={`/projects/${project.id}`}
-      sx={{ display: 'block', p: 2.5, textDecoration: 'none', color: 'inherit', transition: 'border-color .15s, box-shadow .15s, transform .15s', '&:hover': { borderColor: 'primary.main', boxShadow: '0 10px 34px -14px rgba(167,139,250,.75)', transform: 'translateY(-1px)' } }}
+      sx={{ display: 'block', p: 2.5, textDecoration: 'none', color: 'inherit', transition: 'border-color .15s, box-shadow .15s, transform .15s', '&:hover': { borderColor: 'rgba(45,212,191,.8)', boxShadow: '0 16px 40px -16px rgba(11,127,120,.55)', transform: 'translateY(-2px)' } }}
     >
       <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box sx={{ minWidth: 0 }}>

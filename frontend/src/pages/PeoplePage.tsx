@@ -60,7 +60,7 @@ export function PeoplePage() {
                       <Typography variant="caption" color="text.secondary">{p.jobTitle || p.email}</Typography>
                     </TableCell>
                     <TableCell><Chip size="small" variant="outlined" label={p.role} sx={{ textTransform: 'capitalize' }} /></TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: 'primary.light' }}>{p.username}</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{p.username}</TableCell>
                     <TableCell>{list.items.find((u) => u.id === p.managerId)?.name ?? managers.data?.items.find((m) => m.id === p.managerId)?.name ?? '—'}</TableCell>
                     {isAdmin && <TableCell align="right">{p.salary === null ? '—' : `${money(p.salary)}/h`}</TableCell>}
                     {isAdmin && (

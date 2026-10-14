@@ -23,7 +23,7 @@ async function scan(name) {
   await page.addScriptTag({ path: AXE })
   const result = await page.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }))
   const bad = result.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
-  ok(`accessibility (axe): ${name}`, bad.length === 0, bad.map((v) => `${v.id} x${v.nodes.length}`).join(', '))
+  ok(`accessibility (axe): ${name}`, bad.length === 0, bad.map((v) => `${v.id} x${v.nodes.length}: ${v.nodes[0].html.slice(0, 90)} | ${v.nodes[0].any[0]?.message ?? ''}`).join('; '))
 }
 const shot = (n) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${n}.png`, fullPage: true }) : Promise.resolve())
 const iso = (offset) => { const d = new Date(); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }

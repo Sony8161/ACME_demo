@@ -52,8 +52,8 @@ src/
 
 ## Design rules
 
-- One question per screen. Colour means status only (green on track, amber at risk, red overdue, grey done). Violet is the brand: navigation, focus and the main action.
-- **Look:** a dark purple theme set in IBM Plex Mono (self-hosted through `@fontsource/ibm-plex-mono`, so it works offline), kept minimal with a few touches: a faint violet glow in the page corners, a gradient hairline under the top bar, a glowing marker on the open menu item, and a soft lift on project cards. Everything lives in `src/theme.ts` and `src/layout/AppShell.tsx`; the end-to-end test's accessibility scan enforces 4.5:1 text contrast on it.
+- One question per screen. Colour means status only (green on track, amber at risk, red overdue, grey done). Teal is the brand: navigation, focus and the main action.
+- **Look:** a light teal theme set in Plus Jakarta Sans (self-hosted through `@fontsource/plus-jakarta-sans`, so it works offline): airy mint surfaces, soft shadows instead of hard borders, pill-shaped buttons, chips and menu items, two faint teal washes in the page corners, a gradient hairline under the top bar and a short teal underline beneath each page title. The accent teal is too pale for text, so links and text use a deeper teal. Everything lives in `src/theme.ts` and `src/layout/AppShell.tsx`; the end-to-end test's accessibility scan enforces 4.5:1 text contrast on it.
 - The **pulse bar** shows work done (the fill) against the calendar (the dark marker): fill short of the marker means behind.
 - Plain words, a confirmation that says what will happen before anything is archived or completed, and every server error shown as the sentence the server wrote.
 - Phone first: the menu becomes a bottom bar, forms stack.
