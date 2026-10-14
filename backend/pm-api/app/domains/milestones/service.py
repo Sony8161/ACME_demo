@@ -51,6 +51,8 @@ def present(row: dict[str, Any], actor: CurrentUser) -> MilestoneOut:
         hours_worked=float(row["hours_worked"]),
         budget_amount=budget if money else None,
         labor_cost=round(labor, 2) if money else None,
+        expected_hours=float(row["expected_hours"]),
+        expected_cost=round(float(row["expected_cost"]), 2) if money else None,
         budget_pct=(round(100 * labor / budget, 1) if budget > 0 else None) if money else None,
         assignees=int(row["assignees"]),
         deliverables_total=int(row["deliverables_total"]),

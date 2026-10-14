@@ -63,7 +63,9 @@ class MilestoneOut(BaseModel):
     allocated_hours: float = Field(description="Planned hours")
     hours_worked: float = Field(description="Working days so far x 8 x people on it")
     budget_amount: float | None
-    labor_cost: float | None = Field(description="Hours worked x salaries so far")
+    labor_cost: float | None = Field(description="Hours worked x the planned hourly rates, so far")
+    expected_hours: float = Field(description="Hours the assigned people will work in total (precalculated)")
+    expected_cost: float | None = Field(description="Cost of the assigned people for the whole range; null for employees")
     budget_pct: float | None
     assignees: int
     deliverables_total: int

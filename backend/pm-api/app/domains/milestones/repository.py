@@ -21,6 +21,8 @@ _ROW = """
     SELECT m.*,
            COALESCE(w.hours, 0)  AS hours_worked,
            COALESCE(w.labor, 0)  AS labor_cost,
+           COALESCE(w.expected_hours, 0) AS expected_hours,
+           COALESCE(w.expected_cost, 0)  AS expected_cost,
            COALESCE(w.people, 0) AS assignees,
            COALESCE(d.total, 0)  AS deliverables_total,
            COALESCE(d.done, 0)   AS deliverables_done,
@@ -28,9 +30,11 @@ _ROW = """
     FROM milestones m
     LEFT JOIN LATERAL (
         SELECT sum(working_days(a.start_date, LEAST(a.end_date, %(today)s))) * 8            AS hours,
-               sum(working_days(a.start_date, LEAST(a.end_date, %(today)s)) * 8 * u.salary) AS labor,
-               count(DISTINCT a.user_id)                                                                AS people
-        FROM milestone_assignments a JOIN users u ON u.id = a.user_id
+               sum(working_days(a.start_date, LEAST(a.end_date, %(today)s)) * 8 * a.hourly_rate) AS labor,
+               sum(a.expected_hours)                                                       AS expected_hours,
+               sum(a.expected_cost)                                                        AS expected_cost,
+               count(DISTINCT a.user_id)                                                   AS people
+        FROM milestone_assignments a
         WHERE a.milestone_id = m.id AND a.archived_at IS NULL
     ) w ON true
     LEFT JOIN LATERAL (

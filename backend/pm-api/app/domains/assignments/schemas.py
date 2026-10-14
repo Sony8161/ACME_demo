@@ -40,7 +40,10 @@ class AssigneeOut(BaseModel):
     daily_hours: int = Field(description="Hours in one shift")
     days_worked: int = Field(description="Working days from the start until today (or the end)")
     hours_worked: float
-    labor_cost: float | None = Field(description="Hours worked x salary so far; hidden (null) from employees")
+    labor_cost: float | None = Field(description="Hours worked x the planned hourly rate, so far; hidden (null) from employees")
+    expected_hours: float = Field(description="Hours the whole range will take (precalculated: working days x 8)")
+    expected_cost: float | None = Field(description="Cost of the whole range (expected hours x hourly rate); null for employees")
+    hourly_rate: float | None = Field(description="The hourly rate this work was planned at; null for employees")
     archived_at: dt.datetime | None
 
 
@@ -51,3 +54,5 @@ class AssigneeList(BaseModel):
     total: int
     hours_worked: float
     labor_cost: float | None
+    expected_hours: float
+    expected_cost: float | None

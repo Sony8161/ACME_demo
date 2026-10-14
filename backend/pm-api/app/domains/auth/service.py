@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import psycopg
 
-from app.core import security
+from app.config import get_settings
+from app.core import dates, security
 from app.core.deps import CurrentUser
-from app.core.errors import AuthError, ValidationError
+from app.core.errors import AuthError, TooManyRequestsError, ValidationError
 from app.domains.auth.schemas import TokenResponse
 from app.domains.users import repository as users_repo
 from app.domains.users.schemas import UserOut
@@ -25,14 +27,28 @@ def _token_response(row: dict[str, Any]) -> TokenResponse:
 
 def login(conn: psycopg.Connection[Any], username: str, password: str) -> TokenResponse:
     """Verify credentials and issue an access token."""
+    settings = get_settings()
     row = users_repo.get_auth_by_username(conn, username.strip())
     if row is None:
         security.verify_against_dummy()
         raise AuthError(_INVALID_CREDENTIALS, code="invalid_credentials")
+    if row["locked_until"] is not None and row["locked_until"] > dates.now():
+        # Even the right password is refused while locked, so guessing cannot continue past the limit.
+        wait = max(1, math.ceil((row["locked_until"] - dates.now()).total_seconds()))
+        raise TooManyRequestsError(
+            f"Too many failed sign-ins. Try again in {math.ceil(wait / 60)} minute(s), or ask an admin for a new password.",
+            code="account_locked",
+            headers={"Retry-After": str(wait)},
+        )
     if not security.verify_password(password, row["password_hash"]):
+        users_repo.record_failed_login(conn, row["id"], settings.max_failed_logins, settings.login_lock_minutes)
+        # Commit now: the request is about to fail with a 401, which rolls back, and the count must survive that.
+        conn.commit()
         raise AuthError(_INVALID_CREDENTIALS, code="invalid_credentials")
     if row["archived_at"] is not None:
         raise AuthError("This account has been archived", code="account_inactive")
+    if row["failed_logins"] or row["locked_until"] is not None:
+        users_repo.clear_failed_logins(conn, row["id"])
     return _token_response(row)
 
 

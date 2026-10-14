@@ -65,6 +65,7 @@ def build_summary(row: dict[str, Any], today: dt.date, *, include_costs: bool = 
         "schedule_pct": schedule_pct,
         "hours_worked": round(worked, 2),
         "hours_remaining": round(allocated - worked, 2),
+        "expected_hours": round(float(row["expected_hours"]), 2),
         "hours_pct": hours_pct,
         "milestones_total": m_total,
         "milestones_done": m_done,

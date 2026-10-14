@@ -27,6 +27,9 @@ os.environ["BCRYPT_ROUNDS"] = "4"
 os.environ["APP_ENV"] = "test"
 os.environ.pop("BOOTSTRAP_ADMIN_PASSWORD", None)
 os.environ["POSTGRES_CONNECT_TIMEOUT"] = "3"
+# The suite signs in hundreds of times from one address; the limiter has its own tests (test_ratelimit.py).
+os.environ["RATE_LIMIT_PER_MINUTE"] = "0"
+os.environ["LOGIN_RATE_LIMIT_PER_MINUTE"] = "0"
 
 from fastapi.testclient import TestClient  # noqa: E402
 

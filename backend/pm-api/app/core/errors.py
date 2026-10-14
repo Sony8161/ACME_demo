@@ -83,6 +83,13 @@ class NotFoundError(ApiError):
     code = "not_found"
 
 
+class TooManyRequestsError(ApiError):
+    """The caller is going too fast, or the account is locked after repeated failures (429)."""
+
+    status_code = 429
+    code = "rate_limited"
+
+
 class ConflictError(ApiError):
     """Request conflicts with current state, e.g. duplicate name (409)."""
 

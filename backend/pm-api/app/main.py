@@ -12,6 +12,7 @@ from app import __version__
 from app.config import API_PREFIX, get_settings
 from app.core.errors import register_error_handlers
 from app.core.observability import RequestLogMiddleware, configure_logging
+from app.core.ratelimit import RateLimitMiddleware, SlidingWindowLimiter
 from app.db import TransactionMiddleware, get_connection, register_post_migrate_hook
 from app.domains.admin.router import router as admin_router
 from app.domains.assignments.router import router as team_router
@@ -78,6 +79,12 @@ def create_app() -> FastAPI:
     # Middleware added last runs first: the root path is fixed before the transaction starts.
     app.add_middleware(TransactionMiddleware)
     app.add_middleware(RootPathMiddleware)
+    settings = get_settings()
+    app.add_middleware(  # outside the transaction: a refused request never touches the database
+        RateLimitMiddleware,
+        per_person=SlidingWindowLimiter(settings.rate_limit_per_minute),
+        sign_in=SlidingWindowLimiter(settings.login_rate_limit_per_minute),
+    )
     app.add_middleware(RequestLogMiddleware)  # outermost: times everything, including the commit
     register_post_migrate_hook(ensure_bootstrap_admin)
     return app

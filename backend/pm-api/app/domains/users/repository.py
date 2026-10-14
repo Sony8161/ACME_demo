@@ -28,7 +28,9 @@ def get_by_id(conn: psycopg.Connection[Any], user_id: uuid.UUID) -> dict[str, An
 
 def get_auth_by_username(conn: psycopg.Connection[Any], username: str) -> dict[str, Any] | None:
     """Fetch the columns needed to authenticate ``username`` (includes the hash)."""
-    query = sql.SQL("SELECT {cols}, password_hash FROM users WHERE username = %s").format(cols=USER_COLUMNS)
+    query = sql.SQL(
+        "SELECT {cols}, password_hash, failed_logins, locked_until FROM users WHERE username = %s"
+    ).format(cols=USER_COLUMNS)
     return conn.execute(query, (username.lower(),)).fetchone()
 
 
@@ -148,7 +150,8 @@ def set_password(
     query = sql.SQL(
         """
         UPDATE users
-        SET password_hash = %s, must_change_password = %s, token_version = token_version + 1
+        SET password_hash = %s, must_change_password = %s, token_version = token_version + 1,
+            failed_logins = 0, locked_until = NULL
         WHERE id = %s
         RETURNING {cols}
         """
@@ -168,3 +171,18 @@ def set_archived(conn: psycopg.Connection[Any], user_id: uuid.UUID, *, archived:
         """
     ).format(cols=USER_COLUMNS)
     return conn.execute(query, (archived, user_id)).fetchone()
+
+
+def record_failed_login(conn: psycopg.Connection[Any], user_id: uuid.UUID, max_attempts: int, lock_minutes: int) -> None:
+    """Count a failed sign-in; the account locks once ``max_attempts`` is reached."""
+    conn.execute(
+        "UPDATE users SET failed_logins = failed_logins + 1, "
+        "locked_until = CASE WHEN failed_logins + 1 >= %s THEN now() + make_interval(mins => %s) ELSE locked_until END "
+        "WHERE id = %s",
+        (max_attempts, lock_minutes, user_id),
+    )
+
+
+def clear_failed_logins(conn: psycopg.Connection[Any], user_id: uuid.UUID) -> None:
+    """A successful sign-in (or a password reset) starts the count again."""
+    conn.execute("UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = %s", (user_id,))

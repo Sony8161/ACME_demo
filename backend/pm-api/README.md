@@ -4,7 +4,7 @@ FastAPI on AWS Lambda (Mangum) with PostgreSQL. Projects are built from mileston
 hours, cost and risk are calculated from dates. Nothing is ever deleted: removing means archiving, and only admins see the archive.
 
 Interactive API docs: `/docs` (Swagger) and `/openapi.json` when the API runs directly with `uvicorn`.
-A 138-request Postman collection with saved example responses is in [`docs/postman`](../../docs/postman/README.md).
+A 151-request Postman collection with saved example responses is in [`docs/postman`](../../docs/postman/README.md).
 
 ## Run it
 
@@ -25,6 +25,9 @@ On LocalStack use `./bin/demo-postgres.sh` and `./bin/start-dev.sh` from the rep
 | `JWT_SECRET` | Signing key for login tokens. Required in the cloud; Terraform generates it | local constant |
 | `BOOTSTRAP_ADMIN_PASSWORD` | First admin's one-time password. Required in the cloud; Terraform generates it | `ChangeMe123!` locally |
 | `ACCESS_TOKEN_TTL_MINUTES` | Login token lifetime | `480` |
+| `RATE_LIMIT_PER_MINUTE` | Requests one person may make per minute, per Lambda container (0 = off) | `600` |
+| `LOGIN_RATE_LIMIT_PER_MINUTE` | Sign-in attempts per address per minute, per container (0 = off); an office shares one address, so it is generous | `120` |
+| `MAX_FAILED_LOGINS`, `LOGIN_LOCK_MINUTES` | Failed sign-ins before an account locks, and for how long | `5`, `15` |
 | `APP_ENV`, `AUTO_MIGRATE` | Environment label; run migrations on first request | `local`, `true` |
 
 ## How it is organised
@@ -35,10 +38,12 @@ app/
   config.py        settings from the environment
   db.py            one shared connection per Lambda container, SQL migrations, TransactionMiddleware
   core/            errors (one error shape), security (bcrypt, JWT), deps (current user, roles),
-                   dates (UTC "today", freezable in tests), money (compare to the cent), observability (access log)
+                   dates (UTC "today", freezable in tests), money (compare to the cent), observability (access log),
+                   ratelimit (per-person and per-address request limits)
   domains/<name>/  router.py (URLs), schemas.py (validation), service.py (the rules), repository.py (SQL)
                    auth, users, projects, milestones, deliverables, assignments, costs, reports, admin
-  migrations/      001_initial.sql, 002_milestone_work.sql (plain SQL, applied once, in order, under a lock)
+  migrations/      001_initial.sql, 002_milestone_work.sql, 003_precalculated_cost_and_login_throttle.sql
+                   (plain SQL, applied once, in order, under a lock)
   seed.py          first admin and the sample company
 ```
 
@@ -51,13 +56,22 @@ work that failed to save. Business rules live only in `service.py`; SQL lives on
   (milestones, deliverables, team, costs). An employee sees only the work they are assigned to and never any money.
   Permissions are enforced here, never only in the UI. What a person may not see returns 404, not 403.
 - **Milestones are the unit of work.** An employee works one milestone per day; the API refuses overlapping assignments
-  (across projects too) and names the clash. Every Monday to Friday of an assignment is an 8-hour shift:
-  hours = working days x 8, labor cost = hours x the person's hourly `salary`. Nothing is typed in.
+  (across projects too) and names the clash. Every Monday to Friday of an assignment is an 8-hour shift, and nothing is typed in.
+- **Expected hours and cost are precalculated.** When someone is put on a milestone, the assignment stores their hourly rate as it was
+  then (`hourly_rate`) and the hours and cost of the whole range (`expected_hours` = working days x 8, `expected_cost` = hours x rate).
+  A database trigger recomputes them whenever the dates or the rate change, so no code path can forget. Project and milestone totals add
+  up the stored fields. "So far" figures still depend on today's date, so they are calculated, but at the stored rate. A raise applies
+  to work that has not started; work already planned or done keeps its rate, so a raise never reprices the past.
 - **Risk is calculated** from dates, hours and money (see `domains/projects/metrics.py`) and always comes with its reasons.
 - **No DELETE.** Every removal is `POST .../archive`; a test checks the API has no DELETE operation.
   Completing a milestone requires every deliverable ticked, a review note is kept, and it moves to the archive.
 - **Sessions.** bcrypt passwords, HS256 tokens (8 hours), `token_version` revokes every older token on a password change or reset,
   `POST /auth/refresh` issues a fresh token, a generated first password must be changed at first sign-in.
+- **Limits.** Each person may make `RATE_LIMIT_PER_MINUTE` requests a minute and each address `LOGIN_RATE_LIMIT_PER_MINUTE` sign-in
+  attempts; beyond that the answer is `429` with `Retry-After` and the usual error shape. After `MAX_FAILED_LOGINS` wrong passwords an account
+  locks for `LOGIN_LOCK_MINUTES` (even the right password is refused), counted in the database so every container agrees; an admin's password
+  reset unlocks it. The request limit is per container (best effort); the production control that counts across containers is a rate rule
+  on the edge (AWS WAF in front of CloudFront).
 - **Errors.** Always `{"error": {"code", "message", "details": [{"field", "message"}]}}` with 400 (validation), 401, 403, 404, 409 (conflict), 503.
 - **Logs.** One JSON line per request (`method`, `path`, `status`, `ms`, `request_id`; never the query, headers or body) and an
   `X-Request-Id` response header. `aws logs tail /aws/lambda/<function> --follow` shows them.
@@ -85,11 +99,10 @@ returning `200` with the archived record rather than `DELETE` returning `204`, b
 ./bin/test-backend.sh        # from the repository root: ruff, bandit, then pytest with a coverage gate
 ```
 
-154 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.1% coverage. "Today" is frozen to Wednesday
+175 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.4% coverage. "Today" is frozen to Wednesday
 2026-03-11 so date maths is repeatable. See [`docs/TESTING.md`](../../docs/TESTING.md) for the full picture.
 
 ## Known limits
 
-Labor cost uses today's salary for all worked days (a raise reprices history); public holidays are not modelled; no login
-throttling yet; each Lambda container holds one database connection, so database connections equal concurrent requests
+Public holidays are not modelled; the request limit is per container and the edge rate rule (WAF) is not set up yet; each Lambda container holds one database connection, so database connections equal concurrent requests
 (an RDS Proxy would be the next step at high concurrency). Details and the open review findings are in `docs/CONTEXT.md`.

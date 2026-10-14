@@ -40,6 +40,10 @@ class Settings:
     jwt_algorithm: str
     access_token_ttl_minutes: int
     bcrypt_rounds: int
+    rate_limit_per_minute: int  # requests a person may make per minute (0 = off)
+    login_rate_limit_per_minute: int  # sign-in attempts per address per minute (0 = off)
+    max_failed_logins: int  # failed sign-ins before an account is locked
+    login_lock_minutes: int  # how long it stays locked
     pg_host: str
     pg_port: int
     pg_user: str
@@ -85,6 +89,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         jwt_algorithm="HS256",
         access_token_ttl_minutes=int(env.get("ACCESS_TOKEN_TTL_MINUTES", "480")),
         bcrypt_rounds=int(env.get("BCRYPT_ROUNDS", "12")),
+        rate_limit_per_minute=int(env.get("RATE_LIMIT_PER_MINUTE", "600")),
+        login_rate_limit_per_minute=int(env.get("LOGIN_RATE_LIMIT_PER_MINUTE", "120")),
+        max_failed_logins=int(env.get("MAX_FAILED_LOGINS", "5")),
+        login_lock_minutes=int(env.get("LOGIN_LOCK_MINUTES", "15")),
         pg_host=env.get("POSTGRES_HOST", "localhost"),
         pg_port=int(env.get("POSTGRES_PORT", "5432")),
         pg_user=env.get("POSTGRES_USER", "postgres"),

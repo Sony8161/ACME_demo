@@ -2,7 +2,8 @@
 
 An assignment puts one employee on one milestone for a date range. Every Monday-Friday in that
 range is one 8-hour shift, so hours and labor cost are calculated (``working_days(...) * 8``)
-rather than logged. Worked time only counts up to *today*.
+rather than logged. The hours and cost of the whole range are precalculated by a database trigger
+(``expected_hours``, ``expected_cost``, from the stored ``hourly_rate``); worked time only counts up to *today*.
 """
 
 from __future__ import annotations
@@ -18,9 +19,10 @@ _ROW = """
     SELECT a.id, a.milestone_id, m.name AS milestone_name, m.project_id, m.archived_at AS milestone_archived_at,
            a.user_id, u.name, u.username, u.email, u.job_title,
            a.start_date, a.end_date, a.archived_at, a.created_at,
-           working_days(a.start_date, LEAST(a.end_date, %(today)s))             AS days_worked,
-           working_days(a.start_date, LEAST(a.end_date, %(today)s))* 8              AS hours_worked,
-           working_days(a.start_date, LEAST(a.end_date, %(today)s))* 8 * u.salary   AS labor_cost
+           a.hourly_rate, a.expected_hours, a.expected_cost,
+           working_days(a.start_date, LEAST(a.end_date, %(today)s))                    AS days_worked,
+           working_days(a.start_date, LEAST(a.end_date, %(today)s)) * 8                AS hours_worked,
+           working_days(a.start_date, LEAST(a.end_date, %(today)s)) * 8 * a.hourly_rate AS labor_cost
     FROM milestone_assignments a
     JOIN milestones m ON m.id = a.milestone_id
     JOIN users u ON u.id = a.user_id
@@ -232,3 +234,13 @@ def my_work(conn: psycopg.Connection[Any], user_id: uuid.UUID, today: dt.date) -
         """,
         {"uid": user_id, "today": today},
     ).fetchall()
+
+
+def reprice_future(conn: psycopg.Connection[Any], user_id: uuid.UUID, hourly_rate: float, today: dt.date) -> None:
+    """Apply a changed hourly rate to this person's work that has not started (the trigger recomputes the cost).
+
+    Work that has started keeps the rate it was planned at, so a raise never reprices the past."""
+    conn.execute(
+        "UPDATE milestone_assignments SET hourly_rate = %s WHERE user_id = %s AND archived_at IS NULL AND start_date > %s",
+        (hourly_rate, user_id, today),
+    )

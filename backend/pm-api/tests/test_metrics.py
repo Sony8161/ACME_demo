@@ -13,7 +13,7 @@ D = dt.date
 def row(**over: Any) -> dict[str, Any]:
     base: dict[str, Any] = {
         "status": "active", "start_date": D(2026, 1, 1), "end_date": D(2026, 4, 10),  # 100 days
-        "allocated_hours": 1000, "budget_amount": 100000, "hours_worked": 0, "labor_cost": 0, "forecast_cost": 0, "other_cost": 0,
+        "allocated_hours": 1000, "budget_amount": 100000, "hours_worked": 0, "labor_cost": 0, "forecast_cost": 0, "expected_hours": 0, "other_cost": 0,
         "milestones_total": 0, "milestones_done": 0, "milestones_overdue": 0, "team_size": 0,
     }
     base.update(over)

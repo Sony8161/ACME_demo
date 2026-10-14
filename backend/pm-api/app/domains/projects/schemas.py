@@ -54,6 +54,7 @@ class ProjectSummary(BaseModel):
     schedule_pct: float = Field(description="Share of the calendar that has passed")
     hours_worked: float = Field(description="Working days so far x 8 x people on milestones")
     hours_remaining: float
+    expected_hours: float = Field(description="Hours the assigned people will work in total (precalculated)")
     hours_pct: float | None
     milestones_total: int
     milestones_done: int

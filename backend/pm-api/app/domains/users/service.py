@@ -178,6 +178,9 @@ def update_user(conn: psycopg.Connection[Any], actor: CurrentUser, user_id: uuid
     row = users_repo.update(conn, user_id, fields)
     if row is None:  # pragma: no cover - loaded a moment ago
         raise NotFoundError("User not found")
+    if "salary" in fields and float(fields["salary"]) != float(target["salary"]):
+        # A raise applies to work that has not started; work already planned or done keeps its rate.
+        assignments_repo.reprice_future(conn, user_id, float(fields["salary"]), dates.today())
     return present(row, actor)
 
 

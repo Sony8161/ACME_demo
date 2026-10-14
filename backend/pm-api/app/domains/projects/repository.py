@@ -24,6 +24,7 @@ PROJECT_ROWS = sql.SQL(
            COALESCE(t.hours, 0)         AS hours_worked,
            COALESCE(t.labor, 0)         AS labor_cost,
            COALESCE(t.forecast, 0)      AS forecast_cost,
+           COALESCE(t.expected_hours, 0) AS expected_hours,
            COALESCE(c.total, 0)         AS other_cost,
            COALESCE(ms.total, 0)        AS milestones_total,
            COALESCE(ms.done, 0)         AS milestones_done,
@@ -33,14 +34,14 @@ PROJECT_ROWS = sql.SQL(
     JOIN users mu ON mu.id = p.manager_id
     LEFT JOIN LATERAL (
         -- Every Monday-Friday of an assignment is an 8-hour shift; worked time counts up to today,
-        -- the forecast counts the whole planned range.
+        -- the forecast and expected hours are the precalculated totals of the whole planned range.
         SELECT sum(working_days(a.start_date, LEAST(a.end_date, %(today)s))) * 8                      AS hours,
-               sum(working_days(a.start_date, LEAST(a.end_date, %(today)s)) * 8 * u.salary)            AS labor,
-               sum(working_days(a.start_date, a.end_date) * 8 * u.salary)                              AS forecast,
+               sum(working_days(a.start_date, LEAST(a.end_date, %(today)s)) * 8 * a.hourly_rate)       AS labor,
+               sum(a.expected_cost)                                                                    AS forecast,
+               sum(a.expected_hours)                                                                   AS expected_hours,
                count(DISTINCT a.user_id)                                                               AS people
         FROM milestone_assignments a
         JOIN milestones m ON m.id = a.milestone_id
-        JOIN users u ON u.id = a.user_id
         WHERE m.project_id = p.id AND a.archived_at IS NULL
     ) t ON true
     LEFT JOIN LATERAL (

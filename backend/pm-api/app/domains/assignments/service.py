@@ -44,6 +44,9 @@ def _out(row: dict[str, Any], *, include_costs: bool) -> AssigneeOut:
         days_worked=int(row["days_worked"]),
         hours_worked=float(row["hours_worked"]),
         labor_cost=round(float(row["labor_cost"]), 2) if include_costs else None,
+        expected_hours=float(row["expected_hours"]),
+        expected_cost=round(float(row["expected_cost"]), 2) if include_costs else None,
+        hourly_rate=float(row["hourly_rate"]) if include_costs else None,
         archived_at=row["archived_at"],
     )
 
@@ -56,6 +59,8 @@ def _to_list(rows: list[dict[str, Any]], actor: CurrentUser) -> AssigneeList:
         total=len(items),
         hours_worked=round(sum(i.hours_worked for i in items), 2),
         labor_cost=round(sum(i.labor_cost or 0 for i in items), 2) if include_costs else None,
+        expected_hours=round(sum(i.expected_hours for i in items), 2),
+        expected_cost=round(sum(i.expected_cost or 0 for i in items), 2) if include_costs else None,
     )
 
 
