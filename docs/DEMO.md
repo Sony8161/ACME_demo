@@ -135,6 +135,14 @@ costs, and whether it is late."**
    green on track, amber at risk, red overdue, grey signed off. The vertical line is today, and the filled part of a bar is the work done."
 2. Open **Data Platform Migration**, then its **Timeline** tab: the milestones as bars, each task a diamond on its due date. Switch **Show tasks** off and on.
 
+### Act 9. Dependencies (maria1, then admin1, 1.5 min)
+
+1. As `maria1`, open **Website Redesign**. **Launch** carries a **Waiting for 1** tag, and its **Dependencies** section says it waits for **Build**.
+   Click **Mark as started** on Launch. **Say:** "A milestone can wait for another, in this project or another one you manage. The server refuses and names what it is waiting for."
+2. Complete **Build** (Act 3). **Say:** "The moment Build is signed off, Launch is free: the tag is gone."
+3. As `admin1`, open **Customer Portal** and its **Dependencies** tab: the project waits for **Website Redesign**, so it cannot be completed until then.
+   Try **Add dependency**: it lists only what makes sense, never the item itself and never what is already linked. Loops are refused, and every link is in the **History**.
+
 ### Close (30 seconds)
 
 "The API behind this passes 198 tests and a 161-request Postman run with no failures, both locally and on LocalStack.

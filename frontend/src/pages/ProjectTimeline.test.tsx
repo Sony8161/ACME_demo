@@ -7,11 +7,11 @@ import { ProjectTimeline } from './ProjectTimeline'
 vi.setConfig({ testTimeout: 30_000 })
 
 const milestone = (over: Record<string, unknown> = {}) => ({
-  id: 'm1', name: 'Design', start_date: '2026-09-01', due_date: '2026-10-31', status: 'in_progress', is_overdue: false, tasks_total: 2, tasks_done: 1, ...over,
+  id: 'm1', name: 'Design', start_date: '2026-09-01', due_date: '2026-10-31', status: 'in_progress', is_overdue: false, tasks_total: 2, tasks_done: 1, blocked_by_count: 0, ...over,
 })
 const timeline = (milestones: unknown[]) => ({
   as_of: '2026-10-14',
-  projects: [{ id: 'p1', name: 'Website', manager_name: 'Maria', status: 'active', start_date: '2026-08-15', end_date: '2026-12-31', risk_level: 'at_risk', milestones }],
+  projects: [{ id: 'p1', name: 'Website', manager_name: 'Maria', status: 'active', start_date: '2026-08-15', end_date: '2026-12-31', risk_level: 'at_risk', blocked_by_count: 0, milestones }],
 })
 const task = (over: Record<string, unknown> = {}) => ({
   id: 't1', milestone_id: 'm1', name: 'Wireframes', description: '', done: false, status: 'todo', priority: 'medium', due_date: '2026-10-20',
@@ -38,6 +38,13 @@ describe('ProjectTimeline', () => {
     expect(screen.getByText('no due date · Done')).toBeInTheDocument()
     expect(screen.getByText('Task Late one, due Oct 20, 2026, To do')).toBeInTheDocument()
     expect(screen.getByText(/A diamond is a task/)).toBeInTheDocument()
+  })
+
+  it('says what a milestone is waiting for, in words and for a screen reader', async () => {
+    mockRoutes({ 'GET /reports/timeline': timeline([milestone({ blocked_by_count: 2 })]), 'GET /projects/:id/tasks': { items: [], total: 0 } })
+    page()
+    expect(await screen.findByText('Sep 1, 2026 to Oct 31, 2026 · waiting for 2')).toBeInTheDocument()
+    expect(screen.getByText(/waiting for 2 milestone\(s\)/)).toBeInTheDocument()
   })
 
   it('hides the tasks when asked', async () => {

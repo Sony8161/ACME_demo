@@ -1,6 +1,6 @@
 # Postman collection: ACME Project Tracker API
 
-A complete, self-checking test flow for the API: **176 requests, 721 assertions**, with the expected JSON
+A complete, self-checking test flow for the API: **196 requests, 808 assertions**, with the expected JSON
 response saved as an example on every request.
 
 | File | What it is |
@@ -46,6 +46,7 @@ response saved as an example on every request.
 | 05 Deliverables | the checklist a manager ticks off; completing is refused while items are open |
 | 06 Team | several people per milestone, one milestone per person per day (overlap is refused), archived rows are admin-only |
 | 06b Tasks | a deliverable as a task: owner, priority, due date, status; the board and my tasks; an owner starts or pauses, only a manager finishes |
+| 06c Dependencies | a milestone or project that waits for another: blocked from starting or completing, loops refused, who may link what, what a manager cannot see is named generically |
 | 07 Costs | non-labor costs, the budget maths, archiving instead of deleting |
 | 08 Reports | overview, allocation, personal dashboard and the timeline |
 | 09 Completion and archive | complete a milestone after review (it moves to the admin-only archive), cancel one, complete/archive/restore a project, no DELETE exists |

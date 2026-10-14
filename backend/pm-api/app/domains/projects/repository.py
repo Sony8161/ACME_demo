@@ -29,7 +29,10 @@ PROJECT_ROWS = sql.SQL(
            COALESCE(ms.total, 0)        AS milestones_total,
            COALESCE(ms.done, 0)         AS milestones_done,
            COALESCE(ms.overdue, 0)      AS milestones_overdue,
-           COALESCE(t.people, 0)        AS team_size
+           COALESCE(t.people, 0)        AS team_size,
+           (SELECT count(*) FROM project_dependencies pd JOIN projects pp ON pp.id = pd.predecessor_id
+             WHERE pd.successor_id = p.id AND pd.archived_at IS NULL AND pp.status <> 'completed'
+               AND pp.archived_at IS NULL) AS blocked_by_count
     FROM projects p
     JOIN users mu ON mu.id = p.manager_id
     LEFT JOIN LATERAL (

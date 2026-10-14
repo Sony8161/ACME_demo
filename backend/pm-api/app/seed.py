@@ -13,6 +13,7 @@ from app.core import dates, security
 from app.db import MIGRATION_LOCK_ID
 from app.domains.assignments import repository as assignments_repo
 from app.domains.deliverables import repository as deliverables_repo
+from app.domains.dependencies import repository as dependencies_repo
 from app.domains.milestones import repository as milestones_repo
 from app.domains.projects import repository as projects_repo
 from app.domains.users import repository as users_repo
@@ -92,7 +93,7 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
     def make_milestone(
         project_id: Any, manager: dict[str, Any], name: str, start: dt.date, due: dt.date, hours: float, budget: float,
         people: list[dict[str, Any]], deliverables: list[tuple[Any, ...]], *, status: str = "pending", complete: bool = False,
-    ) -> None:
+    ) -> Any:
         mid = milestones_repo.insert(
             conn, project_id=project_id, name=name, description="", start_date=start, due_date=due,
             allocated_hours=hours, budget_amount=budget,
@@ -117,6 +118,10 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
                 deliverables_repo.set_status(conn, did, status=task["status"], user_id=manager["id"])
         if complete:
             milestones_repo.complete(conn, mid, reviewer_id=manager["id"], note="Reviewed and signed off")
+        return mid
+
+    def link(kind: str, earlier: Any, later: Any) -> None:
+        dependencies_repo.insert(conn, kind, earlier, later, admin_id)  # type: ignore[arg-type]
 
     def add_cost(project_id: Any, category: str, description: str, amount: float, when: dt.date) -> None:
         conn.execute(
@@ -129,11 +134,11 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
     p1 = make_project("Website Redesign", maria, today - d(days=60), today + d(days=30), 1200, 60000)
     make_milestone(p1, maria, "Design sign-off", today - d(days=60), today - d(days=20), 200, 8000, [priya],
                    [("Wireframes", True), ("Style guide", True)], complete=True)
-    make_milestone(p1, maria, "Build", today - d(days=19), today + d(days=10), 700, 30000, [alex],
+    build = make_milestone(p1, maria, "Build", today - d(days=19), today + d(days=10), 700, 30000, [alex],
                    [("Login page", True, {"priority": "high", "owner": alex, "due": -5}),
                     ("Dashboard", False, {"priority": "high", "owner": alex, "due": 3, "status": "in_progress"})],
                    status="in_progress")
-    make_milestone(p1, maria, "Launch", today + d(days=11), today + d(days=30), 200, 9000, [],
+    launch = make_milestone(p1, maria, "Launch", today + d(days=11), today + d(days=30), 200, 9000, [],
                    [("Press kit", False, {"priority": "medium", "due": 25}),
                     ("Launch announcement", False, {"priority": "high", "due": 28})])
     add_cost(p1, "license", "Design tool licences", 3000, today - d(days=40))
@@ -141,17 +146,17 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
 
     # Overdue: the end date has passed and both milestones are late.
     p2 = make_project("Mobile App Launch", james, today - d(days=50), today - d(days=3), 400, 40000)
-    make_milestone(p2, james, "Beta release", today - d(days=50), today - d(days=20), 150, 15000, [tom],
+    beta = make_milestone(p2, james, "Beta release", today - d(days=50), today - d(days=20), 150, 15000, [tom],
                    [("Beta build", False, {"priority": "urgent", "owner": tom, "due": -25, "status": "in_progress"})])
-    make_milestone(p2, james, "Store submission", today - d(days=19), today - d(days=3), 150, 15000, [lena],
+    store = make_milestone(p2, james, "Store submission", today - d(days=19), today - d(days=3), 150, 15000, [lena],
                    [("Store listing", False, {"priority": "high", "owner": lena, "due": -5})])
     add_cost(p2, "vendor", "App store consultancy", 4000, today - d(days=15))
 
     # At risk: spending runs far ahead of the calendar and the planned staffing exceeds the budget.
     p3 = make_project("Data Platform Migration", james, today - d(days=30), today + d(days=60), 900, 30000)
-    make_milestone(p3, james, "Inventory", today - d(days=30), today - d(days=10), 100, 4000, [omar],
+    inventory = make_milestone(p3, james, "Inventory", today - d(days=30), today - d(days=10), 100, 4000, [omar],
                    [("System inventory", True)], complete=True)
-    make_milestone(p3, james, "Cut-over", today - d(days=9), today + d(days=60), 600, 20000, [omar],
+    cutover = make_milestone(p3, james, "Cut-over", today - d(days=9), today + d(days=60), 600, 20000, [omar],
                    [("Data copied", False, {"priority": "high", "owner": omar, "due": 10, "status": "in_progress"}),
                     ("Cut-over plan", False, {"priority": "urgent", "owner": omar, "due": 5})], status="in_progress")
     add_cost(p3, "license", "Warehouse licences", 12000, today - d(days=20))
@@ -162,5 +167,12 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
         p4, maria, "Discovery", today + d(days=14), today + d(days=40), 200, 10000, [sofia],
         [("Interview notes", False, {"priority": "medium", "owner": sofia, "due": 20})],
     )
+
+    # Dependencies: Launch waits for Build; the store submission waits for the beta; the cut-over waited for the inventory (done);
+    # the customer portal waits for the website redesign.
+    link("milestone", build, launch)
+    link("milestone", beta, store)
+    link("milestone", inventory, cutover)
+    link("project", p1, p4)
 
     return {"created": True, "message": "Demo data created", "accounts": accounts}

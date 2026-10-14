@@ -11,6 +11,7 @@ import type { AssigneeList, DeliverableList, Milestone, Project, UserList } from
 import { errorText, useApi } from '../api/useApi'
 import { dateRange, hours, money } from '../format'
 import { DateField } from './fields'
+import { DependencyPanel } from './DependencyPanel'
 import { FormDialog } from './FormDialog'
 
 interface Props {
@@ -64,6 +65,7 @@ export function MilestoneCard({ project, milestone: m, canManage, onChanged }: P
           <Typography variant="body2" color="text.secondary">{dateRange(m.startDate, m.dueDate)}</Typography>
         </Box>
         <Stack direction="row" spacing={1}>
+          {m.blockedByCount > 0 && <Chip size="small" color="warning" label={`Waiting for ${m.blockedByCount}`} />}
           {m.isOverdue && <Chip size="small" color="error" label="Past due" />}
           <Chip size="small" variant="outlined" label={m.archivedAt ? (m.status === 'completed' ? 'Completed, archived' : 'Cancelled, archived') : STATUS_LABEL[m.status]} />
         </Stack>
@@ -134,7 +136,11 @@ export function MilestoneCard({ project, milestone: m, canManage, onChanged }: P
         )}
       </Box>
 
-      <Box sx={{ px: 2, pt: 2, pb: 2 }}>
+      <Box sx={{ px: 2, pt: 2, pb: 1, borderTop: 1, borderColor: 'divider', mt: 2 }}>
+        <DependencyPanel path={`${base}/dependencies`} kind="milestone" selfId={m.id} canManage={open} onChanged={onChanged} />
+      </Box>
+
+      <Box sx={{ px: 2, pt: 1, pb: 2 }}>
         <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
           <Typography variant="overline" component="h3">Team</Typography>
           {open && <Button size="small" variant="outlined" startIcon={<AddPersonIcon />} onClick={() => setDialog('assign')}>Assign a person</Button>}

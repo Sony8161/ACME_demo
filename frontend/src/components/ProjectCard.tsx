@@ -1,4 +1,4 @@
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Box, Chip, Paper, Stack, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
 import type { Project } from '../api/types'
 import { dateRange, money, percent } from '../format'
@@ -23,7 +23,10 @@ export function ProjectCard({ project }: { project: Project }) {
             {project.manager.name} · {dateRange(project.startDate, project.endDate)}
           </Typography>
         </Box>
-        <RiskChip level={s.riskLevel} />
+        <Stack direction="row" spacing={1}>
+          {project.blockedByCount > 0 && <Chip size="small" color="warning" label={`Waiting for ${project.blockedByCount}`} />}
+          <RiskChip level={s.riskLevel} />
+        </Stack>
       </Stack>
 
       <Box sx={{ my: 2 }}>

@@ -7,10 +7,10 @@ import { TimelinePage } from './TimelinePage'
 vi.setConfig({ testTimeout: 30_000 })
 
 const ms = (over: Record<string, unknown> = {}) => ({
-  id: 'm1', name: 'Design', start_date: '2026-09-01', due_date: '2026-10-31', status: 'in_progress', is_overdue: false, tasks_total: 2, tasks_done: 1, ...over,
+  id: 'm1', name: 'Design', start_date: '2026-09-01', due_date: '2026-10-31', status: 'in_progress', is_overdue: false, tasks_total: 2, tasks_done: 1, blocked_by_count: 0, ...over,
 })
 const project = (id: string, name: string, risk: string, milestones: unknown[]) => ({
-  id, name, manager_name: 'Maria Lopez', status: 'active', start_date: '2026-08-15', end_date: '2026-12-31', risk_level: risk, milestones,
+  id, name, manager_name: 'Maria Lopez', status: 'active', start_date: '2026-08-15', end_date: '2026-12-31', risk_level: risk, blocked_by_count: 0, milestones,
 })
 const page = () => renderPage(<TimelinePage />, '/timeline', '/timeline')
 
@@ -27,6 +27,13 @@ describe('TimelinePage', () => {
     expect(screen.getByRole('link', { name: 'Portal' })).toHaveAttribute('href', '/projects/p2')
     expect(screen.getAllByText('Maria Lopez · Aug 15, 2026 to Dec 31, 2026')).toHaveLength(2)
     expect(screen.getByText('Milestone Discovery of Portal, Sep 1, 2026 to Oct 31, 2026, late')).toBeInTheDocument()
+  })
+
+  it('says what a project or milestone is waiting for', async () => {
+    mockRoutes({ 'GET /reports/timeline': { as_of: '2026-10-14', projects: [{ ...project('p1', 'Website', 'on_track', [ms({ blocked_by_count: 1 })]), blocked_by_count: 2 }] } })
+    page()
+    expect(await screen.findByText('Maria Lopez · Aug 15, 2026 to Dec 31, 2026 · waiting for 2')).toBeInTheDocument()
+    expect(screen.getByText('Sep 1, 2026 to Oct 31, 2026 · waiting for 1')).toBeInTheDocument()
   })
 
   it('can hide the milestones', async () => {

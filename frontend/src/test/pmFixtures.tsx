@@ -46,7 +46,7 @@ export function project(overrides: Record<string, unknown> = {}, summaryOverride
   return {
     id: 'p1', name: 'Website redesign', description: 'New public site', manager: { id: 'manager-1', name: 'Mia Manager' },
     status: 'active', start_date: '2026-09-01', end_date: '2026-12-31', allocated_hours: 500, budget_amount: 50000,
-    completed_at: null, archived_at: null, summary: summary(summaryOverrides), ...overrides,
+    completed_at: null, archived_at: null, blocked_by_count: 0, summary: summary(summaryOverrides), ...overrides,
   }
 }
 
@@ -60,7 +60,7 @@ export function employeeProject(overrides: Record<string, unknown> = {}) {
 export function milestone(overrides: Record<string, unknown> = {}) {
   return {
     id: 'm1', project_id: 'p1', name: 'Design', description: 'Wireframes and mockups', start_date: '2026-09-01', due_date: '2026-10-31',
-    status: 'in_progress', is_overdue: false, allocated_hours: 100, hours_worked: 40, budget_amount: 8000, labor_cost: 3200, expected_hours: 80, expected_cost: 6400, budget_pct: 40,
+    status: 'in_progress', is_overdue: false, blocked_by_count: 0, allocated_hours: 100, hours_worked: 40, budget_amount: 8000, labor_cost: 3200, expected_hours: 80, expected_cost: 6400, budget_pct: 40,
     assignees: 1, deliverables_total: 2, deliverables_done: 1, completed_at: null, review_note: '', archived_at: null, ...overrides,
   }
 }

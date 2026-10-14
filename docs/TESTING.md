@@ -7,13 +7,13 @@ The structure follows the Testing Expectations in [full-stack.md](./full-stack.m
 
 | Layer | What | Command | Result |
 |---|---|---|---|
-| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **219 tests pass**, 97.5% coverage (gate 80%) |
+| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **236 tests pass**, 97.6% coverage (gate 80%) |
 | Backend lint and security | `ruff` and `bandit` (same scan as CI) | `./bin/test-backend.sh` | clean |
-| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **315 tests pass**, 98.8% statements, 96.3% branches (gate 80%) |
+| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **336 tests pass**, 98.7% statements, 96.4% branches (gate 80%) |
 | Frontend static checks | ESLint, TypeScript, production build, `npm audit` | `npm run lint && npm run typecheck && npm run build && npm audit` | clean, 0 vulnerabilities |
-| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **34 of 34 checks pass** (23 journey, 11 axe scans) |
-| API contract, every endpoint | 176 requests with 721 assertions (Postman/Newman); all 47 operations of the API | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | **0 failures** locally and on LocalStack; saved as `docs/postman/results/postman-results-localstack.json` |
-| Demo pictures | 42 pictures, one folder per MVP item (and the history, tasks and timeline extras) | `cd frontend && npm run screenshots` | Retaken from the running demo; indexed in `docs/demo-screenshots/README.md` and `docs/MVP.md` |
+| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **38 of 38 checks pass** (26 journey, 12 axe scans) |
+| API contract, every endpoint | 196 requests with 808 assertions (Postman/Newman); all 53 operations of the API | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | **0 failures** locally and on LocalStack; saved as `docs/postman/results/postman-results-localstack.json` |
+| Demo pictures | 44 pictures, one folder per MVP item (and the history, tasks, timeline and dependencies extras) | `cd frontend && npm run screenshots` | Retaken from the running demo; indexed in `docs/demo-screenshots/README.md` and `docs/MVP.md` |
 | Performance | Artillery load test | `npx artillery run docs/load/artillery.yml` | see Load test below |
 
 ## Backend
@@ -55,7 +55,7 @@ npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/
 the time it took; and for each operation which requests exercised it. The raw Newman export is never committed because it holds tokens and
 one-time passwords; the saved file holds none.
 
-Result on 2026-10-14, LocalStack: **176 requests, 721 assertions, 0 failed, 47 of 47 operations exercised** (this run was against the API under uvicorn, saved as `postman-results-local.json`; the LocalStack run was not repeated for this branch). The one thing the collection does
+Result on 2026-10-14, LocalStack: **196 requests, 808 assertions, 0 failed, 53 of 53 operations exercised** (this run was against the API under uvicorn, saved as `postman-results-local.json`; the LocalStack run was not repeated for this branch). The one thing the collection does
 not do is exceed the 600-requests-a-minute limit (that needs hundreds of requests); `test_ratelimit.py` covers it.
 
 ## Frontend
@@ -67,7 +67,7 @@ npm run test:coverage       # with the 80% gate (statements, branches, functions
 npm run lint && npm run typecheck && npm run build
 ```
 
-315 tests in 37 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
+336 tests in 38 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
 mocked at the axios adapter (`src/test/mockApi.ts`), so tests exercise the real client code: key conversion, error mapping, the
 401 handler. Covered: every page, the dialogs (busy, error and success states), role differences (employees see no money, no manager
 buttons), route guards and redirects, the sliding session refresh, and the forced password change.
@@ -82,11 +82,11 @@ cd frontend && npm run e2e                       # SHOTS=/some/dir saves a scree
 ./bin/demo-ready.sh                              # the test completes a milestone and archives a project, so reset
 ```
 
-34 checks drive a real browser through: sign-in, the dashboard ranking, an employee with no money visible, a manager seeing only
+38 checks drive a real browser through: sign-in, the dashboard ranking, an employee with no money visible, a manager seeing only
 their own projects, a refused double booking, a refused then accepted milestone sign-off, the forced first-login password change,
 an admin seeing the archived milestone, archive then restore, and the history page crediting each of those to the right person
-(with its filter and the project's own History tab), and the task board: a real drag of a card to In progress, the list view, an employee pausing and starting their own task, and the timeline (every project on one calendar, then one project with its tasks as diamonds). Eleven pages are scanned with axe-core (sign-in, dashboard,
-project detail, my work, a manager's project page, people, history, the task board, my tasks, the timeline and a project's timeline tab); the test fails on any serious or critical issue. The first run found
+(with its filter and the project's own History tab), and the task board: a real drag of a card to In progress, the list view, an employee pausing and starting their own task, the timeline (every project on one calendar, then one project with its tasks as diamonds), and dependencies (a milestone that waits for another cannot be started and the refusal names it; finishing the first frees the second; a project that waits for another says so). Twelve pages are scanned with axe-core (sign-in, dashboard,
+project detail, my work, a manager's project page, people, history, the task board, my tasks, the timeline, a project's timeline tab and a project's dependencies tab); the test fails on any serious or critical issue. The first run found
 one (a tooltip put an `aria-label` on a plain element); it is fixed and now guarded.
 
 ## Load test

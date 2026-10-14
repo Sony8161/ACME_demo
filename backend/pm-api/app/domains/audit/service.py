@@ -15,7 +15,10 @@ from app.domains.projects import service as projects_service
 
 # Fields holding a person's id: shown as the person's name.
 _PERSON_FIELDS = frozenset({"manager_id", "assignee_id"})
-_NOUN = {"person": "person", "project": "project", "milestone": "milestone", "deliverable": "deliverable", "cost": "cost"}
+_NOUN = {
+    "person": "person", "project": "project", "milestone": "milestone", "deliverable": "deliverable", "cost": "cost",
+    "dependency": "dependency",
+}
 
 
 def _field_label(field: str) -> str:
@@ -39,6 +42,8 @@ def summarise(row: dict[str, Any]) -> str:
             return f"Added {noun} ({role})"
         return f"{'Created' if entity == 'project' else 'Added'} {noun}"
     if action == "archive":
+        if entity == "dependency":
+            return f"Removed {noun}"
         return f"Signed off {noun}" if signed_off else f"Archived {noun}"
     if action == "restore":
         return f"Restored {noun}"

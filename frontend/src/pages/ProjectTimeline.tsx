@@ -30,8 +30,8 @@ export function ProjectTimeline({ projectId }: { projectId: string }) {
           const pct = m.tasksTotal ? (100 * m.tasksDone) / m.tasksTotal : m.status === 'completed' ? 100 : 0
           rows.push({
             key: m.id, label: m.name, indent: true, tone, start: m.startDate, end: m.dueDate, progress: m.status === 'completed' ? 100 : pct,
-            sublabel: `${dateRange(m.startDate, m.dueDate)}${m.status === 'completed' ? ' · signed off' : m.isOverdue ? ' · late' : ''}`,
-            summary: `Milestone ${m.name}, ${dateRange(m.startDate, m.dueDate)}, ${m.tasksDone} of ${m.tasksTotal} tasks done${m.isOverdue ? ', late' : ''}`,
+            sublabel: `${dateRange(m.startDate, m.dueDate)}${m.status === 'completed' ? ' · signed off' : m.isOverdue ? ' · late' : ''}${m.blockedByCount ? ` · waiting for ${m.blockedByCount}` : ''}`,
+            summary: `Milestone ${m.name}, ${dateRange(m.startDate, m.dueDate)}, ${m.tasksDone} of ${m.tasksTotal} tasks done${m.isOverdue ? ', late' : ''}${m.blockedByCount ? `, waiting for ${m.blockedByCount} milestone(s)` : ''}`,
           })
           if (showTasks) {
             for (const task of (tasks.data?.items ?? []).filter((x) => x.milestoneId === m.id)) {

@@ -4,7 +4,7 @@ FastAPI on AWS Lambda (Mangum) with PostgreSQL. Projects are built from mileston
 hours, cost and risk are calculated from dates. Nothing is ever deleted: removing means archiving, and only admins see the archive.
 
 Interactive API docs: `/docs` (Swagger) and `/openapi.json` when the API runs directly with `uvicorn`.
-A 176-request Postman collection with saved example responses is in [`docs/postman`](../../docs/postman/README.md).
+A 196-request Postman collection with saved example responses is in [`docs/postman`](../../docs/postman/README.md).
 
 ## Run it
 
@@ -41,8 +41,8 @@ app/
                    dates (UTC "today", freezable in tests), money (compare to the cent), observability (access log),
                    ratelimit (per-person and per-address request limits)
   domains/<name>/  router.py (URLs), schemas.py (validation), service.py (the rules), repository.py (SQL)
-                   auth, users, projects, milestones, deliverables, assignments, costs, reports, admin, audit, tasks
-  migrations/      001_initial.sql, 002_milestone_work.sql, 003_precalculated_cost_and_login_throttle.sql, 004_audit_log.sql, 005_tasks.sql
+                   auth, users, projects, milestones, deliverables, assignments, costs, reports, admin, audit, tasks, dependencies
+  migrations/      001_initial.sql, 002_milestone_work.sql, 003_precalculated_cost_and_login_throttle.sql, 004_audit_log.sql, 005_tasks.sql, 006_dependencies.sql
                    (plain SQL, applied once, in order, under a lock)
   seed.py          first admin and the sample company
 ```
@@ -76,6 +76,11 @@ work that failed to save. Business rules live only in `service.py`; SQL lives on
 - **Tasks.** A deliverable is a task: `status` (todo, in_progress, done), `priority`, `due_date` and an owner (`assignee_id`, who must be on the
   milestone's team). A trigger keeps `status = done` and the old `done` tick in step, so the milestone sign-off rule is unchanged. An employee may
   move their own task between To do and In progress; finishing it is a manager's review. `app/domains/tasks` only reads (the board and "my tasks").
+- **Dependencies.** A milestone can wait for another milestone (in the same project, or another project you manage; an admin may link any two) and
+  a project can wait for another project. Finish-to-start: the later one cannot be started (milestones) or completed until the earlier is completed
+  (409 `blocked`, naming what it waits for). Loops are refused (`dependency_loop`), duplicates too, a cancelled milestone no longer blocks and cannot
+  be chosen, and a link is archived, never deleted. What a person cannot see is named generically ("Another project's milestone"). `blocked_by_count`
+  is on every milestone, project and timeline row. Changes are in the history as "dependency".
 - **History (audit).** Database triggers (migration 004) write every create, edit, archive and restore of a person, project, milestone,
   deliverable, team member or cost to `audit_log`, in the same transaction as the change. The API tells the database who is acting
   with `set_config('app.actor_id', ...)` for that transaction (`core/deps.py`); work with no caller (the first admin) is "System".
@@ -97,6 +102,7 @@ work that failed to save. Business rules live only in `service.py`; SQL lives on
 | Team | `GET /projects/{id}/team`, `GET/POST .../milestones/{mid}/team`, `PATCH .../team/{uid}`, `POST .../team/{uid}/archive` |
 | Costs | `GET/POST /projects/{id}/costs`, `PATCH .../{cid}`, `POST .../{cid}/archive` |
 | Reports | `GET /reports/overview`, `GET /reports/my-dashboard`, `GET /reports/timeline` (open projects with their milestones by date; admin: all, manager: own; `project_id` narrows it) |
+| Dependencies | `GET/POST /projects/{id}/milestones/{mid}/dependencies`, `POST .../{dep}/archive`; `GET/POST /projects/{id}/dependencies`, `POST .../{dep}/archive` |
 | History | `GET /audit` (admin: filters `project_id`, `actor_id`, `entity`, `action`, `from`, `to`, paged), `GET /projects/{id}/history` (admin or the project's manager) |
 | Admin | `POST /admin/seed-demo`, `GET /health` |
 
@@ -109,7 +115,7 @@ returning `200` with the archived record rather than `DELETE` returning `204`, b
 ./bin/test-backend.sh        # from the repository root: ruff, bandit, then pytest with a coverage gate
 ```
 
-219 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.4% coverage. "Today" is frozen to Wednesday
+236 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.4% coverage. "Today" is frozen to Wednesday
 2026-03-11 so date maths is repeatable. See [`docs/TESTING.md`](../../docs/TESTING.md) for the full picture.
 
 ## Known limits

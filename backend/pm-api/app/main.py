@@ -20,6 +20,8 @@ from app.domains.audit.router import audit_router, project_history_router
 from app.domains.auth.router import router as auth_router
 from app.domains.costs.router import router as costs_router
 from app.domains.deliverables.router import router as deliverables_router
+from app.domains.dependencies.router import milestone_router as milestone_dependencies_router
+from app.domains.dependencies.router import project_router as project_dependencies_router
 from app.domains.milestones.router import router as milestones_router
 from app.domains.projects.router import router as projects_router
 from app.domains.reports.router import router as reports_router
@@ -62,7 +64,7 @@ def create_app() -> FastAPI:
     for router in (
         auth_router, users_router, projects_router, milestones_router, deliverables_router, team_router,
         costs_router, reports_router, admin_router, audit_router, project_history_router,
-        project_tasks_router, my_tasks_router,
+        project_tasks_router, my_tasks_router, milestone_dependencies_router, project_dependencies_router,
     ):
         app.include_router(router)
 

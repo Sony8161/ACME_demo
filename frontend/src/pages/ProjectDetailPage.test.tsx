@@ -29,6 +29,8 @@ function serve(p: unknown = project(), extra: Record<string, unknown> = {}) {
     'GET /projects/:id/milestones/:id/deliverables': { items: [], total: 0, done: 0, ready_to_complete: false },
     'GET /projects/:id/milestones/:id/team': { items: [], total: 0, hours_worked: 0, labor_cost: 0, expected_hours: 0, expected_cost: 0 },
     'GET /projects/:id/team': team(),
+    'GET /projects/:id/milestones/:id/dependencies': { blocked_by: [], blocks: [], is_blocked: false },
+    'GET /projects/:id/dependencies': { blocked_by: [], blocks: [], is_blocked: false },
     'GET /projects/:id/costs': costs,
     ...extra,
   })
@@ -185,7 +187,7 @@ describe('Project detail: employee', () => {
     })
     const { container } = page()
     await screen.findByRole('heading', { name: 'Website redesign' })
-    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Milestones', 'Tasks', 'Team'])
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Milestones', 'Tasks', 'Dependencies', 'Team'])
     expect(screen.queryByText('Budget', { selector: 'p' })).not.toBeInTheDocument()
     await screen.findByText('Planned')
     expect(container.textContent).not.toContain('$')
@@ -477,5 +479,40 @@ describe('Project detail: History tab', () => {
     page()
     await screen.findByRole('heading', { name: 'Website redesign' })
     expect(screen.queryByRole('tab', { name: 'History' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Project detail: dependencies', () => {
+  const waiting = {
+    blocked_by: [{ id: 'd1', kind: 'project', item_id: 'p0', name: 'Phase one', project_id: 'p0', project_name: 'Phase one', status: 'active', is_done: false, schedule_conflict: false, visible: true }],
+    blocks: [], is_blocked: true,
+  }
+
+  it('tells the manager the project is waiting, and lists what for under its Dependencies tab', async () => {
+    signIn('manager', { id: 'manager-1' })
+    serve(project({ blocked_by_count: 1 }), { 'GET /projects/:id/dependencies': waiting })
+    page()
+    expect(await screen.findByText('Waiting for 1')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('tab', { name: 'Dependencies' }))
+    expect(await screen.findByText('Phase one')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add dependency' })).toBeInTheDocument()
+  })
+
+  it('lets an employee read the dependencies but not change them', async () => {
+    signIn('employee')
+    serve(employeeProject({ blocked_by_count: 1 }), { 'GET /projects/:id/dependencies': waiting })
+    page()
+    await userEvent.click(await screen.findByRole('tab', { name: 'Dependencies' }))
+    expect(await screen.findByText('Phase one')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add dependency' })).not.toBeInTheDocument()
+  })
+
+  it('does not let another manager change a project they only look at', async () => {
+    signIn('manager', { id: 'someone-else' })
+    serve(project(), { 'GET /projects/:id/dependencies': waiting })
+    page()
+    await userEvent.click(await screen.findByRole('tab', { name: 'Dependencies' }))
+    await screen.findByText('Phase one')
+    expect(screen.queryByRole('button', { name: 'Add dependency' })).not.toBeInTheDocument()
   })
 })

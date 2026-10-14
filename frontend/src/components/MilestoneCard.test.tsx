@@ -35,6 +35,7 @@ function setup({ milestone, canManage = true, deliverables = [deliverable(), del
   const calls = mockRoutes({
     [`GET ${BASE}/deliverables`]: list(deliverables),
     [`GET ${BASE}/team`]: team(members),
+    [`GET ${BASE}/dependencies`]: { blocked_by: [], blocks: [], is_blocked: false },
     ...routes,
   })
   const onChanged = vi.fn()
@@ -423,5 +424,37 @@ describe('MilestoneCard: start, assign, complete, cancel', () => {
       await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel milestone' }))
       expect(await within(dialog).findByText('Only the project manager can cancel a milestone')).toBeInTheDocument()
     })
+  })
+})
+
+describe('MilestoneCard: dependencies', () => {
+  const waiting = { blocked_by: [{ id: 'd1', kind: 'milestone', item_id: 'm0', name: 'Research', project_id: 'p1', project_name: 'Website redesign', status: 'in_progress', is_done: false, schedule_conflict: false, visible: true }], blocks: [], is_blocked: true }
+
+  it('says in the header how many things it waits for, and lists them under Dependencies', async () => {
+    setup({ milestone: { blocked_by_count: 1 }, routes: { [`GET ${BASE}/dependencies`]: waiting } })
+    expect(screen.getByText('Waiting for 1')).toBeInTheDocument()
+    expect(await screen.findByText('Research')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Dependencies' })).toBeInTheDocument()
+  })
+
+  it('has no waiting tag when it waits for nothing', async () => {
+    setup()
+    await screen.findByText('This milestone does not wait for anything.')
+    expect(screen.queryByText(/^Waiting for \d/)).not.toBeInTheDocument()
+  })
+
+  it('shows the server sentence when starting a blocked milestone is refused', async () => {
+    setup({
+      milestone: { status: 'pending', blocked_by_count: 1 },
+      routes: { [`GET ${BASE}/dependencies`]: waiting, [`PATCH ${BASE}`]: apiError(409, 'blocked', 'This milestone cannot be started yet: it is waiting for Research (Website redesign).') },
+    })
+    await userEvent.click(await screen.findByRole('button', { name: 'Mark as started' }))
+    expect(await screen.findByText(/cannot be started yet: it is waiting for Research/)).toBeInTheDocument()
+  })
+
+  it('does not offer add or remove to someone who cannot manage it', async () => {
+    setup({ canManage: false, routes: { [`GET ${BASE}/dependencies`]: waiting } })
+    await screen.findByText('Research')
+    expect(screen.queryByRole('button', { name: 'Add dependency' })).not.toBeInTheDocument()
   })
 })

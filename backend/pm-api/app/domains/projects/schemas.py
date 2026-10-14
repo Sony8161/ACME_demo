@@ -95,6 +95,7 @@ class ProjectOut(BaseModel):
     archived_at: dt.datetime | None
     created_at: dt.datetime
     updated_at: dt.datetime
+    blocked_by_count: int = Field(description="Projects it waits for that are not completed yet")
     summary: ProjectSummary
 
 

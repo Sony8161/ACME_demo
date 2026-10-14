@@ -188,7 +188,10 @@ def timeline(conn: psycopg.Connection[Any], actor: CurrentUser, *, project_id: u
                    (SELECT count(*) FROM deliverables d
                      WHERE d.milestone_id = m.id AND d.archived_at IS NULL) AS tasks_total,
                    (SELECT count(*) FROM deliverables d
-                     WHERE d.milestone_id = m.id AND d.archived_at IS NULL AND d.done) AS tasks_done
+                     WHERE d.milestone_id = m.id AND d.archived_at IS NULL AND d.done) AS tasks_done,
+                   (SELECT count(*) FROM milestone_dependencies md JOIN milestones pm ON pm.id = md.predecessor_id
+                     WHERE md.successor_id = m.id AND md.archived_at IS NULL AND pm.status <> 'completed'
+                       AND pm.archived_at IS NULL) AS blocked_by_count
             FROM milestones m
             WHERE m.project_id = ANY(%s) AND (m.archived_at IS NULL OR m.status = 'completed')
             ORDER BY m.start_date, lower(m.name)
@@ -196,7 +199,8 @@ def timeline(conn: psycopg.Connection[Any], actor: CurrentUser, *, project_id: u
             ([p.id for p in projects],),
         ).fetchall()
         for m in found:
-            fields = {k: m[k] for k in ("id", "name", "start_date", "due_date", "status", "tasks_total", "tasks_done")}
+            keys = ("id", "name", "start_date", "due_date", "status", "tasks_total", "tasks_done", "blocked_by_count")
+            fields = {k: m[k] for k in keys}
             overdue = m["status"] != "completed" and m["due_date"] < today
             by_project[m["project_id"]].append(TimelineMilestone(**fields, is_overdue=overdue))
     return Timeline(
@@ -204,7 +208,7 @@ def timeline(conn: psycopg.Connection[Any], actor: CurrentUser, *, project_id: u
         projects=[
             TimelineProject(
                 id=p.id, name=p.name, manager_name=p.manager.name, status=p.status, start_date=p.start_date, end_date=p.end_date,
-                risk_level=p.summary.risk_level, milestones=by_project[p.id],
+                risk_level=p.summary.risk_level, blocked_by_count=p.blocked_by_count, milestones=by_project[p.id],
             )
             for p in projects
         ],

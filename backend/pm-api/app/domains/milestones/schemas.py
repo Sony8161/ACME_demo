@@ -60,6 +60,7 @@ class MilestoneOut(BaseModel):
     due_date: dt.date
     status: MilestoneStatus
     is_overdue: bool
+    blocked_by_count: int = Field(description="Milestones it waits for that are not completed yet")
     allocated_hours: float = Field(description="Planned hours")
     hours_worked: float = Field(description="Working days so far x 8 x people on it")
     budget_amount: float | None

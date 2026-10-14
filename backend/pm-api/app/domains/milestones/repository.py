@@ -26,7 +26,10 @@ _ROW = """
            COALESCE(w.people, 0) AS assignees,
            COALESCE(d.total, 0)  AS deliverables_total,
            COALESCE(d.done, 0)   AS deliverables_done,
-           (m.status <> 'completed' AND m.archived_at IS NULL AND m.due_date < %(today)s) AS is_overdue
+           (m.status <> 'completed' AND m.archived_at IS NULL AND m.due_date < %(today)s) AS is_overdue,
+           (SELECT count(*) FROM milestone_dependencies md JOIN milestones pm ON pm.id = md.predecessor_id
+             WHERE md.successor_id = m.id AND md.archived_at IS NULL AND pm.status <> 'completed'
+               AND pm.archived_at IS NULL) AS blocked_by_count
     FROM milestones m
     LEFT JOIN LATERAL (
         SELECT sum(working_days(a.start_date, LEAST(a.end_date, %(today)s))) * 8            AS hours,

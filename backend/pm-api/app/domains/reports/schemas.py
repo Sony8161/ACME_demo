@@ -110,6 +110,7 @@ class TimelineMilestone(BaseModel):
     is_overdue: bool = Field(description="Past its due date and not signed off")
     tasks_total: int
     tasks_done: int
+    blocked_by_count: int = Field(description="Milestones it waits for that are not completed yet")
 
 
 class TimelineProject(BaseModel):
@@ -122,6 +123,7 @@ class TimelineProject(BaseModel):
     start_date: dt.date
     end_date: dt.date
     risk_level: Literal["done", "on_track", "at_risk", "overdue"]
+    blocked_by_count: int = Field(description="Projects it waits for that are not completed yet")
     milestones: list[TimelineMilestone]
 
 

@@ -5,7 +5,7 @@ import { ProjectCard } from './ProjectCard'
 
 const project = (summary: Partial<Project['summary']> = {}): Project => ({
   id: 'p1', name: 'Apollo', description: '', manager: { id: 'm1', name: 'Maya Chen' }, status: 'active',
-  startDate: '2026-03-02', endDate: '2026-06-26', allocatedHours: 400, budgetAmount: 100000, completedAt: null, archivedAt: null,
+  startDate: '2026-03-02', endDate: '2026-06-26', allocatedHours: 400, budgetAmount: 100000, completedAt: null, archivedAt: null, blockedByCount: 0,
   summary: {
     daysTotal: 100, daysElapsed: 40, daysRemaining: 60, schedulePct: 40, hoursWorked: 100, hoursRemaining: 300, expectedHours: 320, hoursPct: 25,
     milestonesTotal: 5, milestonesDone: 2, milestonesOverdue: 0, milestonesPct: 40, teamSize: 4, riskLevel: 'on_track', riskReasons: [],
@@ -25,6 +25,11 @@ describe('ProjectCard', () => {
     expect(screen.getByText('2 of 5')).toBeInTheDocument()
     expect(screen.getByText('4')).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAccessibleName('Work done 40 percent, calendar elapsed 40 percent')
+  })
+
+  it('says when the project waits for another project', () => {
+    render(<MemoryRouter><ProjectCard project={{ ...project(), blockedByCount: 2 }} /></MemoryRouter>)
+    expect(screen.getByText('Waiting for 2')).toBeInTheDocument()
   })
 
   it('shows budget used and money spent to people who may see money', () => {

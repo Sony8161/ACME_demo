@@ -18,6 +18,7 @@ from app.core.errors import ConflictError, NotFoundError, ValidationError
 from app.core.money import fits
 from app.domains.assignments import repository as assignments_repo
 from app.domains.deliverables import repository as deliverables_repo
+from app.domains.dependencies import blocking
 from app.domains.milestones import repository as repo
 from app.domains.milestones.schemas import (
     MilestoneComplete,
@@ -47,6 +48,7 @@ def present(row: dict[str, Any], actor: CurrentUser) -> MilestoneOut:
         due_date=row["due_date"],
         status=row["status"],
         is_overdue=bool(row["is_overdue"]),
+        blocked_by_count=int(row["blocked_by_count"]),
         allocated_hours=float(row["allocated_hours"]),
         hours_worked=float(row["hours_worked"]),
         budget_amount=budget if money else None,
@@ -211,6 +213,8 @@ def update_milestone(
             milestone_id,
         )
 
+    if fields.get("status") == "in_progress" and current["status"] != "in_progress":
+        blocking.assert_milestone_free(conn, milestone_id, "started")
     repo.update(conn, milestone_id, fields)
     return present(load(conn, actor, project_id, milestone_id), actor)
 
@@ -225,6 +229,7 @@ def complete_milestone(
     """The manager signs off a milestone once every deliverable is ticked; it then moves to the archive."""
     projects.get_manageable(conn, actor, project_id)
     load_live(conn, actor, project_id, milestone_id)
+    blocking.assert_milestone_free(conn, milestone_id, "completed")
     if deliverables_repo.count_live(conn, milestone_id) == 0:
         raise ConflictError(
             "Add the deliverables to review before completing this milestone", code="no_deliverables"

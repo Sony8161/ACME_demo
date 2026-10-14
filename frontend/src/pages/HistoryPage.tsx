@@ -13,6 +13,7 @@ const PAGE_SIZE = 25
 const ENTITIES: { value: AuditEntity; label: string }[] = [
   { value: 'project', label: 'Projects' }, { value: 'milestone', label: 'Milestones' }, { value: 'deliverable', label: 'Deliverables' },
   { value: 'assignment', label: 'Team members' }, { value: 'cost', label: 'Costs' }, { value: 'person', label: 'People' },
+  { value: 'dependency', label: 'Dependencies' },
 ]
 const ACTIONS: { value: AuditAction; label: string }[] = [
   { value: 'create', label: 'Created' }, { value: 'update', label: 'Edited' }, { value: 'archive', label: 'Archived' }, { value: 'restore', label: 'Restored' },

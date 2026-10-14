@@ -19,6 +19,7 @@ from app.core.deps import CurrentUser
 from app.core.errors import ConflictError, ForbiddenError, NotFoundError, ValidationError
 from app.core.money import fits
 from app.domains.assignments import repository as assignments_repo
+from app.domains.dependencies import blocking
 from app.domains.milestones import repository as milestones_repo
 from app.domains.projects import repository as repo
 from app.domains.projects.metrics import build_summary
@@ -84,6 +85,7 @@ def present(row: dict[str, Any], actor: CurrentUser) -> ProjectOut:
         archived_at=row["archived_at"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
+        blocked_by_count=int(row["blocked_by_count"]),
         summary=ProjectSummary(**summary),
     )
 
@@ -214,6 +216,7 @@ def complete_project(conn: psycopg.Connection[Any], actor: CurrentUser, project_
     row = get_manageable(conn, actor, project_id)
     if row["status"] != "active":
         raise ConflictError("Only a project that has started can be completed")
+    blocking.assert_project_free(conn, project_id, "completed")
     repo.set_status(conn, project_id, "completed", completed_at=dates.now())
     assignments_repo.end_for_project(conn, project_id, dates.today())
     return _reload(conn, actor, project_id)

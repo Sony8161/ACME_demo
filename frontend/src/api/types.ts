@@ -59,6 +59,7 @@ export interface Project {
   budgetAmount: number | null
   completedAt: string | null
   archivedAt: string | null
+  blockedByCount: number
   summary: ProjectSummary
 }
 
@@ -73,6 +74,7 @@ export interface Milestone {
   dueDate: string
   status: MilestoneStatus
   isOverdue: boolean
+  blockedByCount: number
   allocatedHours: number
   hoursWorked: number
   budgetAmount: number | null
@@ -222,7 +224,7 @@ export interface DemoSeedResult {
   accounts: { name: string; role: Role; username: string; temporaryPassword: string }[]
 }
 
-export type AuditEntity = 'person' | 'project' | 'milestone' | 'deliverable' | 'assignment' | 'cost'
+export type AuditEntity = 'person' | 'project' | 'milestone' | 'deliverable' | 'assignment' | 'cost' | 'dependency'
 export type AuditAction = 'create' | 'update' | 'archive' | 'restore'
 export interface AuditChange { field: string; label: string; before: unknown; after: unknown }
 export interface AuditEntry {
@@ -250,6 +252,7 @@ export interface TimelineMilestone {
   isOverdue: boolean
   tasksTotal: number
   tasksDone: number
+  blockedByCount: number
 }
 export interface TimelineProject {
   id: string
@@ -259,6 +262,21 @@ export interface TimelineProject {
   startDate: string
   endDate: string
   riskLevel: RiskLevel
+  blockedByCount: number
   milestones: TimelineMilestone[]
 }
 export interface Timeline { asOf: string; projects: TimelineProject[] }
+
+export interface DependencyRef {
+  id: string
+  kind: 'milestone' | 'project'
+  itemId: string | null
+  name: string
+  projectId: string | null
+  projectName: string | null
+  status: string
+  isDone: boolean
+  scheduleConflict: boolean
+  visible: boolean
+}
+export interface DependencyList { blockedBy: DependencyRef[]; blocks: DependencyRef[]; isBlocked: boolean }

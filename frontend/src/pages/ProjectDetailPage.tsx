@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, Box, Button, Paper, Stack, Tab, Tabs, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Chip, Paper, Stack, Tab, Tabs, TextField, Typography } from '@mui/material'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Milestone, MilestoneList, Project } from '../api/types'
@@ -14,6 +14,7 @@ import { PulseBar, type PulseTick } from '../components/PulseBar'
 import { RiskChip, StatusChip } from '../components/RiskChip'
 import { dateRange, formatDate, hours, money, percent, todayIso } from '../format'
 import { CostsTab } from './CostsTab'
+import { DependencyPanel } from '../components/DependencyPanel'
 import { ProjectHistory } from './ProjectHistory'
 import { ProjectTimeline } from './ProjectTimeline'
 import { TasksTab } from './TasksTab'
@@ -51,7 +52,7 @@ export function ProjectDetailPage() {
         const canManage = !!user && !finished && (isAdmin || (user.role === 'manager' && p.manager.id === user.id))
         const showMoney = s.totalCost !== null
         const canSeeHistory = isAdmin || (user?.role === 'manager' && p.manager.id === user.id)
-        const tabs = ['Milestones', 'Tasks', ...(canSeeHistory ? ['Timeline'] : []), 'Team', ...(showMoney ? ['Costs'] : []), ...(canSeeHistory ? ['History'] : [])]
+        const tabs = ['Milestones', 'Tasks', ...(canSeeHistory ? ['Timeline'] : []), 'Dependencies', 'Team', ...(showMoney ? ['Costs'] : []), ...(canSeeHistory ? ['History'] : [])]
         const current = tabs[tab] ?? 'Milestones'
         const ticks: PulseTick[] = (milestones.data?.items ?? [])
           .filter((m) => m.archivedAt === null)
@@ -66,6 +67,7 @@ export function ProjectDetailPage() {
               actions={
                 <>
                   <StatusChip status={p.status} />
+                  {p.blockedByCount > 0 && <Chip size="small" color="warning" label={`Waiting for ${p.blockedByCount}`} />}
                   <RiskChip level={s.riskLevel} />
                   {canManage && p.status === 'active' && <Button variant="outlined" onClick={() => setDialog('complete')}>Mark project complete</Button>}
                   {isAdmin && p.status !== 'archived' && <Button color="error" onClick={() => setDialog('archive')}>Archive</Button>}
@@ -116,6 +118,11 @@ export function ProjectDetailPage() {
             )}
             {current === 'Tasks' && <TasksTab projectId={p.id} canManage={canManage} milestones={milestones.data?.items ?? []} onChanged={reloadAll} />}
             {current === 'Timeline' && <ProjectTimeline projectId={p.id} />}
+            {current === 'Dependencies' && (
+              <Paper sx={{ p: 2.5 }}>
+                <DependencyPanel path={`/projects/${p.id}/dependencies`} kind="project" selfId={p.id} canManage={canManage && canSeeHistory} onChanged={reloadAll} />
+              </Paper>
+            )}
             {current === 'Team' && <TeamTab projectId={p.id} />}
             {current === 'Costs' && <CostsTab project={p} canManage={canManage} onChanged={reloadAll} />}
             {current === 'History' && <ProjectHistory projectId={p.id} />}

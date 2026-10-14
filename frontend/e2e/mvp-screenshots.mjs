@@ -26,6 +26,7 @@ const MVPS = {
   10: 'extra-history-and-audit',
   11: 'extra-tasks-board',
   12: 'extra-timeline',
+  13: 'extra-dependencies',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -176,7 +177,7 @@ await page.getByRole('button', { name: 'Add milestone' }).last().click()
 await page.getByRole('heading', { name: 'Planning', exact: true }).waitFor()
 for (const item of ['Floor plan', 'Vendor shortlist', 'Move schedule']) {
   await card('Planning').getByLabel('New deliverable').fill(item)
-  await card('Planning').getByRole('button', { name: 'Add' }).click()
+  await card('Planning').getByRole('button', { name: 'Add', exact: true }).click()
   await card('Planning').getByRole('checkbox', { name: item }).waitFor() // the checklist row, not the description text
 }
 await card('Planning').getByRole('checkbox', { name: 'Floor plan' }).click()
@@ -231,6 +232,19 @@ await shot(6, '6e-why-this-project-is-overdue')
 // MVP 7: archive instead of delete
 await page.getByRole('link', { name: 'Projects', exact: true }).first().click()
 await openProject('Website Redesign')
+// Extra: dependencies. Launch waits for Build, so it cannot be started yet.
+await card('Launch').getByText('Waiting for 1').waitFor()
+await card('Launch').getByRole('button', { name: 'Mark as started' }).click()
+await card('Launch').getByText(/cannot be started yet: it is waiting for Build/).waitFor()
+await shot(13, 'm1-a-milestone-that-waits-cannot-be-started', card('Launch'))
+await card('Launch').getByRole('button', { name: 'Add dependency' }).click()
+await page.getByRole('dialog').waitFor()
+await page.getByRole('combobox', { name: /Waits for this milestone/ }).click()
+await page.getByRole('option').first().waitFor()
+await shot(13, 'm2-choose-what-it-waits-for')
+await page.keyboard.press('Escape')
+await page.keyboard.press('Escape')
+await page.waitForTimeout(300)
 await card('Build').getByRole('checkbox', { name: 'Dashboard' }).click()
 await page.waitForFunction(() => /2 of 2 done/i.test(document.body.innerText))
 await card('Build').getByRole('button', { name: 'Complete milestone' }).click()

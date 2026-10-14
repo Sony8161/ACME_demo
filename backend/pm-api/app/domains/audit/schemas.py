@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-AuditEntity = Literal["person", "project", "milestone", "deliverable", "assignment", "cost"]
+AuditEntity = Literal["person", "project", "milestone", "deliverable", "assignment", "cost", "dependency"]
 AuditAction = Literal["create", "update", "archive", "restore"]
 
 
