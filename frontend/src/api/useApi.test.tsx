@@ -80,6 +80,32 @@ describe('useApi', () => {
     expect(result.current.data).toBeNull()
   })
 
+  it('exposes the HTTP status of a failed load so a screen can skip a pointless retry', async () => {
+    const load = vi.fn().mockRejectedValue(new ApiError(403, 'forbidden', 'You may not see this project'))
+    const { result } = renderHook(() => useApi(load, []))
+    expect(result.current.status).toBeNull()
+    await waitFor(() => expect(result.current.error).toBe('You may not see this project'))
+    expect(result.current.status).toBe(403)
+  })
+
+  it('has no status when the failure was not an API answer, and none after a successful retry', async () => {
+    const load = vi.fn()
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockRejectedValueOnce(new ApiError(404, 'not_found', 'No such project'))
+      .mockResolvedValueOnce('ok')
+    const { result } = renderHook(() => useApi<string>(load, []))
+    await waitFor(() => expect(result.current.error).not.toBeNull())
+    expect(result.current.status).toBeNull()
+
+    act(() => result.current.reload())
+    await waitFor(() => expect(result.current.status).toBe(404))
+
+    act(() => result.current.reload())
+    await waitFor(() => expect(result.current.data).toBe('ok'))
+    expect(result.current.error).toBeNull()
+    expect(result.current.status).toBeNull()
+  })
+
   it('ignores the answer of a load that was replaced by a newer one', async () => {
     const slow = deferred<string>()
     const fast = deferred<string>()

@@ -46,11 +46,112 @@ describe('Projects list', () => {
     expect(await screen.findByText(subtitle)).toBeInTheDocument()
   })
 
-  it('shows an empty state when nothing matches', async () => {
+  it('says there are no projects yet, with no filters to clear and no New project button for a manager', async () => {
     signIn('manager')
     mockRoutes({ 'GET /projects': list([]) })
     renderPage(<ProjectsPage />)
+    expect(await screen.findByText('There are no projects yet.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'New project' })).not.toBeInTheDocument()
+  })
+
+  it('offers an admin a New project button in the empty state (next to the one in the header)', async () => {
+    signIn('admin')
+    mockRoutes({ 'GET /projects': list([]), 'GET /users': managers })
+    renderPage(<ProjectsPage />)
+    await screen.findByText('There are no projects yet.')
+    const buttons = screen.getAllByRole('button', { name: 'New project' })
+    expect(buttons).toHaveLength(2)
+    await userEvent.click(buttons[1])
+    expect(await screen.findByRole('dialog', { name: 'Create a project' })).toBeInTheDocument()
+  })
+
+  it('says no projects match when filters hide everything, and Clear filters resets search, status and health', async () => {
+    signIn('manager')
+    const params: Record<string, unknown>[] = []
+    mockRoutes({
+      'GET /projects': (c: InternalAxiosRequestConfig) => {
+        params.push({ ...c.params })
+        return list(c.params?.q || c.params?.status ? [] : [project({ name: 'Alpha' })])
+      },
+    })
+    renderPage(<ProjectsPage />)
+    await screen.findByText('Alpha')
+    await userEvent.type(screen.getByLabelText('Search by project or manager'), 'zzz')
     expect(await screen.findByText('No projects match.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+    expect(await screen.findByText('Alpha')).toBeInTheDocument()
+    expect(screen.getByLabelText('Search by project or manager')).toHaveValue('')
+    expect(params.at(-1)).toEqual({ page_size: 100 })
+  })
+
+  it('filters by health on the page, most urgent kinds first in the list of choices', async () => {
+    signIn('manager')
+    const params: Record<string, unknown>[] = []
+    mockRoutes({
+      'GET /projects': (c: InternalAxiosRequestConfig) => {
+        params.push({ ...c.params })
+        return list([
+          project({ id: 'a', name: 'Alpha' }, { risk_level: 'on_track' }),
+          project({ id: 'b', name: 'Beta' }, { risk_level: 'overdue' }),
+          project({ id: 'c', name: 'Gamma' }, { risk_level: 'at_risk' }),
+        ])
+      },
+    })
+    renderPage(<ProjectsPage />)
+    await screen.findByText('Alpha')
+    await userEvent.click(screen.getByRole('combobox', { name: 'Health' }))
+    expect(within(await screen.findByRole('listbox')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Any', 'Overdue', 'At risk', 'On track'])
+    await userEvent.click(screen.getByRole('option', { name: 'Overdue' }))
+    await waitFor(() => expect(screen.queryByText('Alpha')).not.toBeInTheDocument())
+    expect(screen.getByText('Beta')).toBeInTheDocument()
+    expect(screen.queryByText('Gamma')).not.toBeInTheDocument()
+    expect(params).toHaveLength(1) // health is filtered in the browser, not asked of the server
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Health' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Any' }))
+    expect(await screen.findByText('Alpha')).toBeInTheDocument()
+    expect(screen.getByText('Gamma')).toBeInTheDocument()
+  })
+
+  describe('List and Timeline views', () => {
+    const timeline = { as_of: '2026-10-14', projects: [{ id: 'p1', name: 'Website', manager_name: 'Maria Lopez', status: 'active', start_date: '2026-08-15', end_date: '2026-12-31', risk_level: 'on_track', blocked_by_count: 0, milestones: [] }] }
+
+    it.each(['admin', 'manager'] as const)('lets a %s switch to the timeline and back', async (role) => {
+      signIn(role)
+      const calls = mockRoutes({ 'GET /projects': list([project({ name: 'Alpha' })]), 'GET /reports/timeline': timeline })
+      renderPage(<ProjectsPage />)
+      await screen.findByText('Alpha')
+      expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true')
+      expect(calls).not.toContain('GET /reports/timeline')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Timeline' }))
+      expect(await screen.findByRole('list', { name: 'All projects' })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Website' })).toHaveAttribute('href', '/projects/p1')
+      expect(screen.queryByLabelText('Search by project or manager')).not.toBeInTheDocument()
+      expect(screen.queryByText('Alpha')).not.toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'List' }))
+      expect(await screen.findByText('Alpha')).toBeInTheDocument()
+      expect(screen.queryByRole('list', { name: 'All projects' })).not.toBeInTheDocument()
+    })
+
+    it('opens on the timeline from a ?view=timeline link', async () => {
+      signIn('manager')
+      mockRoutes({ 'GET /projects': list([project({ name: 'Alpha' })]), 'GET /reports/timeline': timeline })
+      renderPage(<ProjectsPage />, '/projects?view=timeline', '/projects')
+      expect(await screen.findByRole('list', { name: 'All projects' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Timeline' })).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    it('gives an employee no toggle, and ignores ?view=timeline', async () => {
+      signIn('employee')
+      const calls = mockRoutes({ 'GET /projects': list([project({ name: 'Alpha' })]) })
+      renderPage(<ProjectsPage />, '/projects?view=timeline', '/projects')
+      expect(await screen.findByText('Alpha')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Timeline' })).not.toBeInTheDocument()
+      expect(calls).not.toContain('GET /reports/timeline')
+    })
   })
 
   it('shows the error and retries', async () => {
@@ -107,15 +208,15 @@ describe('Projects list', () => {
   describe('new project', () => {
     it('is offered to admins only', async () => {
       signIn('manager')
-      mockRoutes({ 'GET /projects': list([]) })
+      mockRoutes({ 'GET /projects': list([project({ name: 'Alpha' })]) })
       renderPage(<ProjectsPage />)
-      await screen.findByText('No projects match.')
+      await screen.findByText('Alpha')
       expect(screen.queryByRole('button', { name: 'New project' })).not.toBeInTheDocument()
     })
 
     it('needs a name and a manager before it can be submitted', async () => {
       signIn('admin')
-      mockRoutes({ 'GET /projects': list([]), 'GET /users': managers })
+      mockRoutes({ 'GET /projects': list([project({ name: 'Alpha' })]), 'GET /users': managers })
       renderPage(<ProjectsPage />)
       await userEvent.click(await screen.findByRole('button', { name: 'New project' }))
       const dialog = await screen.findByRole('dialog', { name: 'Create a project' })
@@ -135,7 +236,7 @@ describe('Projects list', () => {
       const sent: unknown[] = []
       const userParams: unknown[] = []
       const calls = mockRoutes({
-        'GET /projects': () => list(created ? [project({ name: 'Brand refresh' })] : []),
+        'GET /projects': () => list(created ? [project({ name: 'Alpha' }), project({ id: 'n', name: 'Brand refresh' })] : [project({ name: 'Alpha' })]),
         'GET /users': (c: InternalAxiosRequestConfig) => { userParams.push({ ...c.params }); return managers },
         'POST /projects': (c: InternalAxiosRequestConfig) => { sent.push(body(c)); created = true; return project({ name: 'Brand refresh' }) },
       })
@@ -156,7 +257,7 @@ describe('Projects list', () => {
       await userEvent.type(within(dialog).getByLabelText(/Budget/), '40000')
       await userEvent.click(within(dialog).getByRole('button', { name: 'Create project' }))
 
-      expect(await screen.findByText('Brand refresh', { selector: 'h6' })).toBeInTheDocument()
+      expect(await screen.findByRole('link', { name: /Brand refresh/ })).toBeInTheDocument()
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
       expect(userParams).toEqual([{ role: 'manager' }])
       expect(sent).toHaveLength(1)
@@ -169,7 +270,7 @@ describe('Projects list', () => {
     it('keeps the dialog open and shows the server reason when creating fails', async () => {
       signIn('admin')
       mockRoutes({
-        'GET /projects': list([]),
+        'GET /projects': list([project({ name: 'Alpha' })]),
         'GET /users': managers,
         'POST /projects': apiError(422, 'validation_error', 'Request validation failed', [{ field: 'end_date', message: 'end date must be after the start date' }]),
       })
@@ -188,7 +289,7 @@ describe('Projects list', () => {
 
     it('shows why the manager list is empty when it cannot be loaded, and Cancel closes the dialog', async () => {
       signIn('admin')
-      mockRoutes({ 'GET /projects': list([]), 'GET /users': apiError(500, 'server_error', 'Managers unavailable') })
+      mockRoutes({ 'GET /projects': list([project({ name: 'Alpha' })]), 'GET /users': apiError(500, 'server_error', 'Managers unavailable') })
       renderPage(<ProjectsPage />)
       await userEvent.click(await screen.findByRole('button', { name: 'New project' }))
       const dialog = await screen.findByRole('dialog', { name: 'Create a project' })

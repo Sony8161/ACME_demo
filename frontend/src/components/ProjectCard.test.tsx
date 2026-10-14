@@ -16,47 +16,53 @@ const project = (summary: Partial<Project['summary']> = {}): Project => ({
 const renderCard = (p: Project) => render(<MemoryRouter><ProjectCard project={p} /></MemoryRouter>)
 
 describe('ProjectCard', () => {
-  it('shows the project at a glance and links to its page', () => {
+  it('shows the project as one row: the name is the only link, then health, one facts line and the progress bar', () => {
     renderCard(project())
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/projects/p1')
-    expect(screen.getByText('Apollo')).toBeInTheDocument()
-    expect(screen.getByText(/Maya Chen · Mar 2, 2026 to Jun 26, 2026/)).toBeInTheDocument()
+    const link = screen.getByRole('link')
+    expect(link).toHaveAttribute('href', '/projects/p1')
+    expect(link).toHaveTextContent('Apollo')
     expect(screen.getByText('On track')).toBeInTheDocument()
-    expect(screen.getByText('2 of 5')).toBeInTheDocument()
-    expect(screen.getByText('4')).toBeInTheDocument()
+    expect(screen.getByText('Maya Chen · 2 of 5 milestones · ends Jun 26, 2026 · 35% of budget used')).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAccessibleName('Work done 40 percent, calendar elapsed 40 percent')
   })
 
-  it('says when the project waits for another project', () => {
+  it('says when the project waits for other projects', () => {
     render(<MemoryRouter><ProjectCard project={{ ...project(), blockedByCount: 2 }} /></MemoryRouter>)
     expect(screen.getByText('Waiting for 2')).toBeInTheDocument()
   })
 
-  it('shows budget used and money spent to people who may see money', () => {
+  it('has no "Waiting for" chip when nothing is waited on', () => {
     renderCard(project())
-    expect(screen.getByText('Budget used')).toBeInTheDocument()
-    expect(screen.getByText('35%')).toBeInTheDocument()
-    expect(screen.getByText('Spent')).toBeInTheDocument()
-    expect(screen.getByText('$35,000')).toBeInTheDocument()
+    expect(screen.queryByText(/Waiting for/)).not.toBeInTheDocument()
   })
 
-  it('leaves out every money figure when the server sent none (employees)', () => {
+  it('leaves the budget figure out of the facts when the server sent no money (employees)', () => {
     renderCard(project({ totalCost: null, budgetPct: null, laborCost: null }))
-    expect(screen.queryByText('Budget used')).not.toBeInTheDocument()
-    expect(screen.queryByText('Spent')).not.toBeInTheDocument()
+    expect(screen.getByText('Maya Chen · 2 of 5 milestones · ends Jun 26, 2026')).toBeInTheDocument()
+    expect(screen.queryByText(/budget/)).not.toBeInTheDocument()
     expect(screen.queryByText(/\$/)).not.toBeInTheDocument()
-    expect(screen.getByText('Milestones')).toBeInTheDocument()
   })
 
-  it('lists the reasons behind the health when there are any', () => {
-    renderCard(project({ riskLevel: 'at_risk', riskReasons: ['Work is behind the calendar', '1 milestone due this week'] }))
+  it('shows only the first reason behind the health when there is one', () => {
+    renderCard(project({ riskLevel: 'at_risk', riskReasons: ['Work is behind the calendar'] }))
     expect(screen.getByText('At risk')).toBeInTheDocument()
-    expect(screen.getByText('Work is behind the calendar · 1 milestone due this week')).toBeInTheDocument()
+    expect(screen.getByText('Work is behind the calendar')).toBeInTheDocument()
+  })
+
+  it('shows the first reason and counts the rest', () => {
+    renderCard(project({ riskLevel: 'overdue', riskReasons: ['2 milestones are past due', 'Hours are running ahead', 'Over budget'] }))
+    expect(screen.getByText('2 milestones are past due (+2 more)')).toBeInTheDocument()
+    expect(screen.queryByText(/Over budget/)).not.toBeInTheDocument()
+  })
+
+  it('shows no reason line for a healthy project', () => {
+    renderCard(project())
+    expect(screen.queryByText(/more\)/)).not.toBeInTheDocument()
   })
 
   it('shows a project with no milestones as 0 of 0', () => {
     renderCard(project({ milestonesTotal: 0, milestonesDone: 0, milestonesPct: null }))
-    expect(screen.getByText('0 of 0')).toBeInTheDocument()
+    expect(screen.getByText(/0 of 0 milestones/)).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAccessibleName('Work done 0 percent, calendar elapsed 40 percent')
   })
 })

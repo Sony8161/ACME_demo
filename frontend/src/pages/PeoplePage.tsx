@@ -1,33 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
-  Button, Chip, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography,
+  Button, Chip, IconButton, Menu, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, ToggleButton,
+  ToggleButtonGroup, Tooltip, Typography,
 } from '@mui/material'
+import MoreIcon from '@mui/icons-material/MoreHoriz'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
-import type { PasswordReset, Role, User, UserCreated, UserList } from '../api/types'
+import type { Overview, PasswordReset, Role, User, UserCreated, UserList } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useAuth } from '../auth/context'
 import { Async } from '../components/Async'
+import { AvailabilityTable } from '../components/AvailabilityTable'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { EmptyState } from '../components/EmptyState'
 import { CredentialsDialog, type Credential } from '../components/CredentialsDialog'
 import { NumberField } from '../components/fields'
 import { FormDialog } from '../components/FormDialog'
 import { PageHeader } from '../components/PageHeader'
 import { money } from '../format'
+import { useDebouncedValue } from '../useDebouncedValue'
 
 export function PeoplePage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
+  const [params, setParams] = useSearchParams()
+  const view = params.get('view') === 'availability' ? 'availability' : 'people'
   const [text, setText] = useState('')
-  const [q, setQ] = useState('')
+  const q = useDebouncedValue(text.trim())
   const [creating, setCreating] = useState(false)
+  const [menu, setMenu] = useState<{ person: User; anchor: HTMLElement } | null>(null)
   const [target, setTarget] = useState<{ person: User; action: 'archive' | 'reset' } | null>(null)
   const [credentials, setCredentials] = useState<Credential[] | null>(null)
 
-  useEffect(() => {
-    const timer = setTimeout(() => setQ(text.trim()), 300)
-    return () => clearTimeout(timer)
-  }, [text])
-
   const state = useApi(() => api.get<UserList>('/users', { q }), [q])
+  const overview = useApi(view === 'availability' ? () => api.get<Overview>('/reports/overview') : null, [view])
   const managers = useApi(isAdmin ? () => api.get<UserList>('/users', { role: 'manager' }) : null, [isAdmin])
 
   return (
@@ -37,8 +43,16 @@ export function PeoplePage() {
         subtitle={isAdmin ? 'Everyone with an account. Accounts are archived, never deleted.' : 'The people you can assign to your milestones'}
         actions={isAdmin ? <Button variant="contained" onClick={() => setCreating(true)}>New person</Button> : undefined}
       />
-      <TextField size="small" label="Search by name, email or job title" value={text} onChange={(e) => setText(e.target.value)} fullWidth sx={{ mb: 3 }} />
-      <Async state={state}>
+      <ToggleButtonGroup
+        size="small" exclusive value={view} aria-label="View" sx={{ mb: 2 }}
+        onChange={(_, v: 'people' | 'availability' | null) => v && setParams(v === 'availability' ? { view: 'availability' } : {}, { replace: true })}
+      >
+        <ToggleButton value="people">People</ToggleButton>
+        <ToggleButton value="availability">Availability</ToggleButton>
+      </ToggleButtonGroup>
+      {view === 'availability' && <Async state={overview}>{(o) => <AvailabilityTable allocation={o.allocation} />}</Async>}
+      {view === 'people' && <TextField size="small" label="Search by name, email or job title" value={text} onChange={(e) => setText(e.target.value)} fullWidth sx={{ mb: 2.5 }} />}
+      {view === 'people' && <Async state={state}>
         {(list) => (
           <TableContainer component={Paper}>
             <Table size="small">
@@ -49,7 +63,7 @@ export function PeoplePage() {
                   <TableCell>Username</TableCell>
                   <TableCell>Reports to</TableCell>
                   {isAdmin && <TableCell align="right">Hourly cost</TableCell>}
-                  {isAdmin && <TableCell align="right">Actions</TableCell>}
+                  {isAdmin && <TableCell align="right"><span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>Actions</span></TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -66,18 +80,27 @@ export function PeoplePage() {
                     {isAdmin && (
                       <TableCell align="right">
                         {/* Not on your own row: a reset signs you out and shows the new password once. */}
-                        {p.id !== user?.id && <Button size="small" onClick={() => setTarget({ person: p, action: 'reset' })}>New password</Button>}
-                        {p.id !== user?.id && <Button size="small" color="error" onClick={() => setTarget({ person: p, action: 'archive' })}>Archive</Button>}
+                        {p.id !== user?.id && (
+                          <Tooltip title="More">
+                            <IconButton aria-label={`Actions for ${p.name}`} onClick={(e) => setMenu({ person: p, anchor: e.currentTarget })} sx={{ width: 44, height: 44 }}>
+                              <MoreIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       </TableCell>
                     )}
                   </TableRow>
                 ))}
-                {list.items.length === 0 && <TableRow><TableCell colSpan={6}><Typography color="text.secondary">Nobody matches.</Typography></TableCell></TableRow>}
               </TableBody>
             </Table>
+            {list.items.length === 0 && <EmptyState text="Nobody matches." action={text ? { label: 'Clear search', onClick: () => setText('') } : undefined} />}
           </TableContainer>
         )}
-      </Async>
+      </Async>}
+      <Menu anchorEl={menu?.anchor} open={menu !== null} onClose={() => setMenu(null)}>
+        <MenuItem onClick={() => { setTarget({ person: menu!.person, action: 'reset' }); setMenu(null) }}>New password</MenuItem>
+        <MenuItem sx={{ color: 'error.main' }} onClick={() => { setTarget({ person: menu!.person, action: 'archive' }); setMenu(null) }}>Archive</MenuItem>
+      </Menu>
 
       {isAdmin && (
         <NewPersonDialog
@@ -85,14 +108,14 @@ export function PeoplePage() {
           onCreated={(c) => { setCredentials([{ name: c.user.name, role: c.user.role, username: c.user.username, password: c.temporaryPassword }]); state.reload() }}
         />
       )}
-      <FormDialog
-        open={target?.action === 'archive'} title={`Archive ${target?.person.name}?`} submitLabel="Archive" danger
-        onClose={() => setTarget(null)} onSubmit={async () => { await api.post(`/users/${target!.person.id}/archive`); state.reload() }}
+      <ConfirmDialog
+        open={target?.action === 'archive'} title={`Archive ${target?.person.name}?`} confirmLabel="Archive" cancelLabel="Keep" danger
+        onClose={() => setTarget(null)} onConfirm={async () => { await api.post(`/users/${target!.person.id}/archive`); state.reload() }}
       >
         <Typography>
           They can no longer sign in, and their future work on milestones ends. Nothing is deleted: you can restore them from the Archive page.
         </Typography>
-      </FormDialog>
+      </ConfirmDialog>
       <FormDialog
         open={target?.action === 'reset'} title={`New password for ${target?.person.name}`} submitLabel="Create new password"
         onClose={() => setTarget(null)}

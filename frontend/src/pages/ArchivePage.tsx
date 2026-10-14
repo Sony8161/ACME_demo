@@ -1,91 +1,72 @@
 import { useState } from 'react'
-import { Alert, Button, Paper, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Typography } from '@mui/material'
+import { Alert, Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import { api } from '../api/client'
 import type { ProjectList, UserList } from '../api/types'
 import { errorText, useApi } from '../api/useApi'
 import { Async } from '../components/Async'
 import { PageHeader } from '../components/PageHeader'
+import { useToast } from '../components/toast'
 import { formatDate } from '../format'
 
-/** Admin-only. Nothing in the system is ever deleted: removed things wait here and can be restored. */
+interface Row { key: string; kind: 'Project' | 'Person'; name: string; detail: string; archivedAt: string; restorePath: string; reload: () => void }
+
+/** Admin-only. Nothing in the system is ever deleted: removed projects and people wait here as one list and can be restored. */
 export function ArchivePage() {
-  const [tab, setTab] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
+  const toast = useToast()
   const projects = useApi(() => api.get<ProjectList>('/projects', { include_archived: 'true', page_size: 100 }), [])
   const people = useApi(() => api.get<UserList>('/users', { include_archived: 'true' }), [])
 
-  const restore = async (path: string, reload: () => void) => {
+  const restore = async (row: Row) => {
     setMessage(null)
     try {
-      await api.post(path)
-      reload()
+      await api.post(row.restorePath)
+      row.reload()
+      toast({ message: `${row.name} restored` })
     } catch (err) {
       setMessage(errorText(err))
     }
   }
 
+  const rows: Row[] = [
+    ...(projects.data?.items ?? []).filter((p) => p.archivedAt !== null).map((p): Row => ({
+      key: `p-${p.id}`, kind: 'Project', name: p.name, detail: `Manager ${p.manager.name}`, archivedAt: p.archivedAt!, restorePath: `/projects/${p.id}/unarchive`, reload: projects.reload,
+    })),
+    ...(people.data?.items ?? []).filter((u) => u.archivedAt !== null).map((u): Row => ({
+      key: `u-${u.id}`, kind: 'Person', name: u.name, detail: `${u.role} · ${u.email}`, archivedAt: u.archivedAt!, restorePath: `/users/${u.id}/unarchive`, reload: people.reload,
+    })),
+  ].sort((a, b) => b.archivedAt.localeCompare(a.archivedAt))
+
   return (
     <>
-      <PageHeader title="Archive" subtitle="Archived records are visible to admins only. Restoring brings them back." />
-      <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tab label="Projects" />
-        <Tab label="People" />
-      </Tabs>
+      <PageHeader title="Archive" subtitle="Admins only. Nothing is deleted, and restoring brings it back." />
       {message && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setMessage(null)}>{message}</Alert>}
-
-      {tab === 0 && (
-        <Async state={projects}>
-          {(list) => {
-            const archived = list.items.filter((p) => p.archivedAt !== null)
-            return (
+      <Async state={projects}>
+        {() => (
+          <Async state={people}>
+            {() => (
               <TableContainer component={Paper}>
                 <Table size="small">
-                  <TableHead><TableRow><TableCell>Project</TableCell><TableCell>Manager</TableCell><TableCell>Archived</TableCell><TableCell align="right" /></TableRow></TableHead>
+                  <TableHead>
+                    <TableRow><TableCell>Name</TableCell><TableCell>Type</TableCell><TableCell>Archived</TableCell><TableCell align="right"><Box component="span" sx={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>Actions</Box></TableCell></TableRow>
+                  </TableHead>
                   <TableBody>
-                    {archived.map((p) => (
-                      <TableRow key={p.id}>
-                        <TableCell>{p.name}</TableCell>
-                        <TableCell>{p.manager.name}</TableCell>
-                        <TableCell>{formatDate(p.archivedAt!.slice(0, 10))}</TableCell>
-                        <TableCell align="right"><Button size="small" onClick={() => restore(`/projects/${p.id}/unarchive`, projects.reload)}>Restore</Button></TableCell>
+                    {rows.map((r) => (
+                      <TableRow key={r.key}>
+                        <TableCell>{r.name}<Typography variant="caption" color="text.secondary" sx={{ display: 'block', textTransform: 'capitalize' }}>{r.detail}</Typography></TableCell>
+                        <TableCell>{r.kind}</TableCell>
+                        <TableCell>{formatDate(r.archivedAt.slice(0, 10))}</TableCell>
+                        <TableCell align="right"><Button size="small" aria-label={`Restore ${r.name}`} onClick={() => restore(r)}>Restore</Button></TableCell>
                       </TableRow>
                     ))}
-                    {archived.length === 0 && <TableRow><TableCell colSpan={4}><Typography color="text.secondary">No archived projects.</Typography></TableCell></TableRow>}
+                    {rows.length === 0 && <TableRow><TableCell colSpan={4}><Typography color="text.secondary">Nothing is archived.</Typography></TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </TableContainer>
-            )
-          }}
-        </Async>
-      )}
-
-      {tab === 1 && (
-        <Async state={people}>
-          {(list) => {
-            const archived = list.items.filter((u) => u.archivedAt !== null)
-            return (
-              <Stack spacing={2}>
-                <TableContainer component={Paper}>
-                  <Table size="small">
-                    <TableHead><TableRow><TableCell>Person</TableCell><TableCell>Role</TableCell><TableCell>Archived</TableCell><TableCell align="right" /></TableRow></TableHead>
-                    <TableBody>
-                      {archived.map((u) => (
-                        <TableRow key={u.id}>
-                          <TableCell>{u.name}<Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{u.email}</Typography></TableCell>
-                          <TableCell sx={{ textTransform: 'capitalize' }}>{u.role}</TableCell>
-                          <TableCell>{formatDate(u.archivedAt!.slice(0, 10))}</TableCell>
-                          <TableCell align="right"><Button size="small" onClick={() => restore(`/users/${u.id}/unarchive`, people.reload)}>Restore</Button></TableCell>
-                        </TableRow>
-                      ))}
-                      {archived.length === 0 && <TableRow><TableCell colSpan={4}><Typography color="text.secondary">No archived people.</Typography></TableCell></TableRow>}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Stack>
-            )
-          }}
-        </Async>
-      )}
+            )}
+          </Async>
+        )}
+      </Async>
     </>
   )
 }

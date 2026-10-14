@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import { AuthProvider } from '../auth/AuthProvider'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
 import { PeoplePage } from './PeoplePage'
@@ -22,7 +22,16 @@ function signIn(role: 'admin' | 'manager', id = role === 'admin' ? 'a1' : 'm1') 
     user: { id, username: 'x', name: 'Me', email: 'me@x.test', jobTitle: '', role, managerId: null, mustChangePassword: false, archivedAt: null, salary: null },
   }))
 }
-const renderPage = () => render(<MemoryRouter><AuthProvider><PeoplePage /></AuthProvider></MemoryRouter>)
+function Where() {
+  const { pathname, search } = useLocation()
+  return <output aria-label="location">{pathname + search}</output>
+}
+const renderPage = (path = '/people') => render(<MemoryRouter initialEntries={[path]}><AuthProvider><PeoplePage /><Where /></AuthProvider></MemoryRouter>)
+/** Open the ⋯ menu on a person's row. */
+const openMenu = (name: string) => userEvent.click(within(rowOf(name)).getByRole('button', { name: `Actions for ${name}` }))
+const allocation = (over: Record<string, unknown>) => ({ user_id: 'u1', name: 'Ann Busy', job_title: 'Designer', manager_name: 'Mia', state: 'allocated', current_work: null, next_work: null, hours_this_week: 32, week_capacity: 40, ...over })
+const work = { project_id: 'p1', project_name: 'Website redesign', milestone_id: 'm1', milestone_name: 'Wireframes', start_date: '2026-10-01', end_date: '2026-10-30' }
+
 // A person's name also appears in other rows ("Reports to"), so look at the name cell only.
 const rowOf = (name: string) => screen.getByText(name, { selector: 'p' }).closest('tr')!
 
@@ -104,14 +113,75 @@ describe('PeoplePage as an admin', () => {
     expect(await screen.findByText('Nobody matches.', undefined, { timeout: 3000 })).toBeInTheDocument()
   })
 
-  it('has no New password or Archive button on the admin\'s own row', async () => {
+  it('keeps New password and Archive in one row menu, and gives the admin\'s own row none', async () => {
     mockRoutes({ 'GET /users': usersRoute() })
     renderPage()
     await screen.findByText('Eli Employee')
     expect(within(rowOf('Ada Admin')).queryByRole('button')).not.toBeInTheDocument()
-    expect(within(rowOf('Eli Employee')).getByRole('button', { name: 'New password' })).toBeInTheDocument()
-    expect(within(rowOf('Eli Employee')).getByRole('button', { name: 'Archive' })).toBeInTheDocument()
-    expect(within(rowOf('Maya Manager')).getAllByRole('button')).toHaveLength(2)
+    // no loose red buttons on the row: one ⋯ button each
+    expect(within(rowOf('Eli Employee')).getAllByRole('button')).toHaveLength(1)
+    expect(within(rowOf('Maya Manager')).getAllByRole('button')).toHaveLength(1)
+    expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
+    await openMenu('Eli Employee')
+    expect(await screen.findByRole('menuitem', { name: 'New password' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Archive' })).toBeInTheDocument()
+  })
+
+  it('offers to clear the search when nobody matches, and the full list comes back', async () => {
+    mockRoutes({ 'GET /users': usersRoute() })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    await userEvent.type(screen.getByLabelText('Search by name, email or job title'), 'zzz')
+    await userEvent.click(await screen.findByRole('button', { name: 'Clear search' }, { timeout: 3000 }))
+    expect(screen.getByLabelText('Search by name, email or job title')).toHaveValue('')
+    expect(await screen.findByText('Eli Employee')).toBeInTheDocument()
+  })
+
+  describe('Availability view', () => {
+    const overview = (allocationRows: unknown[]) => ({ as_of: '2026-10-13', counts: {}, totals: {}, projects: [], allocation: allocationRows, available_people: 0 })
+
+    it('toggles between People and Availability, keeping the choice in the URL', async () => {
+      const calls = mockRoutes({
+        'GET /users': usersRoute(),
+        'GET /reports/overview': overview([allocation({ current_work: work }), allocation({ user_id: 'u2', name: 'Ben Free', job_title: 'Developer', state: 'available', hours_this_week: 0 })]),
+      })
+      renderPage()
+      await screen.findByText('Eli Employee')
+      expect(calls).not.toContain('GET /reports/overview') // only fetched when asked for
+      expect(screen.getByRole('button', { name: 'People' })).toHaveAttribute('aria-pressed', 'true')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Availability' }))
+      const table = await screen.findByRole('table', { name: 'Availability' })
+      expect(screen.getByLabelText('location')).toHaveTextContent('/people?view=availability')
+      expect(within(table).getByText('Ann Busy')).toBeInTheDocument()
+      expect(within(table).getByText('Busy')).toBeInTheDocument()
+      expect(within(table).getByText('Free')).toBeInTheDocument()
+      expect(calls).toContain('GET /reports/overview')
+      // the people list and its search box are not shown in this view
+      expect(screen.queryByLabelText('Search by name, email or job title')).not.toBeInTheDocument()
+      expect(screen.queryByText('Eli Employee')).not.toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'People' }))
+      expect(await screen.findByText('Eli Employee')).toBeInTheDocument()
+      expect(screen.getByLabelText('location')).toHaveTextContent(/^\/people$/)
+    })
+
+    it('opens straight on availability from a ?view=availability link', async () => {
+      mockRoutes({ 'GET /users': usersRoute(), 'GET /reports/overview': overview([allocation({ current_work: work })]) })
+      renderPage('/people?view=availability')
+      expect(await screen.findByRole('table', { name: 'Availability' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Availability' })).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    it('shows the error with a retry when availability cannot be loaded', async () => {
+      let up = false
+      mockRoutes({ 'GET /users': usersRoute(), 'GET /reports/overview': () => (up ? overview([allocation({})]) : apiError(500, 'server_error', 'Availability is unavailable')) })
+      renderPage('/people?view=availability')
+      expect(await screen.findByRole('alert')).toHaveTextContent('Availability is unavailable')
+      up = true
+      await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+      expect(await screen.findByText('Ann Busy')).toBeInTheDocument()
+    })
   })
 
   it('shows an error with a retry when the list cannot be loaded', async () => {
@@ -239,7 +309,8 @@ describe('PeoplePage as an admin', () => {
       })
       renderPage()
       await screen.findByText('Eli Employee')
-      await userEvent.click(within(rowOf('Eli Employee')).getByRole('button', { name: 'New password' }))
+      await openMenu('Eli Employee')
+      await userEvent.click(await screen.findByRole('menuitem', { name: 'New password' }))
       const confirm = await screen.findByRole('dialog', { name: 'New password for Eli Employee' })
       expect(confirm).toHaveTextContent('every open session is signed out')
       expect(calls).not.toContain('POST /users/e1/reset-password')
@@ -255,7 +326,8 @@ describe('PeoplePage as an admin', () => {
       const calls = mockRoutes({ 'GET /users': usersRoute() })
       renderPage()
       await screen.findByText('Eli Employee')
-      await userEvent.click(within(rowOf('Eli Employee')).getByRole('button', { name: 'New password' }))
+      await openMenu('Eli Employee')
+      await userEvent.click(await screen.findByRole('menuitem', { name: 'New password' }))
       await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
       expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
@@ -268,7 +340,8 @@ describe('PeoplePage as an admin', () => {
       })
       renderPage()
       await screen.findByText('Eli Employee')
-      await userEvent.click(within(rowOf('Eli Employee')).getByRole('button', { name: 'New password' }))
+      await openMenu('Eli Employee')
+      await userEvent.click(await screen.findByRole('menuitem', { name: 'New password' }))
       const confirm = await screen.findByRole('dialog')
       await userEvent.click(within(confirm).getByRole('button', { name: 'Create new password' }))
       expect(await within(confirm).findByRole('alert')).toHaveTextContent('This account is archived')
@@ -288,14 +361,28 @@ describe('PeoplePage as an admin', () => {
       })
       renderPage()
       await screen.findByText('Eli Employee')
-      await userEvent.click(within(rowOf('Eli Employee')).getByRole('button', { name: 'Archive' }))
+      await openMenu('Eli Employee')
+      await userEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }))
       const confirm = await screen.findByRole('dialog', { name: 'Archive Eli Employee?' })
       expect(confirm).toHaveTextContent('Nothing is deleted')
+      expect(within(confirm).getByRole('button', { name: 'Keep' })).toBeInTheDocument()
       expect(calls).not.toContain('POST /users/e1/archive')
       await userEvent.click(within(confirm).getByRole('button', { name: 'Archive' }))
       await waitFor(() => expect(screen.queryByText('Eli Employee')).not.toBeInTheDocument())
       expect(calls).toContain('POST /users/e1/archive')
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    })
+
+    it('keeps the person when the admin answers Keep', async () => {
+      const calls = mockRoutes({ 'GET /users': usersRoute() })
+      renderPage()
+      await screen.findByText('Eli Employee')
+      await openMenu('Eli Employee')
+      await userEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Keep' }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+      expect(screen.getByText('Eli Employee')).toBeInTheDocument()
     })
 
     it('shows the server\'s reason and keeps the person when archiving is refused', async () => {
@@ -305,7 +392,8 @@ describe('PeoplePage as an admin', () => {
       })
       renderPage()
       await screen.findByText('Maya Manager', { selector: 'p' })
-      await userEvent.click(within(rowOf('Maya Manager')).getByRole('button', { name: 'Archive' }))
+      await openMenu('Maya Manager')
+      await userEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }))
       const confirm = await screen.findByRole('dialog', { name: 'Archive Maya Manager?' })
       await userEvent.click(within(confirm).getByRole('button', { name: 'Archive' }))
       expect(await within(confirm).findByRole('alert')).toHaveTextContent('Maya Manager still manages 1 person')
@@ -326,7 +414,7 @@ describe('PeoplePage as a manager', () => {
     expect(screen.queryByRole('columnheader', { name: 'Hourly cost' })).not.toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: 'Actions' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'New person' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Archive|New password/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Actions for|Archive|New password/ })).not.toBeInTheDocument()
     expect(screen.queryByText(/\/h$/)).not.toBeInTheDocument()
     expect(within(rowOf('Eli Employee')).getByText('Maya Manager')).toBeInTheDocument()
     // The managers list is only needed for the admin's dialog.

@@ -5,12 +5,11 @@ import { api } from '../api/client'
 import type { Task, TaskList, TaskStatus } from '../api/types'
 import { errorText, useApi } from '../api/useApi'
 import { Async } from '../components/Async'
-import { PageHeader } from '../components/PageHeader'
 import { formatDate } from '../format'
 import { PRIORITY_LABEL, STATUS_LABEL } from '../tasks'
 
-/** Everything assigned to me across projects, soonest due first. I can start or pause my tasks; a manager finishes them. */
-export function MyTasksPage() {
+/** Everything assigned to me across projects, soonest due first. I can start or pause my tasks; a manager finishes them. A section of My work. */
+export function MyTasks() {
   const state = useApi(() => api.get<TaskList>('/tasks/mine'), [])
   const [message, setMessage] = useState<string | null>(null)
 
@@ -26,7 +25,7 @@ export function MyTasksPage() {
 
   return (
     <>
-      <PageHeader title="My tasks" subtitle="What is assigned to you, soonest due first" />
+      <Typography variant="h6" component="h2" gutterBottom>My tasks</Typography>
       {message && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setMessage(null)}>{message}</Alert>}
       <Async state={state}>
         {(list) => (
@@ -53,7 +52,7 @@ export function MyTasksPage() {
                       <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                         {t.status === 'todo' && <Button size="small" variant="contained" onClick={() => move(t, 'in_progress')} aria-label={`Start ${t.name}`}>Start</Button>}
                         {t.status === 'in_progress' && <Button size="small" onClick={() => move(t, 'todo')} aria-label={`Pause ${t.name}`}>Pause</Button>}
-                        {t.status === 'done' && <Typography variant="caption" color="text.secondary">Reviewed</Typography>}
+                        {t.status === 'done' && <Typography variant="body2" color="text.secondary">Done</Typography>}
                       </Stack>
                     </TableCell>
                   </TableRow>

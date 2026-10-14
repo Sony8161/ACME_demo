@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
 import { renderPage, signIn } from '../test/pmFixtures'
-import { TimelinePage } from './TimelinePage'
+import { TimelineView } from './TimelinePage'
 
 vi.setConfig({ testTimeout: 30_000 })
 
@@ -12,12 +12,12 @@ const ms = (over: Record<string, unknown> = {}) => ({
 const project = (id: string, name: string, risk: string, milestones: unknown[]) => ({
   id, name, manager_name: 'Maria Lopez', status: 'active', start_date: '2026-08-15', end_date: '2026-12-31', risk_level: risk, blocked_by_count: 0, milestones,
 })
-const page = () => renderPage(<TimelinePage />, '/timeline', '/timeline')
+const page = () => renderPage(<TimelineView />, '/projects', '/projects')
 
 beforeEach(() => signIn('admin'))
 afterEach(() => { restoreApi(); localStorage.clear() })
 
-describe('TimelinePage', () => {
+describe('TimelineView', () => {
   it('puts every open project on one calendar, each linked, with its milestones underneath', async () => {
     mockRoutes({ 'GET /reports/timeline': { as_of: '2026-10-14', projects: [project('p1', 'Website', 'on_track', [ms()]), project('p2', 'Portal', 'overdue', [ms({ id: 'm2', name: 'Discovery', is_overdue: true })])] } })
     page()
@@ -27,6 +27,25 @@ describe('TimelinePage', () => {
     expect(screen.getByRole('link', { name: 'Portal' })).toHaveAttribute('href', '/projects/p2')
     expect(screen.getAllByText('Maria Lopez · Aug 15, 2026 to Dec 31, 2026')).toHaveLength(2)
     expect(screen.getByText('Milestone Discovery of Portal, Sep 1, 2026 to Oct 31, 2026, late')).toBeInTheDocument()
+  })
+
+  it('is only the chart: it brings no page header of its own', async () => {
+    mockRoutes({ 'GET /reports/timeline': { as_of: '2026-10-14', projects: [project('p1', 'Website', 'on_track', [ms()])] } })
+    page()
+    await screen.findByRole('list', { name: 'All projects' })
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
+  })
+
+  it('keeps the legend behind an info button that shows how to read the chart on hover', async () => {
+    mockRoutes({ 'GET /reports/timeline': { as_of: '2026-10-14', projects: [project('p1', 'Website', 'on_track', [ms()])] } })
+    page()
+    const info = await screen.findByRole('button', { name: 'How to read this chart' })
+    expect(screen.queryByText(/the vertical line is today/)).not.toBeInTheDocument()
+    await userEvent.hover(info)
+    const tip = await screen.findByRole('tooltip')
+    expect(tip).toHaveTextContent('A bar runs from start to end')
+    expect(tip).toHaveTextContent('Red means late')
+    expect(tip).not.toHaveTextContent('diamond') // projects and milestones only: tasks have the diamond
   })
 
   it('says what a project or milestone is waiting for', async () => {

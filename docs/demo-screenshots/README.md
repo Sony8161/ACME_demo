@@ -7,7 +7,7 @@ endpoints behind it and the tests that cover it). Use them as the backup walkthr
 |---|---|
 | **1. Sign in with 3 roles** | `1a` the sign-in page. `1b` a wrong password is refused. `1c` admin home. `1d` manager home: only their own projects. `1e` employee home: only their work, no money. `1f` an employee who opens an admin page is sent back to their own |
 | **2. Admin creates users and projects** | `2a` people list. `2b` new person form. `2c` generated username and one-time password. `2d` new project form with exactly one manager. `2e` the project created |
-| **3. Milestones with dates and deliverables** | `3a` add a milestone with dates, hours and budget. `3b` a milestone with its deliverable checklist. `3c` sign-off refused while a deliverable is open |
+| **3. Milestones with dates and deliverables** | `3a` add a milestone with dates, hours and budget. `3b` a milestone with its task checklist. `3c` completing is switched off, with the reason, while a task is open |
 | **4. Assign people, no double booking** | `4a` assign a person. `4b` double booking refused, naming the clash. `4c` several people on one milestone |
 | **5. Hours and cost from the calendar** | `5a` planned against expected hours and cost on a milestone. `5b` the team table: hours so far, expected hours, cost so far, expected cost and the rate it was planned at. `5c` budget: labor plus other costs |
 | **6. Risk status with reasons** | `6a` projects ranked by urgency. `6b` an overdue project. `6c` an at-risk project. `6d` why it is at risk. `6e` why it is overdue |

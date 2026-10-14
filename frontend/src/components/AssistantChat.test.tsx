@@ -8,12 +8,11 @@ import { AssistantChat } from './AssistantChat'
 vi.setConfig({ testTimeout: 30_000 })
 
 const reply = (over: Record<string, unknown> = {}) => ({ reply: 'Two things are late.', mode: 'offline', tools_used: ['attention'], notice: null, ...over })
-const status = { mode: 'offline', model: null }
+let calls: string[] = []
 
 function show(role: 'admin' | 'manager' | 'employee' = 'manager', routes: Record<string, unknown> = {}, compact = false) {
   const sent: { messages: { role: string; content: string }[] }[] = []
-  mockRoutes({
-    'GET /assistant/status': status,
+  calls = mockRoutes({
     'POST /assistant/chat': (c: InternalAxiosRequestConfig) => { sent.push(JSON.parse(c.data as string)); return reply() },
     ...routes,
   })
@@ -42,23 +41,45 @@ describe('AssistantChat', () => {
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
-  it('says which assistant is answering', async () => {
-    show('manager', { 'GET /assistant/status': { mode: 'ai', model: 'm' } })
-    await open()
-    expect(await screen.findByText('AI')).toBeInTheDocument()
+  it('is an icon-only launcher with a tooltip name, not a text button', () => {
+    show()
+    const launcher = screen.getByRole('button', { name: 'Ask the assistant' })
+    expect(launcher).toHaveTextContent('')
+    expect(launcher.querySelector('svg')).not.toBeNull()
   })
 
-  it('says it is the built-in one when there is no AI key', async () => {
+  it('opens with a short intro and no AI / Built-in label, and never asks the server which assistant it is', async () => {
     show()
     await open()
-    expect(await screen.findByText('Built-in')).toBeInTheDocument()
+    expect(screen.getByText('Ask about your projects, milestones and tasks.')).toBeInTheDocument()
+    expect(screen.queryByText('AI')).not.toBeInTheDocument()
+    expect(screen.queryByText('Built-in')).not.toBeInTheDocument()
+    expect(calls).toEqual([])
   })
 
-  it('still works when the status cannot be loaded', async () => {
-    show('manager', { 'GET /assistant/status': apiError(500, 'server_error', 'nope') })
+  it('puts the cursor in the question box when opened', async () => {
+    show()
     await open()
-    expect(screen.getByRole('textbox', { name: 'Your question' })).toBeInTheDocument()
-    expect(screen.queryByText('AI')).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Your question' })).toHaveFocus()
+  })
+
+  it('returns focus to the launcher when closed with the button', async () => {
+    show()
+    await open()
+    await userEvent.click(screen.getByRole('button', { name: 'Close the assistant' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Ask the assistant' })).toHaveFocus())
+  })
+
+  it('returns focus to the launcher when closed with Escape', async () => {
+    show()
+    await open()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Ask the assistant' })).toHaveFocus())
+  })
+
+  it('does not grab focus on first load, before it was ever opened', () => {
+    show()
+    expect(screen.getByRole('button', { name: 'Ask the assistant' })).not.toHaveFocus()
   })
 
   it('sends the question and shows the answer, and what it was built from', async () => {
@@ -157,11 +178,19 @@ describe('AssistantChat', () => {
     expect(screen.getByRole('button', { name: 'What is blocked?' })).toBeInTheDocument()
   })
 
-  it('names a lookup it does not know by its own name', async () => {
+  it('describes a lookup it does not know as "your projects", never by its internal name', async () => {
     show('manager', { 'POST /assistant/chat': reply({ tools_used: ['something_new'] }) })
     await open()
     await ask('hi')
-    expect(await screen.findByText('Looked at: something_new')).toBeInTheDocument()
+    expect(await screen.findByText('Looked at: your projects')).toBeInTheDocument()
+    expect(screen.queryByText(/something_new/)).not.toBeInTheDocument()
+  })
+
+  it('lists every lookup it made, in plain words', async () => {
+    show('manager', { 'POST /assistant/chat': reply({ tools_used: ['who_is_free', 'my_tasks', 'something_new'] }) })
+    await open()
+    await ask('hi')
+    expect(await screen.findByText('Looked at: who is free, your tasks, your projects')).toBeInTheDocument()
   })
 
   it('sits above the bottom bar on a phone', () => {

@@ -6,8 +6,9 @@ import { useApi } from '../api/useApi'
 import { useAuth } from '../auth/context'
 import { Async } from '../components/Async'
 import { PageHeader } from '../components/PageHeader'
-import { ProjectCard } from '../components/ProjectCard'
+import { EmptyState } from '../components/EmptyState'
 import { dateRange, formatDate } from '../format'
+import { MyTasks } from './MyTasksPage'
 
 export function MyWorkPage() {
   const { user } = useAuth()
@@ -36,13 +37,15 @@ export function MyWorkPage() {
                 <Typography variant="body2" color="text.secondary">Hours this week</Typography>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>{d.hoursThisWeek} of {d.weekCapacity}</Typography>
               </Stack>
-              <LinearProgress variant="determinate" value={Math.min(100, (100 * d.hoursThisWeek) / d.weekCapacity)} sx={{ height: 8, borderRadius: 4, mt: 0.5 }} aria-label="Hours this week" />
+              <LinearProgress variant="determinate" value={d.weekCapacity > 0 ? Math.min(100, (100 * d.hoursThisWeek) / d.weekCapacity) : 0} sx={{ height: 8, borderRadius: 4, mt: 0.5 }} aria-label="Hours this week" />
             </Box>
           </Paper>
 
-          <Typography variant="h6" gutterBottom>My milestones</Typography>
-          <Stack spacing={1.5} sx={{ mb: 4 }}>
-            {d.myMilestones.length === 0 && <Typography color="text.secondary">Nothing is assigned to you yet.</Typography>}
+          <Box sx={{ mb: 3 }}><MyTasks /></Box>
+
+          <Typography variant="h6" component="h2" gutterBottom>My milestones</Typography>
+          <Stack spacing={1.5}>
+            {d.myMilestones.length === 0 && <EmptyState text="Nothing is assigned to you yet." />}
             {d.myMilestones.map((m) => (
               <Paper key={m.milestoneId} sx={{ p: 2 }}>
                 <Typography sx={{ fontWeight: 600 }}>{m.milestoneName}</Typography>
@@ -50,24 +53,17 @@ export function MyWorkPage() {
                   {m.projectName} · you work on it {dateRange(m.startDate, m.endDate)}
                 </Typography>
                 <Box sx={{ mt: 1.5 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    {m.deliverablesDone} of {m.deliverablesTotal} deliverables done
+                  <Typography variant="body2" color="text.secondary">
+                    {m.deliverablesDone} of {m.deliverablesTotal} tasks done
                   </Typography>
                   <LinearProgress
-                    variant="determinate" color="success" aria-label="Deliverables done" sx={{ height: 6, borderRadius: 3 }}
+                    variant="determinate" color="success" aria-label={`Tasks done in ${m.milestoneName}`} sx={{ height: 4, my: 0.5 }}
                     value={m.deliverablesTotal ? (100 * m.deliverablesDone) / m.deliverablesTotal : 0}
                   />
                 </Box>
               </Paper>
             ))}
           </Stack>
-
-          {d.projects.length > 0 && (
-            <>
-              <Typography variant="h6" gutterBottom>My projects</Typography>
-              <Stack spacing={2}>{d.projects.map((p) => <ProjectCard key={p.id} project={p} />)}</Stack>
-            </>
-          )}
         </>
       )}
     </Async>

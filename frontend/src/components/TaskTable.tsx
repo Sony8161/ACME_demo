@@ -1,6 +1,7 @@
 import { Avatar, Box, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import type { Task, TaskStatus } from '../api/types'
 import { formatDate } from '../format'
+import { tint } from '../theme'
 import { PRIORITY_LABEL, STATUS_LABEL, initials, type Actor } from '../tasks'
 import { TaskMenu } from './TaskCard'
 
@@ -34,7 +35,7 @@ export function TaskTable({ tasks, who, onMove, onEdit }: Props) {
               <TableCell>
                 {t.assigneeName ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar variant="rounded" sx={{ width: 24, height: 24, borderRadius: '3px', fontSize: 10, fontWeight: 700, bgcolor: 'rgba(94,234,212,.5)', color: 'text.primary' }}>{initials(t.assigneeName)}</Avatar>
+                    <Avatar variant="rounded" sx={{ width: 24, height: 24, borderRadius: '3px', fontSize: 10, fontWeight: 700, bgcolor: tint.strong, color: 'text.primary' }}>{initials(t.assigneeName)}</Avatar>
                     {t.assigneeName}
                   </Box>
                 ) : 'Unassigned'}

@@ -1,6 +1,7 @@
 import { createEvent, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { Task } from '../api/types'
+import { todayIso } from '../format'
 import { TaskBoard } from './TaskBoard'
 
 const task = (over: Partial<Task> = {}): Task => ({
@@ -9,34 +10,82 @@ const task = (over: Partial<Task> = {}): Task => ({
 })
 const tasks = [
   task(),
-  task({ id: 't2', name: 'Spec', status: 'in_progress', priority: 'urgent', assigneeId: 'u1', assigneeName: 'Alex Kim', dueDate: '2026-09-12', isOverdue: true }),
-  task({ id: 't3', name: 'Press kit', status: 'done', priority: 'low', dueDate: '2026-12-01' }),
+  task({ id: 't2', name: 'Spec', status: 'in_progress', priority: 'urgent', assigneeId: 'u1', assigneeName: 'Alex Kim', dueDate: todayIso(-2), isOverdue: true }),
+  task({ id: 't3', name: 'Press kit', status: 'done', priority: 'low', dueDate: todayIso(-30) }),
 ]
 const manager = { canManage: true, userId: 'm1' }
 
 const column = (name: RegExp) => screen.getByRole('group', { name })
 
 describe('TaskBoard', () => {
-  it('puts each task in its column, with the number in each', () => {
+  it('puts each task in its column, with the number in each heading', () => {
     render(<TaskBoard tasks={tasks} who={manager} onMove={() => {}} />)
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['To do · 1', 'In progress · 1', 'Done · 1'])
     expect(within(column(/^To do, 1/)).getByText('Wireframes')).toBeInTheDocument()
     expect(within(column(/^In progress, 1/)).getByText('Spec')).toBeInTheDocument()
     expect(within(column(/^Done, 1/)).getByText('Press kit')).toBeInTheDocument()
   })
 
-  it('shows priority, who owns it, and when it is due, in red when it is late', () => {
-    render(<TaskBoard tasks={tasks} who={manager} onMove={() => {}} />)
-    const card = screen.getByText('Spec').closest('div[draggable]') as HTMLElement
-    expect(within(card).getByText('Urgent')).toBeInTheDocument()
-    expect(within(card).getByText('Overdue Sep 12, 2026')).toBeInTheDocument()
-    expect(within(card).getByText('AK')).toBeInTheDocument()
-    expect(within(screen.getByText('Wireframes').closest('div[draggable]') as HTMLElement).getByText('Unassigned')).toBeInTheDocument()
-    expect(screen.getByText('Due Dec 1, 2026')).toBeInTheDocument()
+  it('shows only urgent and high priority, who owns it, and how near the due date is, in red when late', () => {
+    const many = [
+      ...tasks,
+      task({ id: 't4', name: 'Soon', priority: 'high', dueDate: todayIso(1) }),
+      task({ id: 't5', name: 'Far off', priority: 'medium', dueDate: todayIso(30) }),
+    ]
+    render(<TaskBoard tasks={many} who={manager} onMove={() => {}} />)
+    const card = (name: string) => screen.getByText(name).closest('div[draggable]') as HTMLElement
+    expect(within(card('Spec')).getByText('Urgent')).toBeInTheDocument()
+    expect(within(card('Spec')).getByText('2 days late')).toBeInTheDocument()
+    expect(within(card('Spec')).getByText('AK')).toBeInTheDocument()
+    expect(within(card('Soon')).getByText('High')).toBeInTheDocument()
+    expect(within(card('Soon')).getByText('due tomorrow')).toBeInTheDocument()
+    expect(within(card('Wireframes')).getByText('Unassigned')).toBeInTheDocument()
+    // medium and low are the norm, so they get no chip; a far-off date is spelled out
+    expect(within(card('Wireframes')).queryByText('Medium')).not.toBeInTheDocument()
+    expect(within(card('Press kit')).queryByText('Low')).not.toBeInTheDocument()
+    expect(within(card('Far off')).getByText(/^Due [A-Z][a-z]{2} \d{1,2}, \d{4}$/)).toBeInTheDocument()
   })
 
-  it('says so when a column is empty', () => {
+  it('hides the due date once a task is done', () => {
+    render(<TaskBoard tasks={tasks} who={manager} onMove={() => {}} />)
+    const card = screen.getByText('Press kit').closest('div[draggable]') as HTMLElement
+    expect(within(card).queryByText(/late|Due|due/)).not.toBeInTheDocument()
+  })
+
+  it('shows an empty column as a zero count with no cards', () => {
     render(<TaskBoard tasks={[task()]} who={manager} onMove={() => {}} />)
-    expect(within(column(/^Done, 0/)).getByText('Nothing here.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Done · 0' })).toBeInTheDocument()
+    expect(within(column(/^Done, 0/)).queryByText('Wireframes')).not.toBeInTheDocument()
+  })
+
+  it('has no quick-add box unless the page asks for one', () => {
+    render(<TaskBoard tasks={tasks} who={manager} onMove={() => {}} />)
+    expect(screen.queryByRole('textbox', { name: 'New task name' })).not.toBeInTheDocument()
+  })
+
+  it('adds a task from the box in the To do column, trimming the name and clearing the box', async () => {
+    const added: string[] = []
+    render(<TaskBoard tasks={tasks} who={manager} onMove={() => {}} onQuickAdd={async (name) => { added.push(name) }} />)
+    const box = within(column(/^To do, 1/)).getByRole('textbox', { name: 'New task name' })
+    expect(box).toHaveAttribute('placeholder', 'Add a task')
+    expect(screen.getAllByRole('textbox')).toHaveLength(1) // only the To do column has one
+    const add = within(column(/^To do, 1/)).getByRole('button', { name: 'Add' })
+    expect(add).toBeDisabled()
+    await userEvent.type(box, '  Style guide  ')
+    expect(add).toBeEnabled()
+    await userEvent.click(add)
+    expect(added).toEqual(['Style guide'])
+    await vi.waitFor(() => expect(box).toHaveValue(''))
+    await userEvent.type(box, 'Another{Enter}') // Enter submits too
+    expect(added).toEqual(['Style guide', 'Another'])
+  })
+
+  it('keeps what was typed when the save fails', async () => {
+    render(<TaskBoard tasks={tasks} who={manager} onMove={() => {}} onQuickAdd={() => Promise.reject(new Error('no'))} />)
+    const box = screen.getByRole('textbox', { name: 'New task name' })
+    await userEvent.type(box, 'Style guide{Enter}')
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled())
+    expect(box).toHaveValue('Style guide')
   })
 
   it('moves a card when it is dropped on another column', () => {

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import type { InternalAxiosRequestConfig } from 'axios'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
 import { renderPage, signIn } from '../test/pmFixtures'
-import { MyTasksPage } from './MyTasksPage'
+import { MyTasks } from './MyTasksPage'
 
 vi.setConfig({ testTimeout: 30_000 })
 
@@ -12,12 +12,12 @@ const task = (over: Record<string, unknown> = {}) => ({
   assignee_id: 'employee-1', done_at: null, project_id: 'p1', project_name: 'Website redesign', milestone_name: 'Design', assignee_name: 'Alex Kim', is_overdue: false, ...over,
 })
 const list = (items: unknown[]) => ({ items, total: items.length })
-const page = () => renderPage(<MyTasksPage />, '/my-tasks', '/my-tasks')
+const page = () => renderPage(<MyTasks />, '/my-work', '/my-work')
 
 beforeEach(() => signIn('employee'))
 afterEach(() => { restoreApi(); localStorage.clear() })
 
-describe('MyTasksPage', () => {
+describe('MyTasks section', () => {
   it('lists what is assigned to me with its project, priority, due date and status', async () => {
     mockRoutes({ 'GET /tasks/mine': list([task(), task({ id: 't2', name: 'Spec', status: 'in_progress', due_date: '2026-09-01', is_overdue: true, priority: 'low' }), task({ id: 't3', name: 'Press kit', status: 'done', due_date: null })]) })
     page()
@@ -26,6 +26,7 @@ describe('MyTasksPage', () => {
     expect(within(row).getByText('High')).toBeInTheDocument()
     expect(within(row).getByText('Oct 20, 2026')).toBeInTheDocument()
     expect(within(screen.getByText('Spec').closest('tr') as HTMLElement).getByText('Overdue Sep 1, 2026')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'My tasks' })).toBeInTheDocument()
     expect(within(screen.getByText('Press kit').closest('tr') as HTMLElement).getByText('—')).toBeInTheDocument()
   })
 
@@ -42,7 +43,10 @@ describe('MyTasksPage', () => {
       ['/projects/p1/milestones/m1/deliverables/t1', { status: 'in_progress' }],
       ['/projects/p1/milestones/m1/deliverables/t2', { status: 'todo' }],
     ]))
-    expect(screen.getByText('Reviewed')).toBeInTheDocument()
+    // a finished task has no action, only the word Done (in its status chip and in the action column)
+    const doneRow = screen.getByText('Press kit').closest('tr') as HTMLElement
+    expect(within(doneRow).getAllByText('Done')).toHaveLength(2)
+    expect(within(doneRow).queryByRole('button')).not.toBeInTheDocument()
   })
 
   it('shows the server\'s own sentence when a move fails', async () => {

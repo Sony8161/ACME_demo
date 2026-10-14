@@ -1,18 +1,34 @@
-import { navFor } from './nav'
+import { moreFor, navFor } from './nav'
 
 describe('navFor', () => {
-  it('gives an employee their own work and their own tasks', () => {
-    expect(navFor('employee')).toEqual([
-      { label: 'My work', to: '/my-work', icon: 'work' },
-      { label: 'My tasks', to: '/my-tasks', icon: 'tasks' },
-    ])
+  it('gives an employee one place: their own work (their tasks are a section of it)', () => {
+    expect(navFor('employee')).toEqual([{ label: 'My work', to: '/my-work', icon: 'work' }])
   })
 
-  it('gives a manager the dashboard, projects, timeline and people, but no archive', () => {
-    expect(navFor('manager').map((i) => i.to)).toEqual(['/dashboard', '/projects', '/timeline', '/people'])
+  it.each(['manager', 'admin'] as const)('gives a %s the dashboard, projects and people (the timeline is a view of projects)', (role) => {
+    expect(navFor(role).map((i) => i.to)).toEqual(['/dashboard', '/projects', '/people'])
+    expect(navFor(role).map((i) => i.label)).toEqual(['Dashboard', 'Projects', 'People'])
   })
 
-  it('gives an admin everything a manager has plus the history and the archive', () => {
-    expect(navFor('admin').map((i) => i.label)).toEqual(['Dashboard', 'Projects', 'Timeline', 'People', 'History', 'Archive'])
+  it('never has more than three entries, so the phone bar with "More" stays at four', () => {
+    for (const role of ['employee', 'manager', 'admin'] as const) {
+      expect(navFor(role).length + (moreFor(role).length > 0 ? 1 : 0)).toBeLessThanOrEqual(4)
+    }
+  })
+})
+
+describe('moreFor', () => {
+  it('puts the history and the archive under "More" for an admin', () => {
+    expect(moreFor('admin').map((i) => [i.label, i.to])).toEqual([['History', '/history'], ['Archive', '/archive']])
+  })
+
+  it('gives managers and employees nothing under "More"', () => {
+    expect(moreFor('manager')).toEqual([])
+    expect(moreFor('employee')).toEqual([])
+  })
+
+  it('does not repeat an entry that is already on the bar', () => {
+    const onBar = new Set(navFor('admin').map((i) => i.to))
+    expect(moreFor('admin').some((i) => onBar.has(i.to))).toBe(false)
   })
 })

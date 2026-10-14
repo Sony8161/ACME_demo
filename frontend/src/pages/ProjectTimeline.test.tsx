@@ -37,7 +37,10 @@ describe('ProjectTimeline', () => {
     expect(screen.getAllByText('due Oct 20, 2026 · To do')).toHaveLength(2)
     expect(screen.getByText('no due date · Done')).toBeInTheDocument()
     expect(screen.getByText('Task Late one, due Oct 20, 2026, To do')).toBeInTheDocument()
-    expect(screen.getByText(/A diamond is a task/)).toBeInTheDocument()
+    // the legend lives behind an info icon, not in a sentence under the chart
+    expect(screen.queryByText(/A diamond is a task/)).not.toBeInTheDocument()
+    await userEvent.hover(screen.getByRole('button', { name: 'How to read this chart' }))
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/A diamond is a task/)
   })
 
   it('says what a milestone is waiting for, in words and for a screen reader', async () => {
@@ -54,7 +57,11 @@ describe('ProjectTimeline', () => {
     await userEvent.click(screen.getByRole('switch', { name: 'Show tasks' }))
     expect(screen.queryByText('Wireframes')).not.toBeInTheDocument()
     expect(screen.getByText('Design')).toBeInTheDocument()
-    expect(screen.queryByText(/A diamond is a task/)).not.toBeInTheDocument()
+    // with the tasks hidden the legend no longer mentions diamonds
+    await userEvent.hover(screen.getByRole('button', { name: 'How to read this chart' }))
+    const tip = await screen.findByRole('tooltip')
+    expect(tip).toHaveTextContent(/A bar runs from start to end/)
+    expect(tip).not.toHaveTextContent(/diamond/)
   })
 
   it('shows nothing extra when the project is not on the timeline, and the server\'s sentence when it fails', async () => {

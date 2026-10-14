@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material'
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, useMediaQuery, useTheme } from '@mui/material'
 import { errorText } from '../api/useApi'
 
 interface Props {
@@ -12,10 +12,13 @@ interface Props {
   children?: ReactNode
   submitDisabled?: boolean
   danger?: boolean
+  /** What the cancel button says; defaults to "Cancel". */
+  cancelLabel?: string
 }
 
 /** One dialog for every "fill in a few fields and confirm" action, so errors and busy states behave the same everywhere. */
-export function FormDialog({ open, title, submitLabel, onClose, onSubmit, children, submitDisabled, danger }: Props) {
+export function FormDialog({ open, title, submitLabel, onClose, onSubmit, children, submitDisabled, danger, cancelLabel = 'Cancel' }: Props) {
+  const narrow = useMediaQuery(useTheme().breakpoints.down('sm')) // a phone gets the whole screen, not a cramped box
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -40,7 +43,7 @@ export function FormDialog({ open, title, submitLabel, onClose, onSubmit, childr
   }
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={close} fullWidth maxWidth="sm" fullScreen={narrow}>
       <form onSubmit={submit}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
@@ -50,7 +53,7 @@ export function FormDialog({ open, title, submitLabel, onClose, onSubmit, childr
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={close} disabled={busy}>Cancel</Button>
+          <Button onClick={close} disabled={busy}>{cancelLabel}</Button>
           <Button type="submit" variant="contained" color={danger ? 'error' : 'primary'} disabled={busy || submitDisabled}>
             {busy ? 'Working…' : submitLabel}
           </Button>

@@ -9,9 +9,9 @@ The structure follows the Testing Expectations in [full-stack.md](./full-stack.m
 |---|---|---|---|
 | Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **262 tests pass**, 97.4% coverage (gate 80%) |
 | Backend lint and security | `ruff` and `bandit` (same scan as CI) | `./bin/test-backend.sh` | clean |
-| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **351 tests pass**, 98.7% statements, 96.3% branches (gate 80%) |
+| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **493 tests pass**, 98.7% statements, 96.3% branches (gate 80%) |
 | Frontend static checks | ESLint, TypeScript, production build, `npm audit` | `npm run lint && npm run typecheck && npm run build && npm audit` | clean, 0 vulnerabilities |
-| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **42 of 42 checks pass** (29 journey, 13 axe scans) |
+| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **46 of 46 checks pass** (29 journey, 13 axe scans) |
 | API contract, every endpoint | 203 requests with 839 assertions (Postman/Newman); all 55 operations of the API | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | **0 failures** locally and on LocalStack; saved as `docs/postman/results/postman-results-localstack.json` |
 | Demo pictures | 46 pictures, one folder per MVP item (and the history, tasks, timeline and dependencies and assistant extras) | `cd frontend && npm run screenshots` | Retaken from the running demo; indexed in `docs/demo-screenshots/README.md` and `docs/MVP.md` |
 | Performance | Artillery load test | `npx artillery run docs/load/artillery.yml` | see Load test below |
@@ -67,7 +67,7 @@ npm run test:coverage       # with the 80% gate (statements, branches, functions
 npm run lint && npm run typecheck && npm run build
 ```
 
-351 tests in 39 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
+493 tests in 45 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
 mocked at the axios adapter (`src/test/mockApi.ts`), so tests exercise the real client code: key conversion, error mapping, the
 401 handler. Covered: every page, the dialogs (busy, error and success states), role differences (employees see no money, no manager
 buttons), route guards and redirects, the sliding session refresh, and the forced password change.
@@ -82,11 +82,11 @@ cd frontend && npm run e2e                       # SHOTS=/some/dir saves a scree
 ./bin/demo-ready.sh                              # the test completes a milestone and archives a project, so reset
 ```
 
-42 checks drive a real browser through: sign-in, the dashboard ranking, an employee with no money visible, a manager seeing only
+46 checks drive a real browser through: sign-in, the dashboard ranking, an employee with no money visible, a manager seeing only
 their own projects, a refused double booking, a refused then accepted milestone sign-off, the forced first-login password change,
 an admin seeing the archived milestone, archive then restore, and the history page crediting each of those to the right person
-(with its filter and the project's own History tab), and the task board: a real drag of a card to In progress, the list view, an employee pausing and starting their own task, the timeline (every project on one calendar, then one project with its tasks as diamonds), and dependencies (a milestone that waits for another cannot be started and the refusal names it; finishing the first frees the second; a project that waits for another says so), and the assistant (a suggested question and a typed follow-up are answered from the real projects, and Escape closes it). The AI path is tested with a scripted stand-in for the model (the tool loop, the limits, the fallback) and the HTTP client with a patched network call; **no real AI request has been made**, so run it once with a key before relying on it. Thirteen pages are scanned with axe-core (sign-in, dashboard,
-project detail, my work, a manager's project page, people, history, the task board, my tasks, the timeline, a project's timeline tab a project's dependencies tab and the open assistant chat box); the test fails on any serious or critical issue. The first run found
+(with its filter and the project's own History tab), and the task board: a real drag of a card to In progress, the list view, an employee pausing and starting their own task, the timeline (every project on one calendar, then one project with its tasks as diamonds), and dependencies (a milestone that waits for another cannot be started and the refusal names it; finishing the first frees the second; a project that waits for another says so), and the assistant (a suggested question and a typed follow-up are answered from the real projects, and Escape closes it). The AI path is tested with a scripted stand-in for the model (the tool loop, the limits, the fallback) and the HTTP client with a patched network call; **no real AI request has been made**, so run it once with a key before relying on it. Fourteen screens are scanned with axe-core (sign-in, dashboard,
+project detail, my work, a manager's project page, people, the archive, history, the task board, my tasks, the timeline, a project's timeline view, a project's dependencies dialog and the open assistant chat box); the test fails on any serious or critical issue. The first run found
 one (a tooltip put an `aria-label` on a plain element); it is fixed and now guarded.
 
 ## Load test

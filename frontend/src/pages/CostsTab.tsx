@@ -8,6 +8,7 @@ import { useApi } from '../api/useApi'
 import { Async } from '../components/Async'
 import { DateField, NumberField } from '../components/fields'
 import { FormDialog } from '../components/FormDialog'
+import { Stat } from '../components/Stat'
 import { formatDate, money, todayIso } from '../format'
 
 const CATEGORIES: CostCategory[] = ['technology', 'license', 'vendor', 'travel', 'other']
@@ -25,13 +26,16 @@ export function CostsTab({ project, canManage, onChanged }: { project: Project; 
     <Async state={state}>
       {(c) => (
         <>
-          <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, mb: 3 }}>
-            <Total label="People (labor)" value={money(c.laborCost)} />
-            <Total label="Other costs" value={money(c.otherCost)} />
-            <Total label="Total spent" value={money(c.totalCost)} />
-            <Total label="Budget left" value={money(c.budgetRemaining)} />
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="overline" component="h3">Costs</Typography>
+            {canManage && <Button size="small" variant="outlined" onClick={() => setAdding(true)}>Add a cost</Button>}
+          </Stack>
+          <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, mb: 2 }}>
+            <Stat label="People (labor)" value={money(c.laborCost)} />
+            <Stat label="Other costs" value={money(c.otherCost)} />
+            <Stat label="Total spent" value={money(c.totalCost)} />
+            <Stat label="Budget left" value={money(c.budgetRemaining)} />
           </Box>
-          {canManage && <Button variant="contained" sx={{ mb: 2 }} onClick={() => setAdding(true)}>Add a cost</Button>}
           <TableContainer component={Paper}>
             <Table size="small">
               <TableHead>
@@ -74,14 +78,5 @@ export function CostsTab({ project, canManage, onChanged }: { project: Project; 
         </>
       )}
     </Async>
-  )
-}
-
-function Total({ label, value }: { label: string; value: string }) {
-  return (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="body2" color="text.secondary">{label}</Typography>
-      <Typography variant="h6" component="p">{value}</Typography>
-    </Paper>
   )
 }

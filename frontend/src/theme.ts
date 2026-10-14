@@ -12,6 +12,15 @@ const ink = '#12302e'
 const mint = '#eefaf8'
 const rule = alpha('#087069', 0.26) // the one border colour used everywhere
 
+/** The few translucent teals used for hover, selected and quiet backgrounds, named once instead of repeated as numbers. */
+export const tint = {
+  soft: alpha(tealLight, 0.12),
+  hover: alpha(tealLight, 0.1),
+  selected: alpha(tealLight, 0.24),
+  strong: alpha(tealLight, 0.34),
+  rule: alpha(teal, 0.12),
+}
+
 export const theme = createTheme({
   palette: {
     mode: 'light',
@@ -34,7 +43,7 @@ export const theme = createTheme({
     subtitle2: { fontWeight: 700 },
     button: { textTransform: 'none', fontWeight: 700, letterSpacing: '0.01em' },
     // The capitalised micro-label used over every figure and column.
-    overline: { fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.1em', lineHeight: 1.6, color: '#3f6f6a' },
+    overline: { fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.01em', lineHeight: 1.5, textTransform: 'none', color: '#3f6f6a' },
   },
   components: {
     MuiCssBaseline: {
@@ -65,7 +74,7 @@ export const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: { borderColor: alpha('#087069', 0.16) },
-        head: { fontWeight: 800, color: '#3f6f6a', fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: `2px solid ${teal}` },
+        head: { fontWeight: 700, color: '#3f6f6a', fontSize: '0.75rem', borderBottom: `1px solid ${teal}` },
       },
     },
     MuiTabs: {
@@ -74,7 +83,7 @@ export const theme = createTheme({
     MuiTab: { styleOverrides: { root: { minHeight: 40, fontWeight: 700, borderRadius: 0 } } },
     MuiLinearProgress: { styleOverrides: { root: { backgroundColor: alpha(tealMid, 0.2), borderRadius: 0 }, bar: { borderRadius: 0 } } },
     MuiOutlinedInput: { styleOverrides: { root: { borderRadius: 3, backgroundColor: '#ffffff' } } },
-    MuiDialog: { styleOverrides: { paper: { borderRadius: 4, border: `1px solid ${teal}`, boxShadow: `8px 8px 0 ${alpha(tealMid, 0.45)}` } } },
+    MuiDialog: { styleOverrides: { paper: { borderRadius: 4, boxShadow: `0 16px 40px -16px ${alpha(teal, 0.45)}` } } },
     MuiTooltip: { styleOverrides: { tooltip: { backgroundColor: '#0f3d3a', borderRadius: 3 } } },
     MuiAlert: { styleOverrides: { root: { borderRadius: 3 } } },
     MuiBottomNavigationAction: { styleOverrides: { root: { minWidth: 0 } } },

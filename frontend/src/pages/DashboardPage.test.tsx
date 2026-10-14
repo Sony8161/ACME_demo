@@ -35,60 +35,151 @@ afterEach(() => {
   localStorage.clear()
 })
 
+const countsOf = (atRisk: number, overdue: number, projects = 4) => ({ projects, planned: 0, active: projects, completed: 0, on_track: projects - atRisk - overdue, at_risk: atRisk, overdue })
+const person = (name: string, state: 'allocated' | 'available') => ({
+  user_id: name, name, job_title: 'Dev', manager_name: null, state, current_work: null, next_work: null, hours_this_week: 0, week_capacity: 40,
+})
+const subtitle = () => screen.getByRole('heading', { name: 'Dashboard' }).parentElement as HTMLElement
+
 describe('Dashboard', () => {
-  it('shows a spinner while loading, then the headline numbers', async () => {
+  it('shows a loading indicator, then the title with the date and what has been spent', async () => {
     signIn('manager')
     mockRoutes({ 'GET /reports/overview': overview() })
     renderPage(<DashboardPage />)
     expect(screen.getByRole('progressbar', { name: 'Loading' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
-    expect(screen.getByText(/Where every project stands today, Oct 13, 2026/)).toBeInTheDocument()
-
-    expect(screen.getByText('Need attention').parentElement).toHaveTextContent('21 overdue, 1 at risk')
-    expect(screen.getByText('Active projects').parentElement).toHaveTextContent('20 planned, 0 completed')
-    expect(screen.getByText('Spent so far').parentElement).toHaveTextContent('$60,000of $150,000 budget')
-    expect(screen.getByText('People free').parentElement).toHaveTextContent('2not on a milestone today')
+    expect(subtitle()).toHaveTextContent('Oct 13, 2026 · $60,000 spent of $150,000')
   })
 
-  it('lists the projects in the order the server sends them (most urgent first)', async () => {
-    signIn('manager')
-    mockRoutes({ 'GET /reports/overview': overview() })
-    renderPage(<DashboardPage />)
-    await screen.findByText('Projects, most urgent first')
-    const links = screen.getAllByRole('link').filter((l) => l.getAttribute('href')?.startsWith('/projects/'))
-    const cards = links.filter((l) => /Mobile app|Website redesign/.test(l.textContent ?? '') && l.querySelector('h6'))
-    expect(cards.map((c) => c.querySelector('h6')?.textContent)).toEqual(['Mobile app', 'Website redesign'])
-    expect(cards[0]).toHaveTextContent('2 milestones are past due')
-    expect(cards[0]).toHaveAttribute('href', '/projects/p9')
-  })
-
-  it('shows who is busy and who is free, with what each person works on next', async () => {
+  it('has no KPI tiles and no availability table any more', async () => {
     signIn('admin')
     mockRoutes({ 'GET /reports/overview': overview() })
     renderPage(<DashboardPage />)
-    await screen.findByText('Who is busy and who is free')
-    const row = (name: string) => screen.getByText(name).closest('tr') as HTMLElement
-
-    expect(within(row('Ann Busy')).getByText('Busy')).toBeInTheDocument()
-    expect(within(row('Ann Busy')).getByRole('link')).toHaveTextContent('Wireframes · Website redesign')
-    expect(row('Ann Busy')).toHaveTextContent('32 of 40 h')
-    expect(within(row('Ben Free')).getByText('Free')).toBeInTheDocument()
-    expect(row('Ben Free')).toHaveTextContent('Next: Build from Oct 1, 2026')
-    expect(row('Cy Idle')).toHaveTextContent('Nothing planned')
+    await screen.findByRole('heading', { name: 'Dashboard' })
+    for (const gone of ['Need attention', 'Active projects', 'Spent so far', 'People free', 'Who is busy and who is free']) {
+      expect(screen.queryByText(gone)).not.toBeInTheDocument()
+    }
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
-  it('says so when there are no employees', async () => {
+  it('hides the money line when the budget is 0 (nothing to compare the spending with)', async () => {
     signIn('manager')
-    mockRoutes({ 'GET /reports/overview': overview({ allocation: [] }) })
+    mockRoutes({ 'GET /reports/overview': overview({ totals: { ...overview().totals, budget: 0, spent: 0 } }) })
     renderPage(<DashboardPage />)
-    expect(await screen.findByText('No employees yet.')).toBeInTheDocument()
+    await screen.findByRole('heading', { name: 'Dashboard' })
+    expect(subtitle()).toHaveTextContent('Oct 13, 2026')
+    expect(subtitle()).not.toHaveTextContent(/spent|\$/)
+  })
+
+  describe('verdict', () => {
+    const verdictFor = async (counts: ReturnType<typeof countsOf>) => {
+      signIn('manager')
+      mockRoutes({ 'GET /reports/overview': overview({ counts }) })
+      renderPage(<DashboardPage />)
+      await screen.findByRole('heading', { name: 'Dashboard' })
+    }
+
+    it('counts the projects that are at risk or overdue, out of all of them', async () => {
+      await verdictFor(countsOf(1, 1))
+      expect(screen.getByRole('heading', { name: '2 of 4 projects need attention' })).toBeInTheDocument()
+    })
+
+    it('counts only overdue projects too', async () => {
+      await verdictFor(countsOf(0, 3))
+      expect(screen.getByRole('heading', { name: '3 of 4 projects need attention' })).toBeInTheDocument()
+    })
+
+    it('uses the singular verb for one project', async () => {
+      await verdictFor(countsOf(1, 0, 1))
+      expect(screen.getByRole('heading', { name: '1 of 1 project needs attention' })).toBeInTheDocument()
+    })
+
+    it('says everything is on track when nothing is at risk or overdue', async () => {
+      await verdictFor(countsOf(0, 0))
+      expect(screen.getByRole('heading', { name: 'Everything is on track' })).toBeInTheDocument()
+      expect(screen.queryByText(/need attention/)).not.toBeInTheDocument()
+    })
+
+    it('gives no verdict when there are no projects (the empty state speaks instead)', async () => {
+      signIn('manager')
+      mockRoutes({ 'GET /reports/overview': empty() })
+      renderPage(<DashboardPage />)
+      await screen.findByText('No projects are assigned to you yet.')
+      expect(screen.queryByText('Everything is on track')).not.toBeInTheDocument()
+    })
+  })
+
+  it('lists the projects as compact rows in the order the server sends them (most urgent first)', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /reports/overview': overview() })
+    renderPage(<DashboardPage />)
+    await screen.findByRole('heading', { name: 'Dashboard' })
+    const links = screen.getAllByRole('link').filter((l) => l.getAttribute('href')?.startsWith('/projects/'))
+    expect(links.map((l) => [l.textContent, l.getAttribute('href')])).toEqual([['Mobile app', '/projects/p9'], ['Website redesign', '/projects/p1']])
+    const row = links[0].closest('.MuiPaper-root') as HTMLElement
+    expect(row).toHaveTextContent('Overdue')
+    expect(row).toHaveTextContent('2 milestones are past due')
+  })
+
+  describe('free today', () => {
+    const lineAfterLoading = async () => {
+      await screen.findByRole('heading', { name: 'Dashboard' })
+      return screen.getByRole('link', { name: 'See availability' }).parentElement as HTMLElement
+    }
+
+    it('names who is free and links to the availability view of People', async () => {
+      signIn('admin')
+      mockRoutes({ 'GET /reports/overview': overview() })
+      renderPage(<DashboardPage />)
+      const line = await lineAfterLoading()
+      expect(line).toHaveTextContent('Free today: Ben Free, Cy Idle. See availability')
+      expect(screen.getByRole('link', { name: 'See availability' })).toHaveAttribute('href', '/people?view=availability')
+      expect(line).not.toHaveTextContent('Ann Busy')
+    })
+
+    it('names three people at most and counts the rest', async () => {
+      signIn('manager')
+      const allocation = ['A One', 'B Two', 'C Three', 'D Four', 'E Five', 'F Six'].map((n) => person(n, 'available'))
+      mockRoutes({ 'GET /reports/overview': overview({ allocation: [person('Busy Bee', 'allocated'), ...allocation] }) })
+      renderPage(<DashboardPage />)
+      const line = await lineAfterLoading()
+      expect(line).toHaveTextContent('Free today: A One, B Two, C Three and 3 more. See availability')
+      expect(line).not.toHaveTextContent('D Four')
+    })
+
+    it('shows exactly three free people without a "more" part', async () => {
+      signIn('manager')
+      mockRoutes({ 'GET /reports/overview': overview({ allocation: ['A One', 'B Two', 'C Three'].map((n) => person(n, 'available')) }) })
+      renderPage(<DashboardPage />)
+      const line = await lineAfterLoading()
+      expect(line).toHaveTextContent('Free today: A One, B Two, C Three. See availability')
+      expect(line).not.toHaveTextContent('more')
+    })
+
+    it('says nobody is free when everyone is on a milestone, and still links on', async () => {
+      signIn('manager')
+      mockRoutes({ 'GET /reports/overview': overview({ allocation: [person('Ann Busy', 'allocated')] }) })
+      renderPage(<DashboardPage />)
+      const line = await lineAfterLoading()
+      expect(line).toHaveTextContent('Nobody is free today. See availability')
+      expect(line).not.toHaveTextContent('Free today:')
+    })
+
+    it('is left out when there are no employees at all', async () => {
+      signIn('manager')
+      mockRoutes({ 'GET /reports/overview': overview({ allocation: [] }) })
+      renderPage(<DashboardPage />)
+      await screen.findByRole('heading', { name: 'Dashboard' })
+      expect(screen.queryByRole('link', { name: 'See availability' })).not.toBeInTheDocument()
+      expect(screen.queryByText(/free today/i)).not.toBeInTheDocument()
+    })
   })
 
   it('does not offer sample data when there are projects', async () => {
     signIn('admin')
     mockRoutes({ 'GET /reports/overview': overview() })
     renderPage(<DashboardPage />)
-    await screen.findByText('Projects, most urgent first')
+    await screen.findByRole('heading', { name: 'Dashboard' })
     expect(screen.queryByRole('button', { name: 'Load sample data' })).not.toBeInTheDocument()
   })
 
@@ -149,7 +240,7 @@ describe('Dashboard', () => {
       // the dashboard behind it was reloaded and now shows the new projects
       expect(calls).toContain('POST /admin/seed-demo')
       expect(calls.filter((c) => c === 'GET /reports/overview')).toHaveLength(2)
-      expect(await screen.findByText('Projects, most urgent first')).toBeInTheDocument()
+      expect(await screen.findByRole('link', { name: 'Mobile app', hidden: true })).toBeInTheDocument()
       expect(screen.queryByText(/There are no projects yet/)).not.toBeInTheDocument()
 
       await userEvent.click(within(dialog).getByRole('button', { name: 'I have saved them' }))

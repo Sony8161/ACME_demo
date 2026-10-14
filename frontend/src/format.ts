@@ -41,3 +41,18 @@ export function todayIso(offsetDays = 0): string {
   d.setDate(d.getDate() + offsetDays)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
+
+/** Whole days from `today` to `iso` (negative when it is in the past). Both are read as calendar days, so no time zone can shift them. */
+export function daysFromToday(iso: string, today: string = todayIso()): number {
+  const day = (s: string) => Date.parse(`${s.slice(0, 10)}T00:00:00Z`)
+  return Math.round((day(iso) - day(today)) / 86_400_000)
+}
+
+/** How near a date is, in words people use: "3 days late", "due today", "due tomorrow", "due in 5 days"; far dates are left to the caller. */
+export function dueIn(iso: string, today?: string): string | null {
+  const n = daysFromToday(iso, today)
+  if (n < 0) return `${-n} day${n === -1 ? '' : 's'} late`
+  if (n === 0) return 'due today'
+  if (n === 1) return 'due tomorrow'
+  return n <= 7 ? `due in ${n} days` : null
+}

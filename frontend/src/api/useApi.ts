@@ -4,11 +4,13 @@ import { ApiError } from './client'
 export interface Loadable<T> {
   data: T | null
   error: string | null
+  /** HTTP status of the failure, when the server answered (403 and 404 mean "retrying will not help"). */
+  status?: number | null
   loading: boolean
   reload: () => void
 }
 
-interface Settled<T> { key: string; data: T | null; error: string | null }
+interface Settled<T> { key: string; data: T | null; error: string | null; status: number | null }
 
 /**
  * Load something from the API when the screen opens, whenever `deps` change, and again on `reload`.
@@ -25,10 +27,10 @@ export function useApi<T>(load: (() => Promise<T>) | null, deps: unknown[]): Loa
     let cancelled = false
     load()
       .then((data) => {
-        if (!cancelled) setSettled({ key, data, error: null })
+        if (!cancelled) setSettled({ key, data, error: null, status: null })
       })
       .catch((err: unknown) => {
-        if (!cancelled) setSettled((prev) => ({ key, data: prev?.data ?? null, error: errorText(err) }))
+        if (!cancelled) setSettled((prev) => ({ key, data: prev?.data ?? null, error: errorText(err), status: err instanceof ApiError ? err.status : null }))
       })
     return () => {
       cancelled = true
@@ -41,6 +43,7 @@ export function useApi<T>(load: (() => Promise<T>) | null, deps: unknown[]): Loa
   return {
     data: settled?.data ?? null,
     error: settled?.key === key ? settled.error : null,
+    status: settled?.key === key ? settled.status : null,
     loading: load !== null && settled?.key !== key,
     reload,
   }

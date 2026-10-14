@@ -5,7 +5,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import ClearIcon from '@mui/icons-material/DeleteSweepOutlined'
 import SendIcon from '@mui/icons-material/SendOutlined'
 import { api } from '../api/client'
-import type { AssistantStatus, ChatMessage, ChatReply, Role } from '../api/types'
+import type { ChatMessage, ChatReply, Role } from '../api/types'
 import { errorText } from '../api/useApi'
 
 const SUGGESTIONS: Record<Role, string[]> = {
@@ -18,6 +18,7 @@ const LOOKED_AT: Record<string, string> = {
   attention: 'what needs attention', list_projects: 'your projects', project_details: 'project details', my_tasks: 'your tasks',
   my_work: 'your work', who_is_free: 'who is free',
 }
+const lookedAt = (names: string[]) => names.map((n) => LOOKED_AT[n] ?? 'your projects').join(', ')
 
 interface Turn extends ChatMessage { toolsUsed?: string[]; notice?: string | null }
 
@@ -31,15 +32,27 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState<AssistantStatus | null>(null)
   const input = useRef<HTMLInputElement>(null)
+  const launcher = useRef<HTMLButtonElement>(null)
+  const opened = useRef(false)
   const end = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (open) {
+      opened.current = true
+      input.current?.focus()
+    } else if (opened.current) {
+      launcher.current?.focus() // closing puts you back where you were
+    }
+  }, [open])
+
+  // Escape closes the box wherever the focus is: after "Send" the button is disabled for a moment and focus falls back to the page.
+  useEffect(() => {
     if (!open) return
-    input.current?.focus()
-    if (status === null) api.get<AssistantStatus>('/assistant/status').then(setStatus).catch(() => undefined)
-  }, [open, status])
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
 
   useEffect(() => {
     end.current?.scrollIntoView?.({ block: 'end' })
@@ -56,7 +69,6 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
     try {
       const answer = await api.post<ChatReply>('/assistant/chat', { messages: next.map(({ role: r, content }) => ({ role: r, content })) })
       setTurns([...next, { role: 'assistant', content: answer.reply, toolsUsed: answer.toolsUsed, notice: answer.notice }])
-      setStatus((s) => (s ? { ...s, mode: answer.mode } : s))
     } catch (err) {
       setError(errorText(err))
     } finally {
@@ -73,10 +85,10 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
     return (
       <Tooltip title="Ask the assistant">
         <Fab
-          color="primary" variant="extended" aria-label="Ask the assistant" onClick={() => setOpen(true)}
-          sx={{ position: 'fixed', right: 20, bottom: compact ? 84 : 24, zIndex: (t) => t.zIndex.modal - 1, borderRadius: '4px', boxShadow: 'none', border: '1px solid', borderColor: 'primary.main', bgcolor: 'primary.light', color: '#052e2b', '&:hover': { bgcolor: '#5eead4' } }}
+          ref={launcher} color="primary" size="medium" aria-label="Ask the assistant" onClick={() => setOpen(true)}
+          sx={{ position: 'fixed', right: 20, bottom: compact ? 84 : 24, zIndex: (t) => t.zIndex.modal - 1, boxShadow: 'none', border: '1px solid', borderColor: 'primary.main', bgcolor: 'primary.light', color: '#052e2b', '&:hover': { bgcolor: '#5eead4' } }}
         >
-          <ChatIcon sx={{ mr: 1 }} /> Assistant
+          <ChatIcon />
         </Fab>
       </Tooltip>
     )
@@ -84,16 +96,15 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
 
   return (
     <Paper
-      role="complementary" aria-label="Assistant" onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
+      role="complementary" aria-label="Assistant"
       sx={{
         position: 'fixed', right: { xs: 8, sm: 20 }, bottom: compact ? 76 : 20, zIndex: (t) => t.zIndex.modal - 1, width: { xs: 'calc(100vw - 16px)', sm: 400 },
         height: { xs: 'min(72vh, 560px)', sm: 540 }, display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid', borderColor: 'primary.main',
-        boxShadow: '6px 6px 0 rgba(45,212,191,.45)',
+        boxShadow: '0 12px 32px -12px rgba(8,112,105,.45)',
       }}
     >
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', px: 2, py: 1, bgcolor: 'rgba(94,234,212,.22)', borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h6" component="h2" sx={{ flexGrow: 1 }}>Assistant</Typography>
-        {status && <Chip size="small" variant="outlined" label={status.mode === 'ai' ? 'AI' : 'Built-in'} />}
         <Tooltip title="Clear the conversation">
           <span><IconButton size="small" aria-label="Clear the conversation" disabled={turns.length === 0 || busy} onClick={() => { setTurns([]); setError(null) }}><ClearIcon fontSize="small" /></IconButton></span>
         </Tooltip>
@@ -104,7 +115,7 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
         {turns.length === 0 && (
           <Box>
             <Typography variant="body2" sx={{ mb: 1.5 }}>
-              Ask about your projects, milestones and tasks. I can only read: I see what you can see, and I change nothing.
+              Ask about your projects, milestones and tasks.
             </Typography>
             <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
               {SUGGESTIONS[role].map((s) => <Chip key={s} label={s} onClick={() => void ask(s)} variant="outlined" clickable />)}
@@ -113,7 +124,7 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
         )}
         {turns.map((t, i) => (
           <Box key={i} sx={{ alignSelf: t.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '92%' }}>
-            <Typography variant="overline" sx={{ display: 'block', textAlign: t.role === 'user' ? 'right' : 'left' }}>{t.role === 'user' ? 'You' : 'Assistant'}</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, textAlign: t.role === 'user' ? 'right' : 'left' }}>{t.role === 'user' ? 'You' : 'Assistant'}</Typography>
             <Box
               sx={{
                 p: 1.25, borderRadius: '3px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.875rem', border: 1, borderColor: 'divider',
@@ -125,7 +136,7 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
             {t.notice && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>{t.notice}</Typography>}
             {t.toolsUsed && t.toolsUsed.length > 0 && (
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                Looked at: {t.toolsUsed.map((n) => LOOKED_AT[n] ?? n).join(', ')}
+                Looked at: {lookedAt(t.toolsUsed)}
               </Typography>
             )}
           </Box>

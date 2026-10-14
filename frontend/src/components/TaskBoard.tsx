@@ -1,26 +1,43 @@
 import { useState } from 'react'
-import { Box, Chip, Paper, Stack, Typography } from '@mui/material'
+import { Box, Button, Paper, Stack, TextField, Typography } from '@mui/material'
 import type { Task, TaskStatus } from '../api/types'
 import { COLUMNS, canMove, type Actor } from '../tasks'
+import { tint } from '../theme'
 import { TaskCard } from './TaskCard'
-
-const EDGE = { todo: 'text.disabled', in_progress: 'primary.light', done: 'success.main' } as const
 
 interface Props {
   tasks: Task[]
   who: Actor
   onMove: (task: Task, to: TaskStatus) => void
   onEdit?: (task: Task) => void
+  /** When given, the To do column ends with a one-line "Add a task" box. It resolves once the task is saved. */
+  onQuickAdd?: (name: string) => Promise<unknown>
 }
 
 /** Three columns, To do, In progress and Done. Drag a card to move it, or use its menu. */
-export function TaskBoard({ tasks, who, onMove, onEdit }: Props) {
+export function TaskBoard({ tasks, who, onMove, onEdit, onQuickAdd }: Props) {
   const [over, setOver] = useState<TaskStatus | null>(null)
+  const [draft, setDraft] = useState('')
+  const [adding, setAdding] = useState(false)
 
   const drop = (to: TaskStatus, id: string) => {
     setOver(null)
     const task = tasks.find((t) => t.id === id)
     if (task && canMove(task, to, who)) onMove(task, to)
+  }
+
+  const add = async () => {
+    const name = draft.trim()
+    if (!name || !onQuickAdd) return
+    setAdding(true)
+    try {
+      await onQuickAdd(name)
+      setDraft('')
+    } catch {
+      // The page shows the server's message; the text stays so it can be sent again.
+    } finally {
+      setAdding(false)
+    }
   }
 
   return (
@@ -35,15 +52,20 @@ export function TaskBoard({ tasks, who, onMove, onEdit }: Props) {
             onDragOver={(e) => { e.preventDefault(); setOver(col.value) }}
             onDragLeave={() => setOver((o) => (o === col.value ? null : o))}
             onDrop={(e) => { e.preventDefault(); drop(col.value, e.dataTransfer.getData('text/plain')) }}
-            sx={{ p: 1.5, minHeight: 160, borderTop: 4, borderTopColor: EDGE[col.value], bgcolor: over === col.value ? 'rgba(94,234,212,.28)' : 'rgba(255,255,255,.7)', transition: 'background-color .12s' }}
+            sx={{ p: 1.5, minHeight: 120, bgcolor: over === col.value ? tint.strong : tint.soft, borderColor: over === col.value ? 'primary.main' : undefined, transition: 'background-color .12s' }}
           >
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5, px: 0.5 }}>
-              <Typography variant="overline" component="h3">{col.label}</Typography>
-              <Chip size="small" label={items.length} />
-            </Stack>
+            <Typography variant="overline" component="h3" sx={{ display: 'block', mb: 1, px: 0.5 }}>{col.label} · {items.length}</Typography>
             <Stack spacing={1.25}>
               {items.map((t) => <TaskCard key={t.id} task={t} who={who} onMove={onMove} onEdit={onEdit} />)}
-              {items.length === 0 && <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>Nothing here.</Typography>}
+              {col.value === 'todo' && onQuickAdd && (
+                <Stack
+                  component="form" direction="row" spacing={1}
+                  onSubmit={(e) => { e.preventDefault(); void add() }}
+                >
+                  <TextField size="small" fullWidth placeholder="Add a task" value={draft} onChange={(e) => setDraft(e.target.value)} slotProps={{ htmlInput: { 'aria-label': 'New task name' } }} />
+                  <Button type="submit" variant="outlined" disabled={!draft.trim() || adding}>Add</Button>
+                </Stack>
+              )}
             </Stack>
           </Paper>
         )

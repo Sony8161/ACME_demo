@@ -12,6 +12,13 @@ describe('Async', () => {
     expect(screen.getByRole('progressbar', { name: 'Loading' })).toBeInTheDocument()
   })
 
+  it('shows grey placeholder rows (marked busy), not a lone spinner, while loading', () => {
+    render(<Async state={state({ loading: true })}>{list}</Async>)
+    const bar = screen.getByRole('progressbar', { name: 'Loading' })
+    expect(bar).toHaveAttribute('aria-busy', 'true')
+    expect(bar.querySelectorAll('.MuiSkeleton-root')).toHaveLength(3)
+  })
+
   it('renders the content once there is data', () => {
     render(<Async state={state({ data: ['Ann', 'Bo'] })}>{list}</Async>)
     expect(screen.getByText('Ann')).toBeInTheDocument()

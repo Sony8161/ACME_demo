@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import {
-  Alert, Box, Button, Chip, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography,
-} from '@mui/material'
+import { Alert, Link, Stack, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
 import { api } from '../api/client'
 import type { DemoSeedResult, Overview } from '../api/types'
 import { errorText, useApi } from '../api/useApi'
 import { useAuth } from '../auth/context'
 import { Async } from '../components/Async'
+import { EmptyState } from '../components/EmptyState'
 import { CredentialsDialog } from '../components/CredentialsDialog'
 import { PageHeader } from '../components/PageHeader'
 import { ProjectCard } from '../components/ProjectCard'
@@ -38,78 +37,43 @@ export function DashboardPage() {
   return (
     <>
       <Async state={state}>
-        {(o) => (
-          <>
-            <PageHeader title="Dashboard" subtitle={`Where every project stands today, ${formatDate(o.asOf)}`} />
+        {(o) => {
+          const needing = o.counts.atRisk + o.counts.overdue
+          const free = o.allocation.filter((a) => a.state === 'available')
+          const verdict = o.counts.projects === 0 ? '' : needing > 0 ? `${needing} of ${o.counts.projects} project${o.counts.projects === 1 ? '' : 's'} need${needing === 1 ? 's' : ''} attention` : 'Everything is on track'
+          return (
+            <>
+              <PageHeader
+                title="Dashboard"
+                subtitle={`${formatDate(o.asOf)}${o.totals.budget > 0 ? ` · ${money(o.totals.spent)} spent of ${money(o.totals.budget)}` : ''}`}
+              />
 
-            {o.counts.projects === 0 && (
-              <Alert
-                severity="info"
-                sx={{ mb: 3 }}
-                action={user?.role === 'admin' ? <Button color="inherit" size="small" disabled={seeding} onClick={loadDemo}>{seeding ? 'Loading…' : 'Load sample data'}</Button> : undefined}
-              >
-                {user?.role === 'admin'
-                  ? 'There are no projects yet. Load sample managers, employees and projects to see how the dashboard looks.'
-                  : 'No projects are assigned to you yet.'}
-              </Alert>
-            )}
-            {seedError && <Alert severity="error" sx={{ mb: 3 }}>{seedError}</Alert>}
+              {o.counts.projects === 0 && (
+                <EmptyState
+                  text={user?.role === 'admin' ? 'There are no projects yet.' : 'No projects are assigned to you yet.'}
+                  action={user?.role === 'admin' ? { label: seeding ? 'Loading…' : 'Load sample data', onClick: loadDemo } : undefined}
+                />
+              )}
+              {seedError && <Alert severity="error" sx={{ mb: 2 }}>{seedError}</Alert>}
 
-            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, mb: 4 }}>
-              <Kpi label="Need attention" value={String(o.counts.atRisk + o.counts.overdue)} hint={`${o.counts.overdue} overdue, ${o.counts.atRisk} at risk`} tone={o.counts.atRisk + o.counts.overdue > 0 ? 'warning.main' : undefined} />
-              <Kpi label="Active projects" value={String(o.counts.active)} hint={`${o.counts.planned} planned, ${o.counts.completed} completed`} />
-              <Kpi label="Spent so far" value={money(o.totals.spent)} hint={`of ${money(o.totals.budget)} budget`} />
-              <Kpi label="People free" value={String(o.availablePeople)} hint="not on a milestone today" />
-            </Box>
+              {verdict && (
+                <Typography variant="h6" component="h2" sx={{ mb: 1.5, color: needing > 0 ? 'warning.dark' : 'success.dark' }}>{verdict}</Typography>
+              )}
+              <Stack spacing={1.5} sx={{ mb: 3 }}>
+                {o.projects.map((p) => <ProjectCard key={p.id} project={p} />)}
+              </Stack>
 
-            <Typography variant="h6" gutterBottom>Projects, most urgent first</Typography>
-            <Stack spacing={2} sx={{ mb: 4 }}>
-              {o.projects.map((p) => <ProjectCard key={p.id} project={p} />)}
-            </Stack>
-
-            <Typography variant="h6" gutterBottom>Who is busy and who is free</Typography>
-            <TableContainer component={Paper}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Person</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Working on</TableCell>
-                    <TableCell align="right">This week</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {o.allocation.map((p) => (
-                    <TableRow key={p.userId}>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{p.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">{p.jobTitle}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip size="small" color={p.state === 'available' ? 'success' : 'default'} variant={p.state === 'available' ? 'filled' : 'outlined'} label={p.state === 'available' ? 'Free' : 'Busy'} />
-                      </TableCell>
-                      <TableCell>
-                        {p.currentWork ? (
-                          <Typography variant="body2" component={RouterLink} to={`/projects/${p.currentWork.projectId}`} sx={{ color: 'inherit' }}>
-                            {p.currentWork.milestoneName} · {p.currentWork.projectName}
-                          </Typography>
-                        ) : p.nextWork ? (
-                          <Typography variant="body2" color="text.secondary">Next: {p.nextWork.milestoneName} from {formatDate(p.nextWork.startDate)}</Typography>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">Nothing planned</Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="right">{p.hoursThisWeek} of {p.weekCapacity} h</TableCell>
-                    </TableRow>
-                  ))}
-                  {o.allocation.length === 0 && (
-                    <TableRow><TableCell colSpan={4}><Typography color="text.secondary">No employees yet.</Typography></TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </>
-        )}
+              {o.allocation.length > 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  {free.length === 0
+                    ? 'Nobody is free today. '
+                    : `Free today: ${free.slice(0, 3).map((f) => f.name).join(', ')}${free.length > 3 ? ` and ${free.length - 3} more` : ''}. `}
+                  <Link component={RouterLink} to="/people?view=availability">See availability</Link>
+                </Typography>
+              )}
+            </>
+          )
+        }}
       </Async>
 
       <CredentialsDialog
@@ -119,15 +83,5 @@ export function DashboardPage() {
         onClose={() => setSeeded(null)}
       />
     </>
-  )
-}
-
-function Kpi({ label, value, hint, tone }: { label: string; value: string; hint: string; tone?: string }) {
-  return (
-    <Paper sx={{ p: 2, borderTop: 3, borderTopColor: 'primary.light' }}>
-      <Typography variant="overline" component="p">{label}</Typography>
-      <Typography variant="h4" component="p" sx={{ color: tone }}>{value}</Typography>
-      <Typography variant="caption" color="text.secondary">{hint}</Typography>
-    </Paper>
   )
 }

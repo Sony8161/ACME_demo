@@ -60,38 +60,38 @@ costs, and whether it is late."**
 ### Act 1. The company at a glance (admin, 2 min)
 
 1. Sign in as `admin1` / `Demo1234!`. You land on the **Dashboard**.
-2. Point at the four tiles, then at the project list. **Say:** "Ranked by urgency: overdue first, then at risk. Each project
-   says why, in words."
+2. Read the heading (*2 of 4 projects need attention*), then the project list. **Say:** "Ranked by urgency: overdue first, then at risk. Each project
+   says why, in one line."
 3. Point at one pulse bar. **Say:** "The fill is work done, the dark marker is today. Fill behind the marker means behind schedule."
-4. Click **Data Platform Migration**. Read the box "Why this project is at risk": spending is ahead of the calendar, and the planned
+4. Click **Data Platform Migration**, then **Why?** under the progress bar: spending is ahead of the calendar, and the planned
    staffing will cost more than the budget. **Say:** "Notice the work is actually ahead of the calendar here. The money is
    going faster, and the system caught it. Nobody set this status; it is calculated from dates and assignments."
-5. Click the **Team** tab. **Say:** "Nobody types hours. Every Monday to Friday on a milestone is an 8-hour shift, so hours and cost
+5. Click the **Team & costs** tab. **Say:** "Nobody types hours. Every Monday to Friday on a milestone is an 8-hour shift, so hours and cost
    come from the calendar."
-6. Sign out (icon, top right).
+6. Sign out (the initials button, top right, then **Sign out**).
 
 ### Act 2. What an employee sees (1 min)
 
 1. Sign in as `alex01` / `Demo1234!`. You land on **My work**.
-2. **Say:** "Alex sees today's milestone, hours this week out of 40, and deliverable progress. Alex never sees a dollar."
+2. **Say:** "Alex sees today's milestone, hours this week out of 40, and their own tasks. Alex never sees a dollar."
    Click the project: only Alex's project is visible, and no money appears.
 3. Sign out.
 
 ### Act 3. A manager at work (maria1, 4 min)
 
 1. Sign in as `maria1` / `Demo1234!`. **Say:** "Maria sees only her two projects, not James's."
-2. Open **Website Redesign**. Scroll to the **Launch** milestone (nobody is assigned).
-3. Click **Assign a person**, choose **Sofia Rossi**, leave the dates empty, click **Assign**.
+2. Open **Website Redesign**. The **Launch** milestone (nobody is assigned) is already open, because it is waiting.
+3. Open its **...** menu, click **Assign a person**, choose **Sofia Rossi**, leave the dates empty, click **Assign**.
    - **You see:** a red message: *Sofia Rossi is already on milestone 'Discovery' of 'Customer Portal' from ... to ...*
    - **Say:** "One person, one milestone per day, even across projects. The server refuses and names the clash. That makes
      over-allocation impossible, not just reported."
-4. Cancel, click **Assign a person** again, choose **Priya Shah**, click **Assign**. Priya appears in the team.
-5. In the **Build** milestone click **Complete milestone**, then **Sign off and complete** (leave the note empty).
-   - **You see:** *1 deliverable(s) are not done yet: Dashboard*
-   - **Say:** "A milestone is signed off only after the manager has reviewed every deliverable."
-6. Cancel. Tick the **Dashboard** checkbox. Click **Complete milestone**, type a note such as
+4. Cancel, open **Assign a person** again, choose **Priya Shah**, click **Assign**. Priya appears in the team.
+5. In the **Build** milestone open the **...** menu.
+   - **You see:** **Complete milestone** is greyed out: *Every task must be done first*
+   - **Say:** "A milestone is signed off only after the manager has reviewed every task, so the button is off until they are all ticked."
+6. Close the menu. Tick the **Dashboard** checkbox. A **Ready to sign off** button appears: click it, type a note such as
    *Reviewed with the client; both screens signed off*, click **Sign off and complete**.
-   - **You see:** Build leaves the list, and the Milestones tile reads **2 of 3**.
+   - **You see:** Build leaves the list, and the summary line reads **2 of 3 milestones**.
    - **Say:** "It moved to the archive but still counts toward progress, and Alex is free from tomorrow."
 7. Sign out.
 
@@ -108,12 +108,12 @@ costs, and whether it is late."**
 1. Sign in as `admin1`. Open **Website Redesign**.
 2. **Say:** "Admins still see the milestone Maria completed, marked *Completed, archived*, with her review note. Managers and
    employees no longer do."
-3. Go to **Projects**, open **Customer Portal**, click **Archive**, confirm. Open **Archive** in the menu: it is listed.
+3. Go to **Projects**, open **Customer Portal**, open the **...** menu next to the title, click **Archive project**, confirm. Open **More > Archive**: it is listed.
 4. Click **Restore**. **Say:** "There is no delete anywhere in the API; a test proves it. Archive, then restore."
 
 ### Act 6. Who did what, and when (admin, 1.5 min)
 
-1. Still as `admin1`, open **History** in the menu. **Say:** "Everything that changes is recorded by the database itself, in the same
+1. Still as `admin1`, open **More > History**. **Say:** "Everything that changes is recorded by the database itself, in the same
    transaction as the change, so nothing can forget to log it and a refused request leaves no trace. It cannot be edited or deleted."
 2. Open the entry **Signed off milestone Build**: **Status: In progress → Completed** and Maria's review note. The person shown is the
    one who did it (after the practice run you will see Maria Lopez; the sample company itself was loaded by the admin).
@@ -123,32 +123,33 @@ costs, and whether it is late."**
 
 ### Act 7. Tasks: a board for the work (maria1 then omar01, 2 min)
 
-1. Sign in as `maria1`, open **Website Redesign**, click the **Tasks** tab. **Say:** "Every deliverable is now a task: an owner, a priority,
+1. Sign in as `maria1`, open **Website Redesign**, click the **Tasks** tab. **Say:** "Every task has an owner, a priority,
    a due date and a status. Same data as the checklist, so the sign-off rule is unchanged."
-2. Drag **Launch announcement** from To do to **In progress**; or open its **...** menu (the keyboard route). Switch to **List**.
-3. Sign in as `omar01`, open **My tasks**. **Say:** "Employees see only their own tasks. Omar can start or pause his task, but only a manager can
+2. Type a name in **Add a task** under To do and press Enter. Drag **Launch announcement** from To do to **In progress** (or use its **...** menu, the keyboard route),
+   then click **Undo** in the message at the bottom. Switch to **List**.
+3. Sign in as `omar01`; **My work** has a **My tasks** section. **Say:** "Employees see only their own tasks. Omar can start or pause his task, but only a manager can
    finish it, because a manager reviews the work." Click **Pause Data copied** then **Start Data copied**. Every move is in the **History**.
 
 ### Act 8. The timeline (admin1, 1 min)
 
-1. Sign in as `admin1` and open **Timeline** in the menu. **Say:** "Every open project on one calendar, coloured the same way as everywhere else:
+1. Sign in as `admin1`, open **Projects** and switch to **Timeline**. **Say:** "Every open project on one calendar, coloured the same way as everywhere else:
    green on track, amber at risk, red overdue, grey signed off. The vertical line is today, and the filled part of a bar is the work done."
-2. Open **Data Platform Migration**, then its **Timeline** tab: the milestones as bars, each task a diamond on its due date. Switch **Show tasks** off and on.
+2. Open **Data Platform Migration**; on the **Plan** tab switch **List** to **Timeline**: the milestones as bars, each task a diamond on its due date. Switch **Show tasks** off and on.
 
 ### Act 9. Dependencies (maria1, then admin1, 1.5 min)
 
-1. As `maria1`, open **Website Redesign**. **Launch** carries a **Waiting for 1** tag, and its **Dependencies** section says it waits for **Build**.
-   Click **Mark as started** on Launch. **Say:** "A milestone can wait for another, in this project or another one you manage. The server refuses and names what it is waiting for."
+1. As `maria1`, open **Website Redesign**. **Launch** carries a **Waiting for 1** tag, and its expanded card says it waits for **Build**.
+   Open its **...** menu and click **Mark as started**. **Say:** "A milestone can wait for another, in this project or another one you manage. The server refuses and names what it is waiting for."
 2. Complete **Build** (Act 3). **Say:** "The moment Build is signed off, Launch is free: the tag is gone."
-3. As `admin1`, open **Customer Portal** and its **Dependencies** tab: the project waits for **Website Redesign**, so it cannot be completed until then.
-   Try **Add dependency**: it lists only what makes sense, never the item itself and never what is already linked. Loops are refused, and every link is in the **History**.
+3. As `admin1`, open **Customer Portal** and click its **Waiting for 1** tag: the project waits for **Website Redesign**, so it cannot be completed until then.
+   Try **Add dependency** on a milestone's **...** menu: it lists only what makes sense, never the item itself and never what is already linked. Loops are refused, and every link is in the **History**.
 
 ### Act 10. The assistant (admin1, 1 min)
 
-1. Click **Assistant** at the bottom right. **Say:** "A chat box on every screen. It can only read, and it answers from the same lookups as the
+1. Click the round chat button at the bottom right. **Say:** "A chat box on every screen. It can only read, and it answers from the same lookups as the
    screens, run as the person asking, so a manager hears about their own projects and an employee never hears about money."
-2. Click **What is late?**, then type **What is blocked?**. Note **Looked at: ...** under each answer, and the **Built-in** tag in the header:
-   with an AI key set on the server it says **AI** and a model chooses the lookups; without one nothing leaves the machine.
+2. Click **What is late?**, then type **What is blocked?**. Note **Looked at: ...** under each answer. With an AI key set on the server a model chooses the lookups;
+   without one the built-in engine answers and nothing leaves the machine.
 3. Optional: sign in as `alex01` and ask the same question: only Alex's own work, no money.
 
 ### Close (30 seconds)
@@ -176,7 +177,7 @@ Act 1 (steps 1 to 4), Act 3 steps 3, 5 and 6 only, then Act 5 steps 3 and 4 and 
 | The site does not load at all | `./bin/start-dev.sh` restarts the proxy and website |
 | LocalStack was restarted or the machine rebooted | `./bin/demo-postgres.sh`, `./bin/start-dev.sh`, then `./bin/demo-ready.sh` |
 | The browser offers to save a password | Dismiss it |
-| Everything fails on stage | Walk through `docs/demo-screenshots/` (36 pictures, one folder per MVP item and one for the history; see `docs/MVP.md`), then show the saved responses in the Postman collection and `docs/postman/results/` |
+| Everything fails on stage | Walk through `docs/demo-screenshots/` (46 pictures, one folder per MVP item and one for the history; see `docs/MVP.md`), then show the saved responses in the Postman collection and `docs/postman/results/` |
 
 ## 6. Other commands
 

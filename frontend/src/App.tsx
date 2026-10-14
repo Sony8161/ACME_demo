@@ -11,8 +11,6 @@ import { LoginPage } from './pages/LoginPage'
 const ArchivePage = lazy(() => import('./pages/ArchivePage').then((m) => ({ default: m.ArchivePage })))
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
 const HistoryPage = lazy(() => import('./pages/HistoryPage').then((m) => ({ default: m.HistoryPage })))
-const TimelinePage = lazy(() => import('./pages/TimelinePage').then((m) => ({ default: m.TimelinePage })))
-const MyTasksPage = lazy(() => import('./pages/MyTasksPage').then((m) => ({ default: m.MyTasksPage })))
 const MyWorkPage = lazy(() => import('./pages/MyWorkPage').then((m) => ({ default: m.MyWorkPage })))
 const PeoplePage = lazy(() => import('./pages/PeoplePage').then((m) => ({ default: m.PeoplePage })))
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage').then((m) => ({ default: m.ProjectDetailPage })))
@@ -34,11 +32,11 @@ export function App() {
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route path="/my-work" element={<RequireRole roles={['employee']}><MyWorkPage /></RequireRole>} />
-          <Route path="/my-tasks" element={<RequireRole roles={['employee']}><MyTasksPage /></RequireRole>} />
+          <Route path="/my-tasks" element={<Navigate to="/my-work" replace />} />
+          <Route path="/timeline" element={<Navigate to="/projects?view=timeline" replace />} />
           <Route path="/dashboard" element={<RequireRole roles={['admin', 'manager']}><DashboardPage /></RequireRole>} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-          <Route path="/timeline" element={<RequireRole roles={['admin', 'manager']}><TimelinePage /></RequireRole>} />
           <Route path="/people" element={<RequireRole roles={['admin', 'manager']}><PeoplePage /></RequireRole>} />
           <Route path="/history" element={<RequireRole roles={['admin']}><HistoryPage /></RequireRole>} />
           <Route path="/archive" element={<RequireRole roles={['admin']}><ArchivePage /></RequireRole>} />

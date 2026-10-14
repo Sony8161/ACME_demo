@@ -3,8 +3,8 @@ import { Box, Typography } from '@mui/material'
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, mb: 3, pb: 2, borderBottom: 2, borderColor: 'primary.main' }}>
-      <Box sx={{ minWidth: 0, }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, mb: 2.5 }}>
+      <Box sx={{ minWidth: 0 }}>
         <Typography variant="h5" component="h1">{title}</Typography>
         {subtitle && <Typography color="text.secondary" component="div">{subtitle}</Typography>}
       </Box>

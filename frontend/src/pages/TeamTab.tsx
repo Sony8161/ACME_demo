@@ -1,4 +1,5 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
+import { IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from '@mui/material'
+import InfoIcon from '@mui/icons-material/InfoOutlined'
 import { api } from '../api/client'
 import type { AssigneeList } from '../api/types'
 import { useApi } from '../api/useApi'
@@ -12,9 +13,12 @@ export function TeamTab({ projectId }: { projectId: string }) {
     <Async state={state}>
       {(team) => (
         <>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Hours are not typed in. Every Monday to Friday of an assignment is an 8-hour shift. "Expected" is the whole range, worked out when the work is planned, at the hourly rate it was planned at; "so far" counts up to today.
-          </Typography>
+          <Stack direction="row" sx={{ alignItems: 'center', mb: 0.5 }}>
+            <Typography variant="overline" component="h3">Team</Typography>
+            <Tooltip title='Hours are not typed in. Every Monday to Friday of an assignment is an 8-hour shift. "Expected" is the whole range at the rate it was planned at; "so far" counts up to today.'>
+              <IconButton aria-label="How hours are counted" sx={{ width: 40, height: 40 }}><InfoIcon fontSize="small" /></IconButton>
+            </Tooltip>
+          </Stack>
           <TableContainer component={Paper}>
             <Table size="small">
               <TableHead>
@@ -47,7 +51,7 @@ export function TeamTab({ projectId }: { projectId: string }) {
                     )}
                   </TableRow>
                 ))}
-                {team.items.length === 0 && <TableRow><TableCell colSpan={8}><Typography color="text.secondary">Nobody is assigned to a milestone yet.</Typography></TableCell></TableRow>}
+                {team.items.length === 0 && <TableRow><TableCell colSpan={8}><Typography color="text.secondary">Nobody is assigned yet. Assign people from a milestone on the Plan tab.</Typography></TableCell></TableRow>}
                 {team.items.length > 0 && (
                   <TableRow>
                     <TableCell colSpan={4}><strong>Total</strong></TableCell>
