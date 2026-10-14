@@ -23,10 +23,14 @@ const MVPS = {
   6: 'mvp6-risk-status-with-reasons',
   7: 'mvp7-archive-instead-of-delete',
   8: 'mvp8-a-screen-for-each-role',
+  10: 'extra-history-and-audit',
 }
 
-rmSync(OUT, { recursive: true, force: true })
-for (const dir of Object.values(MVPS)) mkdirSync(path.join(OUT, dir), { recursive: true })
+// Only the picture folders are cleared: the README beside them is written by hand.
+for (const dir of Object.values(MVPS)) {
+  rmSync(path.join(OUT, dir), { recursive: true, force: true })
+  mkdirSync(path.join(OUT, dir), { recursive: true })
+}
 
 const browser = await chromium.launch()
 const context = await browser.newContext({ viewport: { width: 1280, height: 800 } })
@@ -245,6 +249,23 @@ await shot(7, '7c-archive-page-admins-only')
 await page.getByRole('button', { name: 'Restore' }).first().click()
 await page.getByText('No archived projects.').waitFor()
 await shot(7, '7d-restored-nothing-was-lost')
+
+// Extra: the history (audit trail) of everything done above
+await page.getByRole('link', { name: 'History', exact: true }).first().click()
+await page.getByText('Signed off milestone Build').first().waitFor()
+await shot(10, 'h1-history-who-did-what-and-when')
+await page.getByRole('button', { name: /Show details: Signed off milestone Build/ }).click()
+await page.getByText(/→ Completed/).first().waitFor()
+await shot(10, 'h2-an-entry-opened-to-show-exactly-what-changed')
+await page.getByRole('combobox', { name: 'Person' }).click()
+await page.getByRole('option', { name: 'Maria Lopez' }).click()
+await page.waitForTimeout(700)
+await shot(10, 'h3-filtered-to-one-person')
+await page.getByRole('link', { name: 'Projects', exact: true }).first().click()
+await openProject('Website Redesign')
+await page.getByRole('tab', { name: 'History' }).click()
+await page.getByText('Signed off milestone Build').first().waitFor()
+await shot(10, 'h4-a-project-has-its-own-history-tab')
 await signOut()
 
 await browser.close()

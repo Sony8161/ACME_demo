@@ -1,6 +1,6 @@
 # Postman collection: ACME Project Tracker API
 
-A complete, self-checking test flow for the API: **151 requests, 611 assertions**, with the expected JSON
+A complete, self-checking test flow for the API: **161 requests, 654 assertions**, with the expected JSON
 response saved as an example on every request.
 
 | File | What it is |
@@ -49,6 +49,8 @@ response saved as an example on every request.
 | 08 Reports | overview, allocation and personal dashboard |
 | 09 Completion and archive | complete a milestone after review (it moves to the admin-only archive), cancel one, complete/archive/restore a project, no DELETE exists |
 | 10 Admin | demo data |
+| 11 Security limits | account lock after five wrong passwords; an admin cannot reset their own password |
+| 12 History | the audit log: filters, paging, who may read it (admin: all; manager: own project; employee: none) |
 
 Every error follows one shape: `{"error": {"code", "message", "details": []}}`. Every request in the collection
 asserts its status code and the important fields, and stores the ids and tokens the next request needs

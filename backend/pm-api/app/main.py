@@ -16,6 +16,7 @@ from app.core.ratelimit import RateLimitMiddleware, SlidingWindowLimiter
 from app.db import SerializeRequestsMiddleware, TransactionMiddleware, get_connection, register_post_migrate_hook
 from app.domains.admin.router import router as admin_router
 from app.domains.assignments.router import router as team_router
+from app.domains.audit.router import audit_router, project_history_router
 from app.domains.auth.router import router as auth_router
 from app.domains.costs.router import router as costs_router
 from app.domains.deliverables.router import router as deliverables_router
@@ -59,7 +60,7 @@ def create_app() -> FastAPI:
 
     for router in (
         auth_router, users_router, projects_router, milestones_router, deliverables_router, team_router,
-        costs_router, reports_router, admin_router,
+        costs_router, reports_router, admin_router, audit_router, project_history_router,
     ):
         app.include_router(router)
 

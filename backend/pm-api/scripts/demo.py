@@ -70,19 +70,30 @@ def create_db() -> None:
 
 def reset(conn: psycopg.Connection) -> None:
     """Empty every table that references users, then recreate the first admin (one-time password, must change it)."""
-    conn.execute("TRUNCATE users CASCADE")
+    conn.execute("TRUNCATE users, audit_log CASCADE")
     ensure_bootstrap_admin(conn)
 
 
 def ready(conn: psycopg.Connection) -> None:
     reset(conn)
     admin = users_repo.get_auth_by_username(conn, get_settings().bootstrap_admin_username)
+    # The history credits the admin, as it does when the same data is loaded through the API.
+    conn.execute("SELECT set_config('app.actor_id', %s, true)", (str(admin["id"]),))
     seed_demo(conn, admin["id"])
     maria = conn.execute("SELECT id FROM users WHERE email LIKE 'maria.lopez@%'").fetchone()
     users_repo.insert(
         conn, username="nina01", password_hash=security.hash_password(NEW_HIRE_PASSWORD), name="Nina Park",
         email="nina.park@demo.acme.example", job_title="Junior Designer", role="employee", manager_id=maria["id"], salary=38,
     )
+    try:
+        with conn.transaction():  # keeps the cosmetic edits out of the history (needs a superuser; else they are recorded)
+            conn.execute("SET LOCAL session_replication_role = replica")
+            _rename_and_set_passwords(conn)
+    except psycopg.errors.InsufficientPrivilege:
+        _rename_and_set_passwords(conn)
+
+
+def _rename_and_set_passwords(conn: psycopg.Connection) -> None:
     for prefix, username in USERNAMES.items():
         conn.execute("UPDATE users SET username = %s WHERE email LIKE %s", (username, f"{prefix}@%"))
     demo_hash = security.hash_password(DEMO_PASSWORD)

@@ -5,8 +5,8 @@ the pages each person sees follow their role, and the server enforces the same r
 
 | Role | Opens to | Can do |
 |---|---|---|
-| Admin | Dashboard | Everything: create projects and people, archive and restore, load sample data |
-| Manager | Dashboard | Run their projects: milestones, deliverables, team, costs, completion |
+| Admin | Dashboard | Everything: create projects and people, archive and restore, read the history of every change, load sample data |
+| Manager | Dashboard | Run their projects: milestones, deliverables, team, costs, completion; read their project's history |
 | Employee | My work | See their milestone, hours this week and deliverables. No money is ever shown |
 
 ## Run it
@@ -31,7 +31,7 @@ dashboard. It creates two managers, six employees and four projects and shows th
 |---|---|
 | `npm run dev` | Dev server on port 3000 |
 | `npm run build` | Type check, then production build into `dist/` |
-| `npm test` | Vitest and React Testing Library: 253 tests across the API client, every page and dialog, role guards, session refresh |
+| `npm test` | Vitest and React Testing Library: 266 tests across the API client, every page and dialog, role guards, session refresh |
 | `npm run test:coverage` | The same with an 80% gate on statements, branches, functions and lines (currently 99% / 98%) |
 | `npm run screenshots` | Re-takes the 32 demo pictures in `docs/demo-screenshots/` (one folder per MVP item) from the running demo |
 | `npm run e2e` | Playwright through the real stack (see `docs/TESTING.md`): the demo journey for all three roles plus axe accessibility scans |

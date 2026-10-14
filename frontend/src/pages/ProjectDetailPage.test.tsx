@@ -437,3 +437,45 @@ describe('Project detail: costs tab', () => {
     expect(await within(dialog).findByText('This project is closed')).toBeInTheDocument()
   })
 })
+
+describe('Project detail: History tab', () => {
+  const history = {
+    items: [{
+      id: 7, occurred_at: '2026-03-11T14:05:00Z', actor_id: 'm', actor_name: 'Mia Manager', entity: 'milestone', entity_id: 'm1',
+      project_id: 'p1', project_name: 'Website redesign', label: 'Design', action: 'create', summary: 'Added milestone Design',
+      changes: [],
+    }],
+    total: 1, page: 1, page_size: 20,
+  }
+
+  it('shows the project manager the changes made to their project, without a project link', async () => {
+    signIn('manager', { id: 'manager-1' })
+    serve(project(), { 'GET /projects/:id/history': history })
+    page()
+    await userEvent.click(await screen.findByRole('tab', { name: 'History' }))
+    expect(await screen.findByText('Added milestone Design')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Website redesign' })).not.toBeInTheDocument()
+  })
+
+  it('gives an admin the tab too, and an employee or another manager none', async () => {
+    signIn('admin')
+    serve(project(), { 'GET /projects/:id/history': history })
+    const first = page()
+    expect(await screen.findByRole('tab', { name: 'History' })).toBeInTheDocument()
+    first.unmount()
+    localStorage.clear()
+
+    signIn('manager', { id: 'someone-else' })
+    const second = page()
+    await screen.findByRole('heading', { name: 'Website redesign' })
+    expect(screen.queryByRole('tab', { name: 'History' })).not.toBeInTheDocument()
+    second.unmount()
+    localStorage.clear()
+
+    signIn('employee')
+    serve(employeeProject())
+    page()
+    await screen.findByRole('heading', { name: 'Website redesign' })
+    expect(screen.queryByRole('tab', { name: 'History' })).not.toBeInTheDocument()
+  })
+})

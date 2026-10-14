@@ -111,14 +111,24 @@ costs, and whether it is late."**
 3. Go to **Projects**, open **Customer Portal**, click **Archive**, confirm. Open **Archive** in the menu: it is listed.
 4. Click **Restore**. **Say:** "There is no delete anywhere in the API; a test proves it. Archive, then restore."
 
+### Act 6. Who did what, and when (admin, 1.5 min)
+
+1. Still as `admin1`, open **History** in the menu. **Say:** "Everything that changes is recorded by the database itself, in the same
+   transaction as the change, so nothing can forget to log it and a refused request leaves no trace. It cannot be edited or deleted."
+2. Open the entry **Signed off milestone Build**: **Status: In progress → Completed** and Maria's review note. The person shown is the
+   one who did it (after the practice run you will see Maria Lopez; the sample company itself was loaded by the admin).
+3. Filter **Person** to Maria Lopez, then **Clear filters**. Open **Website Redesign** and click its **History** tab: managers see this
+   for their own projects only.
+4. **Say:** "Passwords are never in it: a password change is recorded as the word 'changed'."
+
 ### Close (30 seconds)
 
-"The API behind this passes 175 tests and a 151-request Postman run with no failures, both locally and on LocalStack.
+"The API behind this passes 198 tests and a 161-request Postman run with no failures, both locally and on LocalStack.
 What is left: the AWS deployment, and growing this demo UI into the full app."
 
 ### 5-minute cut
 
-Act 1 (steps 1 to 4), Act 3 steps 3, 5 and 6 only, then Act 5 steps 3 and 4.
+Act 1 (steps 1 to 4), Act 3 steps 3, 5 and 6 only, then Act 5 steps 3 and 4 and Act 6 step 1 and 2.
 
 ## 4. After each run
 

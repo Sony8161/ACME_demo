@@ -33,6 +33,8 @@ curl -s -m 60 -X POST "$API/users" "${AUTH[@]}" -d "{\"name\":\"Nina Park\",\"em
 
 echo "3/4 Setting readable usernames and passwords..."
 psql_ <<SQL
+-- Cosmetic edits to the sample accounts: keep them out of the history, which should show the demo's own story.
+SET session_replication_role = replica;
 UPDATE users u SET username = v.username
 FROM (VALUES
   ('maria.lopez@%', 'maria1'), ('james.carter@%', 'james1'), ('alex.kim@%', 'alex01'), ('priya.shah@%', 'priya1'),

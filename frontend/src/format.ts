@@ -15,6 +15,10 @@ export function formatDate(iso: string): string {
   return new Date(year, month - 1, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+/** An ISO moment ('2026-03-11T14:05:00Z') as the viewer's local 'Mar 11, 2026, 10:05 AM'. Stored and sent as UTC; converted only to show. */
+export const formatDateTime = (iso: string) =>
+  new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+
 export const dateRange = (start: string, end: string) => `${formatDate(start)} to ${formatDate(end)}`
 
 export const RISK_LABEL: Record<RiskLevel, string> = {

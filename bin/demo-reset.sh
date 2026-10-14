@@ -18,6 +18,7 @@ if docker exec pm-demo-postgres psql -U postgres -tAc "select to_regclass('publi
     "${PSQL[@]}" <<SQL
 SET client_min_messages = warning;
 TRUNCATE users CASCADE;
+DO \$\$ BEGIN IF to_regclass('audit_log') IS NOT NULL THEN TRUNCATE audit_log; END IF; END \$\$;
 INSERT INTO users (username, password_hash, name, email, job_title, role, salary, must_change_password)
 VALUES ('admin1', '$ADMIN_HASH', 'System Admin', 'admin@acme.example', 'Administrator', 'admin', 0, true);
 SQL

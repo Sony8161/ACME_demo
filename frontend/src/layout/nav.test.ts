@@ -9,7 +9,7 @@ describe('navFor', () => {
     expect(navFor('manager').map((i) => i.to)).toEqual(['/dashboard', '/projects', '/people'])
   })
 
-  it('gives an admin everything a manager has plus the archive', () => {
-    expect(navFor('admin').map((i) => i.label)).toEqual(['Dashboard', 'Projects', 'People', 'Archive'])
+  it('gives an admin everything a manager has plus the history and the archive', () => {
+    expect(navFor('admin').map((i) => i.label)).toEqual(['Dashboard', 'Projects', 'People', 'History', 'Archive'])
   })
 })

@@ -7,13 +7,13 @@ The structure follows the Testing Expectations in [full-stack.md](./full-stack.m
 
 | Layer | What | Command | Result |
 |---|---|---|---|
-| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **175 tests pass**, 97.4% coverage (gate 80%) |
+| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **198 tests pass**, 97.4% coverage (gate 80%) |
 | Backend lint and security | `ruff` and `bandit` (same scan as CI) | `./bin/test-backend.sh` | clean |
-| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **253 tests pass**, 99.2% statements, 98.1% branches (gate 80%) |
+| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **266 tests pass**, 99.1% statements, 98.4% branches (gate 80%) |
 | Frontend static checks | ESLint, TypeScript, production build, `npm audit` | `npm run lint && npm run typecheck && npm run build && npm audit` | clean, 0 vulnerabilities |
-| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **17 of 17 checks pass** (11 journey, 6 axe scans) |
-| API contract, every endpoint | 151 requests with 611 assertions (Postman/Newman); all 42 operations of the API | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | **0 failures** locally and on LocalStack; saved as `docs/postman/results/postman-results-localstack.json` |
-| Demo pictures | 32 pictures, one folder per MVP item | `cd frontend && npm run screenshots` | Retaken from the running demo; indexed in `docs/demo-screenshots/README.md` and `docs/MVP.md` |
+| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **24 of 24 checks pass** (17 journey, 7 axe scans) |
+| API contract, every endpoint | 161 requests with 654 assertions (Postman/Newman); all 44 operations of the API | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | **0 failures** locally and on LocalStack; saved as `docs/postman/results/postman-results-localstack.json` |
+| Demo pictures | 36 pictures, one folder per MVP item (and the history extra) | `cd frontend && npm run screenshots` | Retaken from the running demo; indexed in `docs/demo-screenshots/README.md` and `docs/MVP.md` |
 | Performance | Artillery load test | `npx artillery run docs/load/artillery.yml` | see Load test below |
 
 ## Backend
@@ -37,7 +37,7 @@ and skip themselves if PostgreSQL is not reachable. "Today" is frozen to Wednesd
 | Rate limiting and the account lock | `test_ratelimit.py`: the limiter (window, per person, per address, forged forwarding header, health check exempt), the real app refusing a flood with 429 and `Retry-After`, five wrong passwords locking an account even for the right one, the count surviving the request's rollback, unlock after 15 minutes or by an admin reset |
 | Precalculated hours and cost | `test_precalculated.py`: the stored expected hours, cost and rate; recomputed when dates change; project and milestone totals add up the stored fields; a raise changes future work and never the past; and migration 003 run on data written by the old version |
 
-Coverage: 97.4% overall. All nine router files and `app/core/errors.py` (the error handlers) are at 100%. The lowest files are
+Coverage: 97.4% overall (the audit history is covered by `test_audit.py`: 22 tests). All nine router files and `app/core/errors.py` (the error handlers) are at 100%. The lowest files are
 `app/main.py` (94%, the health check's database-down branch) and `app/domains/users/service.py` (95%).
 
 ## API contract: every endpoint (Postman)
@@ -55,7 +55,7 @@ npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/
 the time it took; and for each operation which requests exercised it. The raw Newman export is never committed because it holds tokens and
 one-time passwords; the saved file holds none.
 
-Result on 2026-10-14, LocalStack: **151 requests, 611 assertions, 0 failed, 42 of 42 operations exercised**. The one thing the collection does
+Result on 2026-10-14, LocalStack: **161 requests, 654 assertions, 0 failed, 44 of 44 operations exercised**. The one thing the collection does
 not do is exceed the 600-requests-a-minute limit (that needs hundreds of requests); `test_ratelimit.py` covers it.
 
 ## Frontend
@@ -67,7 +67,7 @@ npm run test:coverage       # with the 80% gate (statements, branches, functions
 npm run lint && npm run typecheck && npm run build
 ```
 
-253 tests in 28 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
+266 tests in 29 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
 mocked at the axios adapter (`src/test/mockApi.ts`), so tests exercise the real client code: key conversion, error mapping, the
 401 handler. Covered: every page, the dialogs (busy, error and success states), role differences (employees see no money, no manager
 buttons), route guards and redirects, the sliding session refresh, and the forced password change.
@@ -82,10 +82,11 @@ cd frontend && npm run e2e                       # SHOTS=/some/dir saves a scree
 ./bin/demo-ready.sh                              # the test completes a milestone and archives a project, so reset
 ```
 
-17 checks drive a real browser through: sign-in, the dashboard ranking, an employee with no money visible, a manager seeing only
+24 checks drive a real browser through: sign-in, the dashboard ranking, an employee with no money visible, a manager seeing only
 their own projects, a refused double booking, a refused then accepted milestone sign-off, the forced first-login password change,
-an admin seeing the archived milestone, and archive then restore. Six pages are scanned with axe-core (sign-in, dashboard,
-project detail, my work, a manager's project page, people); the test fails on any serious or critical issue. The first run found
+an admin seeing the archived milestone, archive then restore, and the history page crediting each of those to the right person
+(with its filter and the project's own History tab). Seven pages are scanned with axe-core (sign-in, dashboard,
+project detail, my work, a manager's project page, people, history); the test fails on any serious or critical issue. The first run found
 one (a tooltip put an `aria-label` on a plain element); it is fixed and now guarded.
 
 ## Load test
@@ -101,7 +102,7 @@ Read-only traffic as managers and an admin: overview, project list, one project,
 
 | Profile | Requests | Failed | Median | p95 | p99 | Max |
 |---|---|---|---|---|---|---|
-| Realistic, on the final code with rate limiting (5 new users/s across three people, about 19 requests/s observed) | 1,189 | **0** (all 200, no 429) | 27 ms | 51 ms | 99 ms | 1.8 s (a container starting) |
+| Realistic, on the final code with rate limiting (5 new users/s across three people, about 19 requests/s observed) | 1,197 | **0** (all 200, no 429) | 20 ms | 35 ms | 49 ms | 62 ms |
 | Stress, measured before the limiter was added (ramp to 15 users/s, about 90 requests/s offered) | 2,554 | 1,769 (HTTP 500 x1,228, 502 x96, timeouts x445) | 1.7 s | 5.1 s | 6.7 s | 7.9 s |
 
 The scenario spreads the traffic over three people (maria1, james1, admin1) because the API now limits each person to 600 requests a minute;

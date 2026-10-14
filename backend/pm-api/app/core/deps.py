@@ -82,6 +82,9 @@ def get_authenticated_user(
     if row["token_version"] != claims.get("tv"):
         raise AuthError("Your session is no longer valid. Please sign in again.", code="token_revoked")
 
+    # Tell the database who is acting, for this transaction only: the audit triggers (migration 004) read it.
+    conn.execute("SELECT set_config('app.actor_id', %s, true)", (str(row["id"]),))
+
     return CurrentUser(
         id=row["id"],
         username=row["username"],

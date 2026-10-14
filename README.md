@@ -17,10 +17,11 @@ calculated from dates instead of timesheets. FastAPI on AWS Lambda, PostgreSQL, 
 |---|---|
 | [docs/DEMO.md](./docs/DEMO.md) | Run it on LocalStack and present it (accounts, script, recovery steps) |
 | [docs/TESTING.md](./docs/TESTING.md) | Every test command, results, coverage and known gaps |
+| [docs/OVERVIEW.md](./docs/OVERVIEW.md) | A short summary: what is built, how it was tested, the architecture, scaling, and what to improve next |
 | [docs/CONTEXT.md](./docs/CONTEXT.md) | Requirements, decisions and trade-offs, what is done and what is not |
 | [backend/pm-api/README.md](./backend/pm-api/README.md) | The API: architecture, rules, endpoints, how to run and test it |
 | [frontend/README.md](./frontend/README.md) | The web app |
-| [docs/postman](./docs/postman/README.md) | The API collection: 151 requests with saved examples, and a saved results file |
+| [docs/postman](./docs/postman/README.md) | The API collection: 161 requests with saved examples, and a saved results file |
 
 Quick start (about 3 minutes the first time): `./bin/demo-postgres.sh && ./bin/start-dev.sh`, then `./bin/demo-ready.sh` in a
 second terminal, then open http://localhost:3000 and sign in as `admin1` / `Demo1234!`.

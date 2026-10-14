@@ -545,6 +545,30 @@ SPEC: list[Folder] = [
           check=[ERR("self_reset")] + VALID_ENVELOPE,
           desc="A reset signs the person out and shows the new password once; done to yourself it could lock out the only admin."),
     ]),
+
+    Folder("12 History", "Everything above was recorded by the database as it happened: who did it, when, and which fields changed. "
+           "Only admins read the whole log; a manager reads the history of their own project. It cannot be edited or deleted.", [
+        R("Admin reads the history, newest first", "GET", "/audit", query={"page_size": "5"},
+          check=[("items", "type", "array"), ("total", "gte", 20), ("page_size", "eq", 5), ("items.0.occurred_at", "type", "string"),
+                 ("items.0.actor_name", "type", "string"), ("items.0.summary", "type", "string"), ("items.0.changes", "type", "array")],
+          desc="Each entry says who (`actor_name`), what (`summary`) and exactly which fields changed (`changes`)."),
+        R("Filter by project", "GET", "/audit", query={"project_id": "{{project_id}}", "page_size": "100"},
+          check=[("total", "gte", 5), ("items.0.project_name", "eq", "Apollo {{run_id}}")]),
+        R("Filter by kind of record and action", "GET", "/audit", query={"entity": "milestone", "action": "archive"},
+          check=[("total", "gte", 1), ("items.0.entity", "eq", "milestone"), ("items.0.action", "eq", "archive")],
+          desc="Signing off or cancelling a milestone archives it, and that is a recorded action of its own."),
+        R("Filter by date", "GET", "/audit", query={"from": "2000-01-01", "to": "2000-12-31"}, check=[("total", "eq", 0), ("items", "len_eq", 0)]),
+        R("An unknown kind is rejected", "GET", "/audit", query={"entity": "nonsense"}, status=400,
+          check=[ERR("validation_error")] + VALID_ENVELOPE),
+        R("Only admins read the whole log", "GET", "/audit", auth="manager_token", status=403, check=[ERR("forbidden")]),
+        R("Employees cannot read it either", "GET", "/audit", auth="employee_token", status=403, check=[ERR("forbidden")]),
+        R("A manager reads their own project's history", "GET", "/projects/{{project_id}}/history", auth="manager_token",
+          check=[("total", "gte", 5), ("items.0.project_id", "type", "string")]),
+        R("Another manager gets 404, not 403", "GET", "/projects/{{project_id}}/history", auth="manager2_token", status=404,
+          check=[ERR("not_found")]),
+        R("An employee cannot read a project's history", "GET", "/projects/{{project_id}}/history", auth="employee_token", status=403,
+          check=[ERR("forbidden")]),
+    ]),
 ]
 
 # ---------------------------------------------------------------------------------------

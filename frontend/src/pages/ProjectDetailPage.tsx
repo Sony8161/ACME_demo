@@ -14,6 +14,7 @@ import { PulseBar, type PulseTick } from '../components/PulseBar'
 import { RiskChip, StatusChip } from '../components/RiskChip'
 import { dateRange, formatDate, hours, money, percent, todayIso } from '../format'
 import { CostsTab } from './CostsTab'
+import { ProjectHistory } from './ProjectHistory'
 import { TeamTab } from './TeamTab'
 
 /** Where a milestone's due date falls on the project's calendar, 0 to 100 (for the ticks on the pulse bar). */
@@ -47,6 +48,8 @@ export function ProjectDetailPage() {
         const finished = p.status === 'completed' || p.status === 'archived'
         const canManage = !!user && !finished && (isAdmin || (user.role === 'manager' && p.manager.id === user.id))
         const showMoney = s.totalCost !== null
+        const canSeeHistory = isAdmin || (user?.role === 'manager' && p.manager.id === user.id)
+        const historyTab = showMoney ? 3 : 2
         const ticks: PulseTick[] = (milestones.data?.items ?? [])
           .filter((m) => m.archivedAt === null)
           .map((m) => ({ id: m.id, name: `${m.name}, due ${formatDate(m.dueDate)}`, at: position(p, m.dueDate), late: m.isOverdue }))
@@ -95,6 +98,7 @@ export function ProjectDetailPage() {
               <Tab label="Milestones" />
               <Tab label="Team" />
               {showMoney && <Tab label="Costs" />}
+              {canSeeHistory && <Tab label="History" />}
             </Tabs>
 
             {tab === 0 && (
@@ -111,6 +115,7 @@ export function ProjectDetailPage() {
               </Stack>
             )}
             {tab === 1 && <TeamTab projectId={p.id} />}
+            {tab === historyTab && canSeeHistory && <ProjectHistory projectId={p.id} />}
             {tab === 2 && showMoney && <CostsTab project={p} canManage={canManage} onChanged={reloadAll} />}
 
             <NewMilestoneDialog open={dialog === 'milestone'} project={p} onClose={() => setDialog(null)} onDone={reloadAll} />

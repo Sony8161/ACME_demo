@@ -7,6 +7,7 @@ vi.mock('react-responsive', () => ({ useMediaQuery: () => true }))
 // The pages are lazy-loaded; stand-ins keep these tests about routing only.
 vi.mock('./pages/ArchivePage', () => ({ ArchivePage: () => <p>archive page</p> }))
 vi.mock('./pages/DashboardPage', () => ({ DashboardPage: () => <p>dashboard page</p> }))
+vi.mock('./pages/HistoryPage', () => ({ HistoryPage: () => <p>history page</p> }))
 vi.mock('./pages/MyWorkPage', () => ({ MyWorkPage: () => <p>my work page</p> }))
 vi.mock('./pages/PeoplePage', () => ({ PeoplePage: () => <p>people page</p> }))
 vi.mock('./pages/ProjectDetailPage', () => ({ ProjectDetailPage: () => <p>project detail page</p> }))
@@ -56,10 +57,10 @@ describe('App routing', () => {
 
   it('sends an employee who opens the dashboard, people or archive back to their own page', async () => {
     signIn('employee')
-    for (const path of ['/dashboard', '/people', '/archive']) {
+    for (const path of ['/dashboard', '/people', '/archive', '/history']) {
       const { unmount } = renderAt(path)
       expect(await screen.findByText('my work page')).toBeInTheDocument()
-      expect(screen.queryByText(/dashboard page|people page|archive page/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/dashboard page|people page|archive page|history page/)).not.toBeInTheDocument()
       unmount()
     }
   })
@@ -81,6 +82,16 @@ describe('App routing', () => {
     signIn('admin')
     renderAt('/archive')
     expect(await screen.findByText('archive page')).toBeInTheDocument()
+  })
+
+  it('lets an admin open the history, and sends a manager who tries to the dashboard', async () => {
+    signIn('admin')
+    const { unmount } = renderAt('/history')
+    expect(await screen.findByText('history page')).toBeInTheDocument()
+    unmount()
+    signIn('manager')
+    renderAt('/history')
+    expect(await screen.findByText('dashboard page')).toBeInTheDocument()
   })
 
   it('opens the project list and a project page for everyone signed in', async () => {

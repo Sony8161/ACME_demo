@@ -43,7 +43,7 @@ BOOTSTRAP_USER, BOOTSTRAP_PASSWORD = "admin1", "ChangeMe123!"
 GOOD_PASSWORD = "Passw0rd-xyz"
 TABLES = (
     "deliverables, milestone_assignments, legacy_time_entries, legacy_project_assignments, "
-    "time_entries, project_assignments, project_costs, milestones, projects, users"
+    "time_entries, project_assignments, project_costs, milestones, projects, users, audit_log"
 )
 
 

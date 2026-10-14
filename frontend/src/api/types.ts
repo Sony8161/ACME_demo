@@ -205,3 +205,22 @@ export interface DemoSeedResult {
   message: string
   accounts: { name: string; role: Role; username: string; temporaryPassword: string }[]
 }
+
+export type AuditEntity = 'person' | 'project' | 'milestone' | 'deliverable' | 'assignment' | 'cost'
+export type AuditAction = 'create' | 'update' | 'archive' | 'restore'
+export interface AuditChange { field: string; label: string; before: unknown; after: unknown }
+export interface AuditEntry {
+  id: number
+  occurredAt: string
+  actorId: string | null
+  actorName: string
+  entity: AuditEntity
+  entityId: string
+  projectId: string | null
+  projectName: string | null
+  label: string
+  action: AuditAction
+  summary: string
+  changes: AuditChange[]
+}
+export interface AuditList { items: AuditEntry[]; total: number; page: number; pageSize: number }

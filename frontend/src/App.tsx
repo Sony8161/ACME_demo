@@ -10,6 +10,7 @@ import { LoginPage } from './pages/LoginPage'
 // The signed-in pages load on demand, so the sign-in screen does not wait for the whole app.
 const ArchivePage = lazy(() => import('./pages/ArchivePage').then((m) => ({ default: m.ArchivePage })))
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
+const HistoryPage = lazy(() => import('./pages/HistoryPage').then((m) => ({ default: m.HistoryPage })))
 const MyWorkPage = lazy(() => import('./pages/MyWorkPage').then((m) => ({ default: m.MyWorkPage })))
 const PeoplePage = lazy(() => import('./pages/PeoplePage').then((m) => ({ default: m.PeoplePage })))
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage').then((m) => ({ default: m.ProjectDetailPage })))
@@ -35,6 +36,7 @@ export function App() {
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
           <Route path="/people" element={<RequireRole roles={['admin', 'manager']}><PeoplePage /></RequireRole>} />
+          <Route path="/history" element={<RequireRole roles={['admin']}><HistoryPage /></RequireRole>} />
           <Route path="/archive" element={<RequireRole roles={['admin']}><ArchivePage /></RequireRole>} />
         </Route>
       </Route>
