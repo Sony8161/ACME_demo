@@ -7,8 +7,10 @@ from typing import Any
 
 import psycopg
 
+from app.core import dates
 from app.core.deps import CurrentUser
-from app.core.errors import ConflictError, NotFoundError, ValidationError
+from app.core.errors import ConflictError, ForbiddenError, NotFoundError, ValidationError
+from app.domains.assignments import repository as assignments_repo
 from app.domains.deliverables import repository as repo
 from app.domains.deliverables.schemas import DeliverableCreate, DeliverableList, DeliverableOut, DeliverableUpdate
 from app.domains.milestones import service as milestones
@@ -42,6 +44,25 @@ def list_deliverables(
     )
 
 
+def _check_assignee(conn: psycopg.Connection[Any], milestone_id: uuid.UUID, assignee_id: uuid.UUID | None) -> None:
+    """A task is owned by someone whose work on its milestone has not ended."""
+    if assignee_id is None:
+        return
+    assignment = assignments_repo.get_active(conn, milestone_id, assignee_id)
+    if assignment is None or assignment["end_date"] < dates.today():
+        raise ValidationError(
+            "Only someone on this milestone's team can own the task",
+            details=[{"field": "assignee_id", "message": "Not on this milestone's team"}],
+        )
+
+
+# Fields that may be sent as null to clear them.
+_CLEARABLE = frozenset({"due_date", "assignee_id"})
+
+# What an employee may do to a task that is theirs: start it or put it back. Finishing is the manager's review.
+_OWNER_STATUSES = ("todo", "in_progress")
+
+
 def _open_milestone(
     conn: psycopg.Connection[Any], actor: CurrentUser, project_id: uuid.UUID, milestone_id: uuid.UUID
 ) -> None:
@@ -58,8 +79,22 @@ def add_deliverable(
         raise ConflictError(
             "This milestone already has a deliverable with that name", details=[{"field": "name", "message": "Already in use"}]
         )
-    new_id = repo.insert(conn, milestone_id=milestone_id, name=payload.name, description=payload.description)
+    _check_assignee(conn, milestone_id, payload.assignee_id)
+    new_id = repo.insert(
+        conn, milestone_id=milestone_id, name=payload.name, description=payload.description, priority=payload.priority,
+        due_date=payload.due_date, assignee_id=payload.assignee_id,
+    )
     return _out(_load(conn, actor, milestone_id, new_id))
+
+
+def _owner_may_move(current: dict[str, Any], actor: CurrentUser, fields: dict[str, Any]) -> bool:
+    """True when an employee is only starting or pausing their own, unfinished task."""
+    return (
+        current["assignee_id"] == actor.id
+        and current["status"] != "done"
+        and set(fields) == {"status"}
+        and fields["status"] in _OWNER_STATUSES
+    )
 
 
 def update_deliverable(
@@ -70,24 +105,35 @@ def update_deliverable(
     deliverable_id: uuid.UUID,
     payload: DeliverableUpdate,
 ) -> DeliverableOut:
-    """Rename a deliverable, or tick it off after review (``done: true``) / reopen it (``done: false``)."""
-    _open_milestone(conn, actor, project_id, milestone_id)
+    """Edit a task, move it on the board, or tick it off after review (``done: true`` is the same as ``status: done``)."""
+    fields = payload.model_dump(exclude_unset=True)
+    if actor.role == "employee":
+        projects.get_visible(conn, actor, project_id)
+        milestones.load_live(conn, actor, project_id, milestone_id)
+    else:
+        _open_milestone(conn, actor, project_id, milestone_id)
     current = _load(conn, actor, milestone_id, deliverable_id)
+    if actor.role == "employee" and not _owner_may_move(current, actor, fields):
+        raise ForbiddenError("You can start or pause your own tasks. A manager reviews and finishes them.")
     if current["archived_at"] is not None:
         raise ConflictError("This deliverable is archived and can no longer be changed")
-    fields = payload.model_dump(exclude_unset=True)
     for key, value in fields.items():
-        if value is None:
+        if value is None and key not in _CLEARABLE:
             raise ValidationError("This field cannot be empty", details=[{"field": key, "message": "This field cannot be empty"}])
     done = fields.pop("done", None)
+    status = fields.pop("status", None)
     if "name" in fields and fields["name"].lower() != current["name"].lower() and repo.name_taken(
         conn, milestone_id, fields["name"], exclude_id=deliverable_id
     ):
         raise ConflictError(
             "This milestone already has a deliverable with that name", details=[{"field": "name", "message": "Already in use"}]
         )
+    if "assignee_id" in fields and fields["assignee_id"] != current["assignee_id"]:
+        _check_assignee(conn, milestone_id, fields["assignee_id"])
     repo.update(conn, deliverable_id, fields)
-    if done is not None:
+    if status is not None:
+        repo.set_status(conn, deliverable_id, status=status, user_id=actor.id)
+    elif done is not None:
         repo.set_done(conn, deliverable_id, done=done, user_id=actor.id)
     return _out(_load(conn, actor, milestone_id, deliverable_id))
 

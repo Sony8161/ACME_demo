@@ -69,11 +69,10 @@ describe('AppShell on a wide screen', () => {
     expect(await screen.findByText('projects content')).toBeInTheDocument()
   })
 
-  it('shows an employee a single item', () => {
+  it('shows an employee their work and their tasks, and nothing else', () => {
     renderShell('employee', '/my-work')
     const menu = screen.getByRole('navigation', { name: 'Main' })
-    expect(within(menu).getAllByRole('link')).toHaveLength(1)
-    expect(within(menu).getByRole('link', { name: 'My work' })).toBeInTheDocument()
+    expect(within(menu).getAllByRole('link').map((l) => l.textContent)).toEqual(['My work', 'My tasks'])
   })
 
   it('signs out and clears the saved session', async () => {
@@ -109,9 +108,9 @@ describe('AppShell on a narrow screen', () => {
     expect(screen.getByText('people content')).toBeInTheDocument()
   })
 
-  it('does not show a bottom bar when there is only one place to go', () => {
+  it('shows an employee a two-place bottom bar', () => {
     renderShell('employee', '/my-work')
-    expect(document.querySelector('.MuiBottomNavigation-root')).toBeNull()
+    expect(document.querySelector('.MuiBottomNavigation-root')).not.toBeNull()
     expect(screen.getByText('my work content')).toBeInTheDocument()
   })
 

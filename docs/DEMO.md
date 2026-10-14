@@ -121,6 +121,14 @@ costs, and whether it is late."**
    for their own projects only.
 4. **Say:** "Passwords are never in it: a password change is recorded as the word 'changed'."
 
+### Act 7. Tasks: a board for the work (maria1 then omar01, 2 min)
+
+1. Sign in as `maria1`, open **Website Redesign**, click the **Tasks** tab. **Say:** "Every deliverable is now a task: an owner, a priority,
+   a due date and a status. Same data as the checklist, so the sign-off rule is unchanged."
+2. Drag **Launch announcement** from To do to **In progress**; or open its **...** menu (the keyboard route). Switch to **List**.
+3. Sign in as `omar01`, open **My tasks**. **Say:** "Employees see only their own tasks. Omar can start or pause his task, but only a manager can
+   finish it, because a manager reviews the work." Click **Pause Data copied** then **Start Data copied**. Every move is in the **History**.
+
 ### Close (30 seconds)
 
 "The API behind this passes 198 tests and a 161-request Postman run with no failures, both locally and on LocalStack.

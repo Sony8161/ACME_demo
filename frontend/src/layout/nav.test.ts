@@ -1,8 +1,11 @@
 import { navFor } from './nav'
 
 describe('navFor', () => {
-  it('gives an employee only their own work', () => {
-    expect(navFor('employee')).toEqual([{ label: 'My work', to: '/my-work', icon: 'work' }])
+  it('gives an employee their own work and their own tasks', () => {
+    expect(navFor('employee')).toEqual([
+      { label: 'My work', to: '/my-work', icon: 'work' },
+      { label: 'My tasks', to: '/my-tasks', icon: 'tasks' },
+    ])
   })
 
   it('gives a manager the dashboard, projects and people, but no archive', () => {

@@ -11,6 +11,7 @@ import { LoginPage } from './pages/LoginPage'
 const ArchivePage = lazy(() => import('./pages/ArchivePage').then((m) => ({ default: m.ArchivePage })))
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
 const HistoryPage = lazy(() => import('./pages/HistoryPage').then((m) => ({ default: m.HistoryPage })))
+const MyTasksPage = lazy(() => import('./pages/MyTasksPage').then((m) => ({ default: m.MyTasksPage })))
 const MyWorkPage = lazy(() => import('./pages/MyWorkPage').then((m) => ({ default: m.MyWorkPage })))
 const PeoplePage = lazy(() => import('./pages/PeoplePage').then((m) => ({ default: m.PeoplePage })))
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage').then((m) => ({ default: m.ProjectDetailPage })))
@@ -32,6 +33,7 @@ export function App() {
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route path="/my-work" element={<RequireRole roles={['employee']}><MyWorkPage /></RequireRole>} />
+          <Route path="/my-tasks" element={<RequireRole roles={['employee']}><MyTasksPage /></RequireRole>} />
           <Route path="/dashboard" element={<RequireRole roles={['admin', 'manager']}><DashboardPage /></RequireRole>} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<ProjectDetailPage />} />

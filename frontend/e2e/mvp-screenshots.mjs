@@ -24,6 +24,7 @@ const MVPS = {
   7: 'mvp7-archive-instead-of-delete',
   8: 'mvp8-a-screen-for-each-role',
   10: 'extra-history-and-audit',
+  11: 'extra-tasks-board',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -267,6 +268,29 @@ await openProject('Website Redesign')
 await page.getByRole('tab', { name: 'History' }).click()
 await page.getByText('Signed off milestone Build').first().waitFor()
 await shot(10, 'h4-a-project-has-its-own-history-tab')
+await signOut()
+
+// Extra: tasks, a board and a list for the manager, and "my tasks" for an employee
+await signIn('maria1')
+await page.getByText('Projects, most urgent first').waitFor()
+await openProject('Website Redesign')
+await page.getByRole('tab', { name: 'Tasks' }).click()
+await page.getByRole('group', { name: /^To do/ }).waitFor()
+await shot(11, 'k1-a-board-with-owners-priorities-and-due-dates')
+await page.getByRole('button', { name: 'Task actions: Launch announcement' }).click()
+await page.getByRole('menuitem', { name: 'Move to In progress' }).waitFor()
+await shot(11, 'k2-every-card-has-a-menu-so-it-works-without-a-mouse')
+await page.getByRole('menuitem', { name: 'Move to In progress' }).click()
+await page.getByRole('button', { name: 'List' }).click()
+await page.getByRole('table', { name: 'Tasks' }).waitFor()
+await shot(11, 'k3-the-same-tasks-as-a-list')
+await signOut()
+await signIn('omar01')
+await page.getByText('My milestones').waitFor()
+await page.getByRole('link', { name: 'My tasks', exact: true }).first().click()
+await page.getByRole('heading', { name: 'My tasks', exact: true }).waitFor()
+await page.getByRole('button', { name: 'Pause Data copied' }).waitFor()
+await shot(11, 'k4-an-employee-sees-only-their-own-tasks')
 await signOut()
 
 await browser.close()

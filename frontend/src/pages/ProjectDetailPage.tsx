@@ -15,6 +15,7 @@ import { RiskChip, StatusChip } from '../components/RiskChip'
 import { dateRange, formatDate, hours, money, percent, todayIso } from '../format'
 import { CostsTab } from './CostsTab'
 import { ProjectHistory } from './ProjectHistory'
+import { TasksTab } from './TasksTab'
 import { TeamTab } from './TeamTab'
 
 /** Where a milestone's due date falls on the project's calendar, 0 to 100 (for the ticks on the pulse bar). */
@@ -49,7 +50,8 @@ export function ProjectDetailPage() {
         const canManage = !!user && !finished && (isAdmin || (user.role === 'manager' && p.manager.id === user.id))
         const showMoney = s.totalCost !== null
         const canSeeHistory = isAdmin || (user?.role === 'manager' && p.manager.id === user.id)
-        const historyTab = showMoney ? 3 : 2
+        const tabs = ['Milestones', 'Tasks', 'Team', ...(showMoney ? ['Costs'] : []), ...(canSeeHistory ? ['History'] : [])]
+        const current = tabs[tab] ?? 'Milestones'
         const ticks: PulseTick[] = (milestones.data?.items ?? [])
           .filter((m) => m.archivedAt === null)
           .map((m) => ({ id: m.id, name: `${m.name}, due ${formatDate(m.dueDate)}`, at: position(p, m.dueDate), late: m.isOverdue }))
@@ -95,13 +97,10 @@ export function ProjectDetailPage() {
             </Box>
 
             <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }} variant="scrollable">
-              <Tab label="Milestones" />
-              <Tab label="Team" />
-              {showMoney && <Tab label="Costs" />}
-              {canSeeHistory && <Tab label="History" />}
+              {tabs.map((t) => <Tab key={t} label={t} />)}
             </Tabs>
 
-            {tab === 0 && (
+            {current === 'Milestones' && (
               <Stack spacing={2}>
                 {canManage && <Box><Button variant="contained" onClick={() => setDialog('milestone')}>Add milestone</Button></Box>}
                 <Async state={milestones}>
@@ -114,9 +113,10 @@ export function ProjectDetailPage() {
                 </Async>
               </Stack>
             )}
-            {tab === 1 && <TeamTab projectId={p.id} />}
-            {tab === historyTab && canSeeHistory && <ProjectHistory projectId={p.id} />}
-            {tab === 2 && showMoney && <CostsTab project={p} canManage={canManage} onChanged={reloadAll} />}
+            {current === 'Tasks' && <TasksTab projectId={p.id} canManage={canManage} milestones={milestones.data?.items ?? []} onChanged={reloadAll} />}
+            {current === 'Team' && <TeamTab projectId={p.id} />}
+            {current === 'Costs' && <CostsTab project={p} canManage={canManage} onChanged={reloadAll} />}
+            {current === 'History' && <ProjectHistory projectId={p.id} />}
 
             <NewMilestoneDialog open={dialog === 'milestone'} project={p} onClose={() => setDialog(null)} onDone={reloadAll} />
             <FormDialog

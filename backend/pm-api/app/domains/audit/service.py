@@ -14,7 +14,7 @@ from app.domains.audit.schemas import AuditChange, AuditEntry, AuditList
 from app.domains.projects import service as projects_service
 
 # Fields holding a person's id: shown as the person's name.
-_PERSON_FIELDS = frozenset({"manager_id"})
+_PERSON_FIELDS = frozenset({"manager_id", "assignee_id"})
 _NOUN = {"person": "person", "project": "project", "milestone": "milestone", "deliverable": "deliverable", "cost": "cost"}
 
 
@@ -42,9 +42,16 @@ def summarise(row: dict[str, Any]) -> str:
         return f"Signed off {noun}" if signed_off else f"Archived {noun}"
     if action == "restore":
         return f"Restored {noun}"
-    done = (changes.get("done") or {}).get("after")
-    if entity == "deliverable" and done is not None:
-        return f"{'Ticked' if done else 'Unticked'} {noun}"
+    status = changes.get("status") or {}
+    ticked = changes.get("done") or {}  # history written before tasks had a status only has the tick
+    if entity == "deliverable" and not status and "after" in ticked:
+        return f"{'Ticked' if ticked['after'] else 'Unticked'} {noun}"
+    if entity == "deliverable" and status:
+        if status.get("after") == "done":
+            return f"Ticked {noun}"
+        if status.get("before") == "done":
+            return f"Unticked {noun}"
+        return f"Moved {noun} to {str(status.get('after')).capitalize().replace('_', ' ')}"
     if signed_off:
         return f"Signed off {noun}"
     if set(changes) == {"password"}:

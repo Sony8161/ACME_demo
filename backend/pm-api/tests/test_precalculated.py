@@ -127,7 +127,7 @@ def test_migration_003_gives_existing_assignments_their_rate_and_totals(tmp_path
             conn.commit()
 
             applied = db.run_migrations(conn, db.MIGRATIONS_DIR)
-            assert applied == ["003_precalculated_cost_and_login_throttle", "004_audit_log"]  # 004 adds triggers only: old rows keep their data
+            assert applied == ["003_precalculated_cost_and_login_throttle", "004_audit_log", "005_tasks"]  # old rows keep their data
             row = conn.execute("SELECT hourly_rate, expected_hours, expected_cost FROM milestone_assignments").fetchone()
             assert (row["hourly_rate"], row["expected_hours"], row["expected_cost"]) == (45, 80, 3600)
     finally:

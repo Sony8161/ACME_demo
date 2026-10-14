@@ -16,7 +16,8 @@ working on what.** Every Monday to Friday on a milestone is an 8-hour shift, so 
 | Hours and cost | Expected hours and cost are stored when the work is planned, at that day's rate, by a database trigger; "so far" is calculated. A raise never reprices the past |
 | Risk | On track, at risk or overdue, always with the reasons (dates, hours, budget, forecast staffing cost) |
 | Archive, never delete | The API has no `DELETE`. Archived things are visible to admins, who can restore them |
-| **History (new)** | Who created, edited, archived or restored what, and when, with the exact fields that changed. Admins read all of it, a manager reads their own project's; it cannot be edited or removed |
+| **Tasks (new)** | A deliverable is a task with an owner, a priority, a due date and a status. A board (drag a card between To do, In progress and Done) and a list per project, and "My tasks" for employees. An owner starts or pauses their own task; only a manager or admin finishes it. Every move is in the history |
+| **History** | Who created, edited, archived or restored what, and when, with the exact fields that changed. Admins read all of it, a manager reads their own project's; it cannot be edited or removed |
 | Protection | bcrypt, 8-hour tokens that can be revoked, forced first password change, request limits per person and per address, a lock after five wrong passwords |
 | Web app | React + TypeScript + MUI, one app for all roles, works on a phone |
 
@@ -27,10 +28,10 @@ but has never been applied; the demo runs on LocalStack).
 
 | Check | Result |
 |---|---|
-| Backend, on a real PostgreSQL (rules through HTTP, plus unit tests) | **198 pass**, 97.4% coverage (gate 80%); ruff and bandit clean |
-| Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **266 pass**, 99.1% statements, 98.4% branches (gate 80%); lint, types, build and `npm audit` clean |
-| API contract, every endpoint (Postman/Newman on LocalStack) | **161 requests, 654 assertions, 0 failed, 44 of 44 operations** |
-| End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **24 of 24 checks**, including 7 accessibility scans |
+| Backend, on a real PostgreSQL (rules through HTTP, plus unit tests) | **213 pass**, 97.4% coverage (gate 80%); ruff and bandit clean |
+| Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **291 pass**, 98.6% statements, 96.4% branches (gate 80%); lint, types, build and `npm audit` clean |
+| API contract, every endpoint (Postman/Newman on LocalStack) | **172 requests, 704 assertions, 0 failed, 46 of 46 operations** (run against the API under uvicorn on this branch) |
+| End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **29 of 29 checks**, including 9 accessibility scans |
 | Load, realistic (about 19 requests a second across three people) | 1,197 requests, **0 failed**, median 20 ms, 95th percentile 35 ms |
 
 How: **tests run on a real database, not a mock**, because most of the risk is in rules that cross layers (who may see a project, overlap
@@ -68,7 +69,7 @@ PostgreSQL, plain SQL through psycopg 3, migrations as numbered SQL files applie
 | `projects` | name, one manager, dates, hours, budget | unique active name; end not before start |
 | `milestones` | dates, planned hours and budget, status, review note | belongs to one project |
 | `milestone_assignments` | a person on a milestone for a date range | **stored** hourly rate, expected hours and cost, filled by a trigger |
-| `deliverables`, `project_costs` | the checklist; non-labor spend | archived, never deleted |
+| `deliverables`, `project_costs` | the checklist, now also the tasks (status, owner, priority, due date); non-labor spend | archived, never deleted; a trigger keeps the tick and the status in step |
 | `audit_log` | the history | written by triggers; no foreign keys; `UPDATE` and `DELETE` refused |
 
 Three triggers carry rules that must never be forgotten: `set_updated_at`, `assignment_precalculate` and `audit_row`. Everything uses

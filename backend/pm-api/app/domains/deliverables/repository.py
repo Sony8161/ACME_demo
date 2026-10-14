@@ -8,7 +8,7 @@ from typing import Any
 import psycopg
 from psycopg import sql
 
-_EDITABLE = frozenset({"name", "description"})
+_EDITABLE = frozenset({"name", "description", "priority", "due_date", "assignee_id"})
 
 
 def list_for_milestone(
@@ -45,11 +45,15 @@ def name_taken(
     )
 
 
-def insert(conn: psycopg.Connection[Any], *, milestone_id: uuid.UUID, name: str, description: str) -> uuid.UUID:
+def insert(
+    conn: psycopg.Connection[Any], *, milestone_id: uuid.UUID, name: str, description: str, priority: str = "medium",
+    due_date: Any = None, assignee_id: uuid.UUID | None = None,
+) -> uuid.UUID:
     """Add a deliverable and return its id."""
     row = conn.execute(
-        "INSERT INTO deliverables (milestone_id, name, description) VALUES (%s, %s, %s) RETURNING id",
-        (milestone_id, name, description),
+        "INSERT INTO deliverables (milestone_id, name, description, priority, due_date, assignee_id) "
+        "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+        (milestone_id, name, description, priority, due_date, assignee_id),
     ).fetchone()
     if row is None:  # pragma: no cover - RETURNING always yields the inserted row
         raise RuntimeError("INSERT INTO deliverables returned no row")
@@ -71,6 +75,15 @@ def set_done(conn: psycopg.Connection[Any], deliverable_id: uuid.UUID, *, done: 
         "UPDATE deliverables SET done = %s, done_at = CASE WHEN %s THEN now() END, "
         "done_by = CASE WHEN %s THEN %s::uuid END WHERE id = %s",
         (done, done, done, user_id, deliverable_id),
+    )
+
+
+def set_status(conn: psycopg.Connection[Any], deliverable_id: uuid.UUID, *, status: str, user_id: uuid.UUID) -> None:
+    """Move a task to a board column; the database keeps the tick (done) in step, and we record who finished it."""
+    conn.execute(
+        "UPDATE deliverables SET status = %s, done_at = CASE WHEN %s = 'done' THEN now() END, "
+        "done_by = CASE WHEN %s = 'done' THEN %s::uuid END WHERE id = %s",
+        (status, status, status, user_id, deliverable_id),
     )
 
 

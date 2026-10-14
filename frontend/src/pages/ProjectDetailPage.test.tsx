@@ -185,7 +185,7 @@ describe('Project detail: employee', () => {
     })
     const { container } = page()
     await screen.findByRole('heading', { name: 'Website redesign' })
-    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Milestones', 'Team'])
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Milestones', 'Tasks', 'Team'])
     expect(screen.queryByText('Budget', { selector: 'p' })).not.toBeInTheDocument()
     await screen.findByText('Planned')
     expect(container.textContent).not.toContain('$')

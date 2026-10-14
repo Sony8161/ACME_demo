@@ -8,6 +8,7 @@ import FolderIcon from '@mui/icons-material/FolderOpenOutlined'
 import PeopleIcon from '@mui/icons-material/PeopleAltOutlined'
 import ArchiveIcon from '@mui/icons-material/Inventory2Outlined'
 import HistoryIcon from '@mui/icons-material/HistoryOutlined'
+import TasksIcon from '@mui/icons-material/TaskAltOutlined'
 import WorkIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
 import LogoutIcon from '@mui/icons-material/LogoutOutlined'
 import { useMediaQuery } from 'react-responsive'
@@ -22,6 +23,7 @@ const ICONS: Record<NavItem['icon'], ReactElement> = {
   archive: <ArchiveIcon />,
   history: <HistoryIcon />,
   work: <WorkIcon />,
+  tasks: <TasksIcon />,
 }
 
 const DRAWER_WIDTH = 224

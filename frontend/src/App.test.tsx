@@ -8,6 +8,7 @@ vi.mock('react-responsive', () => ({ useMediaQuery: () => true }))
 vi.mock('./pages/ArchivePage', () => ({ ArchivePage: () => <p>archive page</p> }))
 vi.mock('./pages/DashboardPage', () => ({ DashboardPage: () => <p>dashboard page</p> }))
 vi.mock('./pages/HistoryPage', () => ({ HistoryPage: () => <p>history page</p> }))
+vi.mock('./pages/MyTasksPage', () => ({ MyTasksPage: () => <p>my tasks page</p> }))
 vi.mock('./pages/MyWorkPage', () => ({ MyWorkPage: () => <p>my work page</p> }))
 vi.mock('./pages/PeoplePage', () => ({ PeoplePage: () => <p>people page</p> }))
 vi.mock('./pages/ProjectDetailPage', () => ({ ProjectDetailPage: () => <p>project detail page</p> }))
@@ -82,6 +83,16 @@ describe('App routing', () => {
     signIn('admin')
     renderAt('/archive')
     expect(await screen.findByText('archive page')).toBeInTheDocument()
+  })
+
+  it('lets an employee open their tasks, and sends a manager who tries to their dashboard', async () => {
+    signIn('employee')
+    const { unmount } = renderAt('/my-tasks')
+    expect(await screen.findByText('my tasks page')).toBeInTheDocument()
+    unmount()
+    signIn('manager')
+    renderAt('/my-tasks')
+    expect(await screen.findByText('dashboard page')).toBeInTheDocument()
   })
 
   it('lets an admin open the history, and sends a manager who tries to the dashboard', async () => {

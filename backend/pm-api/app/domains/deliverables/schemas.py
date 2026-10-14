@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 
 DeliverableName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 Text = Annotated[str, StringConstraints(strip_whitespace=True, max_length=2000)]
+TaskStatus = Literal["todo", "in_progress", "done"]
+TaskPriority = Literal["low", "medium", "high", "urgent"]
 
 
 class DeliverableCreate(BaseModel):
@@ -17,6 +19,9 @@ class DeliverableCreate(BaseModel):
 
     name: DeliverableName
     description: Text = ""
+    priority: TaskPriority = "medium"
+    due_date: dt.date | None = None
+    assignee_id: uuid.UUID | None = Field(default=None, description="Someone on this milestone's team")
 
 
 class DeliverableUpdate(BaseModel):
@@ -25,6 +30,10 @@ class DeliverableUpdate(BaseModel):
     name: DeliverableName | None = None
     description: Text | None = None
     done: bool | None = None
+    status: TaskStatus | None = Field(default=None, description="The board column; 'done' is the same as ticking it")
+    priority: TaskPriority | None = None
+    due_date: dt.date | None = Field(default=None, description="Send null to clear it")
+    assignee_id: uuid.UUID | None = Field(default=None, description="Send null to unassign")
 
 
 class DeliverableOut(BaseModel):
@@ -35,6 +44,10 @@ class DeliverableOut(BaseModel):
     name: str
     description: str
     done: bool
+    status: TaskStatus
+    priority: TaskPriority
+    due_date: dt.date | None
+    assignee_id: uuid.UUID | None
     done_at: dt.datetime | None
     done_by: uuid.UUID | None
     archived_at: dt.datetime | None

@@ -1,0 +1,5623 @@
+{
+  "generated_at": "2026-10-14T14:11:10+00:00",
+  "environment": "local",
+  "base_url": "http://localhost:8010",
+  "summary": {
+    "requests": 172,
+    "requests_failed": 0,
+    "assertions": 704,
+    "assertions_failed": 0,
+    "operations_in_api": 46,
+    "operations_exercised": 46,
+    "operations_not_exercised": [],
+    "all_passed": true,
+    "slowest_request_ms": 2018
+  },
+  "operations": [
+    {
+      "method": "POST",
+      "path": "/admin/seed-demo",
+      "requests": 3,
+      "statuses_seen": [
+        200,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Seeding demo data is admin only",
+        "Seed demo data",
+        "Seeding twice does nothing"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/audit",
+      "requests": 7,
+      "statuses_seen": [
+        200,
+        400,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Admin reads the history, newest first",
+        "Filter by project",
+        "Filter by kind of record and action",
+        "Filter by date",
+        "An unknown kind is rejected",
+        "Only admins read the whole log",
+        "Employees cannot read it either"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/auth/change-password",
+      "requests": 6,
+      "statuses_seen": [
+        200,
+        400
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Weak password is rejected",
+        "Change the admin password",
+        "Maria sets a new password",
+        "James sets a new password",
+        "Alex sets a new password",
+        "Priya sets a new password"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "requests": 14,
+      "statuses_seen": [
+        200,
+        400,
+        401,
+        429
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Sign in as admin (first login)",
+        "Wrong password is rejected",
+        "Validation errors use the same envelope",
+        "Sign in as Maria (one-time password)",
+        "Sign in as James (one-time password)",
+        "Sign in as Alex (one-time password)",
+        "Sign in as Priya (one-time password)",
+        "Wrong password, attempt 1 of 5",
+        "Wrong password, attempt 2 of 5",
+        "Wrong password, attempt 3 of 5",
+        "Wrong password, attempt 4 of 5",
+        "Wrong password, attempt 5 of 5",
+        "The account is locked, even for the right password",
+        "Sign in works again"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "requests": 2,
+      "statuses_seen": [
+        200,
+        401
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Who am I (still allowed)",
+        "The old token is revoked"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/auth/refresh",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Refresh the token"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Health check"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects",
+      "requests": 8,
+      "statuses_seen": [
+        200,
+        401,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Blocked until the password is changed",
+        "No token is rejected",
+        "List projects (admin sees all)",
+        "List projects (a manager sees only their own)",
+        "List projects (an unassigned employee sees none)",
+        "Search and filter projects",
+        "Archived projects are hidden",
+        "...unless an admin asks for them"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects",
+      "requests": 6,
+      "statuses_seen": [
+        201,
+        400,
+        403,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Create project: Apollo",
+        "Create project: Borealis (other manager)",
+        "Managers cannot create projects",
+        "The project manager must be a manager",
+        "Duplicate project name",
+        "End date before start date"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}",
+      "requests": 6,
+      "statuses_seen": [
+        200,
+        404
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Get one project",
+        "Another manager gets 404, not 403",
+        "Employee sees the project without money",
+        "It still counts in the project's progress",
+        "Cancelled milestones do not count",
+        "A manager can no longer see it"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/projects/{project_id}",
+      "requests": 4,
+      "statuses_seen": [
+        200,
+        400,
+        403,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Manager adjusts the budget",
+        "Only an admin can reassign the manager",
+        "Empty name is rejected",
+        "A finished project cannot be edited"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/archive",
+      "requests": 2,
+      "statuses_seen": [
+        200,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Managers cannot archive a project",
+        "Admin archives the project"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/complete",
+      "requests": 2,
+      "statuses_seen": [
+        200,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Complete the project",
+        "Completing twice"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/costs",
+      "requests": 5,
+      "statuses_seen": [
+        200,
+        403,
+        404
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Costs and totals against the budget",
+        "Archived costs no longer count",
+        "Admins can see the archived cost",
+        "Employees cannot see costs",
+        "Another manager cannot see them either"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/costs",
+      "requests": 3,
+      "statuses_seen": [
+        201,
+        400
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Add a license cost",
+        "Add a technology cost",
+        "Invalid cost"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/projects/{project_id}/costs/{cost_id}",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Correct a cost"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/costs/{cost_id}/archive",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Archive a cost"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/history",
+      "requests": 3,
+      "statuses_seen": [
+        200,
+        403,
+        404
+      ],
+      "all_passed": true,
+      "request_names": [
+        "A manager reads their own project's history",
+        "Another manager gets 404, not 403",
+        "An employee cannot read a project's history"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/milestones",
+      "requests": 4,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "List milestones",
+        "Employees can read the plan (without money)",
+        "The manager no longer sees it",
+        "The admin can see the archive"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones",
+      "requests": 9,
+      "statuses_seen": [
+        201,
+        400,
+        403,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Add milestone: Design",
+        "Add milestone: Build",
+        "Milestone outside the project dates",
+        "Planned hours beyond the project's hours",
+        "Planned budget beyond the project's budget",
+        "Duplicate milestone name",
+        "Plan a milestone on Borealis",
+        "Employees cannot change the plan",
+        "Plan a milestone by mistake"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/milestones/{milestone_id}",
+      "requests": 2,
+      "statuses_seen": [
+        200,
+        404
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Get one milestone",
+        "Opening it directly gives 404"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/projects/{project_id}/milestones/{milestone_id}",
+      "requests": 3,
+      "statuses_seen": [
+        200,
+        400,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Start the Build milestone",
+        "Completing is not an edit",
+        "A completed milestone cannot change"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/archive",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Cancel it (archive, never delete)"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/complete",
+      "requests": 3,
+      "statuses_seen": [
+        200,
+        403,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Cannot complete with open deliverables",
+        "Employees cannot complete a milestone",
+        "Complete the Design milestone"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/deliverables",
+      "requests": 3,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Checklist",
+        "Checklist is ready",
+        "The checklist is unchanged"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/deliverables",
+      "requests": 6,
+      "statuses_seen": [
+        201,
+        400,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Add deliverable: Wireframes",
+        "Add deliverable: Style guide",
+        "Duplicate deliverable",
+        "Add an item that is not needed after all",
+        "Add a task with an owner, a priority and a due date",
+        "Only someone on the milestone can own a task"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/deliverables/{deliverable_id}",
+      "requests": 5,
+      "statuses_seen": [
+        200,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Tick off Wireframes after review",
+        "Tick off Style guide",
+        "Alex starts their own task",
+        "Alex cannot finish it: a manager reviews",
+        "The manager finishes it after review"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/deliverables/{deliverable_id}/archive",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Take it off the checklist (archived, not deleted)"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/team",
+      "requests": 3,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Archived assignments are admin-only",
+        "Milestone team (manager sees labor cost)",
+        "Milestone team (employee does not see labor cost)"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/team",
+      "requests": 8,
+      "statuses_seen": [
+        201,
+        400,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Put Alex on Design",
+        "Adding the same person twice",
+        "Only employees can be assigned",
+        "One milestone per day (overlap)",
+        "Put Priya on Build (it starts later)",
+        "Several people on one milestone: Priya joins Design",
+        "Dates outside the milestone",
+        "Alex is free again from tomorrow"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/team/{user_id}",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Change a person's dates"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/team/{user_id}/archive",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Take her off before she starts"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/tasks",
+      "requests": 4,
+      "statuses_seen": [
+        200,
+        400,
+        404
+      ],
+      "all_passed": true,
+      "request_names": [
+        "The board lists every live task with its milestone and owner",
+        "Filter the board by owner",
+        "An unknown status is rejected",
+        "Another manager cannot read the board"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/team",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Whole project team"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/unarchive",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Restore the project"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/reports/my-dashboard",
+      "requests": 2,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "My dashboard (employee)",
+        "My dashboard (manager)"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/reports/overview",
+      "requests": 4,
+      "statuses_seen": [
+        200,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Overview (manager)",
+        "Overview (admin sees all projects)",
+        "Employees have no overview",
+        "Overview shows every health state"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/tasks/mine",
+      "requests": 2,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "My tasks gathers what is mine",
+        "Only an admin or the manager sees nothing under another person"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/users",
+      "requests": 7,
+      "statuses_seen": [
+        200,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "List people (admin)",
+        "List people (manager)",
+        "Employees cannot list people",
+        "Search people",
+        "Filter people by role and manager",
+        "Archived people are hidden by default",
+        "...but admins can include them"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/users",
+      "requests": 9,
+      "statuses_seen": [
+        201,
+        400,
+        403,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Create manager: Maria Lopez",
+        "Create second manager: James Carter",
+        "Create employee: Alex Kim",
+        "Create employee: Priya Shah",
+        "Employee needs a manager",
+        "Duplicate email is a conflict",
+        "Managers cannot create users",
+        "Create a throw-away employee",
+        "Create an employee for the lock test"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/users/me",
+      "requests": 2,
+      "statuses_seen": [
+        200,
+        400
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Edit my own profile",
+        "Invalid email is rejected"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/users/{user_id}",
+      "requests": 2,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Get a person (admin sees salary)",
+        "Get a person (manager does not see salary)"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/users/{user_id}",
+      "requests": 4,
+      "statuses_seen": [
+        200,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Admin edits any field",
+        "Manager edits a direct report",
+        "Manager cannot change salary",
+        "Manager cannot edit someone else's report"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/users/{user_id}/archive",
+      "requests": 2,
+      "statuses_seen": [
+        200,
+        400
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Archive a person",
+        "Admins cannot archive themselves"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/users/{user_id}/reset-password",
+      "requests": 3,
+      "statuses_seen": [
+        200,
+        409
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Reset a password",
+        "An admin's password reset unlocks it",
+        "An admin cannot reset their own password"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/users/{user_id}/unarchive",
+      "requests": 1,
+      "statuses_seen": [
+        200
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Restore a person"
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "folder": "00 Health",
+      "name": "Health check",
+      "method": "GET",
+      "path": "/health",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 21,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq ok",
+          "passed": true
+        },
+        {
+          "name": "database eq ok",
+          "passed": true
+        },
+        {
+          "name": "service eq pm-api",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "Sign in as admin (first login)",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 244,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.role eq admin",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "expires_at type number",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "Wrong password is rejected",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "expected_status": 401,
+      "response_ms": 285,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 401",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq invalid_credentials",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "Validation errors use the same envelope",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "Blocked until the password is changed",
+      "method": "GET",
+      "path": "/projects",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq password_change_required",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "Who am I (still allowed)",
+      "method": "GET",
+      "path": "/auth/me",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "username eq {{initial_admin_username}}",
+          "passed": true
+        },
+        {
+          "name": "role eq admin",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "Weak password is rejected",
+      "method": "POST",
+      "path": "/auth/change-password",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 243,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field eq new_password",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "Change the admin password",
+      "method": "POST",
+      "path": "/auth/change-password",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 488,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq False",
+          "passed": true
+        },
+        {
+          "name": "access_token type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "The old token is revoked",
+      "method": "GET",
+      "path": "/auth/me",
+      "status": 401,
+      "expected_status": 401,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 401",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq token_revoked",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "Refresh the token",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "access_token type string",
+          "passed": true
+        },
+        {
+          "name": "user.role eq admin",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "01 Auth",
+      "name": "No token is rejected",
+      "method": "GET",
+      "path": "/projects",
+      "status": 401,
+      "expected_status": 401,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 401",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq unauthenticated",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Create manager: Maria Lopez",
+      "method": "POST",
+      "path": "/users",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 247,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.role eq manager",
+          "passed": true
+        },
+        {
+          "name": "user.username matches ^[a-z0-9]{6}$",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "temporary_password type string",
+          "passed": true
+        },
+        {
+          "name": "user.created_at matches Z$",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Create second manager: James Carter",
+      "method": "POST",
+      "path": "/users",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 265,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.role eq manager",
+          "passed": true
+        },
+        {
+          "name": "user.username matches ^[a-z0-9]{6}$",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "temporary_password type string",
+          "passed": true
+        },
+        {
+          "name": "user.created_at matches Z$",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Create employee: Alex Kim",
+      "method": "POST",
+      "path": "/users",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 252,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.role eq employee",
+          "passed": true
+        },
+        {
+          "name": "user.username matches ^[a-z0-9]{6}$",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "temporary_password type string",
+          "passed": true
+        },
+        {
+          "name": "user.created_at matches Z$",
+          "passed": true
+        },
+        {
+          "name": "user.manager_id eq {{manager_id}}",
+          "passed": true
+        },
+        {
+          "name": "user.salary eq 45",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Create employee: Priya Shah",
+      "method": "POST",
+      "path": "/users",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 281,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.role eq employee",
+          "passed": true
+        },
+        {
+          "name": "user.username matches ^[a-z0-9]{6}$",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "temporary_password type string",
+          "passed": true
+        },
+        {
+          "name": "user.created_at matches Z$",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Employee needs a manager",
+      "method": "POST",
+      "path": "/users",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field eq manager_id",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Duplicate email is a conflict",
+      "method": "POST",
+      "path": "/users",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq conflict",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field eq email",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Sign in as Maria (one-time password)",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 247,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "user.role eq manager",
+          "passed": true
+        },
+        {
+          "name": "access_token type string",
+          "passed": true
+        },
+        {
+          "name": "token_type eq bearer",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Maria sets a new password",
+      "method": "POST",
+      "path": "/auth/change-password",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 487,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq False",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Sign in as James (one-time password)",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 244,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "user.role eq manager",
+          "passed": true
+        },
+        {
+          "name": "access_token type string",
+          "passed": true
+        },
+        {
+          "name": "token_type eq bearer",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "James sets a new password",
+      "method": "POST",
+      "path": "/auth/change-password",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 502,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq False",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Sign in as Alex (one-time password)",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 265,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "user.role eq employee",
+          "passed": true
+        },
+        {
+          "name": "access_token type string",
+          "passed": true
+        },
+        {
+          "name": "token_type eq bearer",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Alex sets a new password",
+      "method": "POST",
+      "path": "/auth/change-password",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 550,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq False",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Sign in as Priya (one-time password)",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 269,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "user.role eq employee",
+          "passed": true
+        },
+        {
+          "name": "access_token type string",
+          "passed": true
+        },
+        {
+          "name": "token_type eq bearer",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Priya sets a new password",
+      "method": "POST",
+      "path": "/auth/change-password",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 480,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq False",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Managers cannot create users",
+      "method": "POST",
+      "path": "/users",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "List people (admin)",
+      "method": "GET",
+      "path": "/users",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "items type array",
+          "passed": true
+        },
+        {
+          "name": "total gte 5",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "List people (manager)",
+      "method": "GET",
+      "path": "/users",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "items type array",
+          "passed": true
+        },
+        {
+          "name": "total gte 4",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Employees cannot list people",
+      "method": "GET",
+      "path": "/users",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Search people",
+      "method": "GET",
+      "path": "/users",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        },
+        {
+          "name": "items.0.name eq Alex Kim",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Filter people by role and manager",
+      "method": "GET",
+      "path": "/users",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Get a person (admin sees salary)",
+      "method": "GET",
+      "path": "/users/{{employee_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "name eq Alex Kim",
+          "passed": true
+        },
+        {
+          "name": "salary eq 45",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Get a person (manager does not see salary)",
+      "method": "GET",
+      "path": "/users/{{employee_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "name eq Alex Kim",
+          "passed": true
+        },
+        {
+          "name": "salary null",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Admin edits any field",
+      "method": "PATCH",
+      "path": "/users/{{employee_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "job_title eq Senior Developer",
+          "passed": true
+        },
+        {
+          "name": "salary eq 50",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Manager edits a direct report",
+      "method": "PATCH",
+      "path": "/users/{{employee_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "job_title eq Frontend Developer",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Manager cannot change salary",
+      "method": "PATCH",
+      "path": "/users/{{employee_id}}",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Manager cannot edit someone else's report",
+      "method": "PATCH",
+      "path": "/users/{{employee_id}}",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Edit my own profile",
+      "method": "PATCH",
+      "path": "/users/me",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "name eq Alex Kim",
+          "passed": true
+        },
+        {
+          "name": "role eq employee",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Invalid email is rejected",
+      "method": "PATCH",
+      "path": "/users/me",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Unknown person",
+      "method": "GET",
+      "path": "/users/00000000-0000-0000-0000-000000000000",
+      "status": 404,
+      "expected_status": 404,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 404",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq not_found",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Malformed id",
+      "method": "GET",
+      "path": "/users/not-a-uuid",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 3,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Create a throw-away employee",
+      "method": "POST",
+      "path": "/users",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 273,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.role eq employee",
+          "passed": true
+        },
+        {
+          "name": "user.username matches ^[a-z0-9]{6}$",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "temporary_password type string",
+          "passed": true
+        },
+        {
+          "name": "user.created_at matches Z$",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Reset a password",
+      "method": "POST",
+      "path": "/users/{{throwaway_id}}/reset-password",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 240,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "temporary_password type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Archive a person",
+      "method": "POST",
+      "path": "/users/{{throwaway_id}}/archive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 12,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "archived_at type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Archived people are hidden by default",
+      "method": "GET",
+      "path": "/users",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "...but admins can include them",
+      "method": "GET",
+      "path": "/users",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Restore a person",
+      "method": "POST",
+      "path": "/users/{{throwaway_id}}/unarchive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "archived_at null",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "02 Users",
+      "name": "Admins cannot archive themselves",
+      "method": "POST",
+      "path": "/users/{{admin_id}}/archive",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Create project: Apollo",
+      "method": "POST",
+      "path": "/projects",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq active",
+          "passed": true
+        },
+        {
+          "name": "manager.id eq {{manager_id}}",
+          "passed": true
+        },
+        {
+          "name": "manager.name eq Maria Lopez",
+          "passed": true
+        },
+        {
+          "name": "summary.risk_level eq on_track",
+          "passed": true
+        },
+        {
+          "name": "summary.days_total eq 71",
+          "passed": true
+        },
+        {
+          "name": "summary.total_cost eq 0",
+          "passed": true
+        },
+        {
+          "name": "summary.team_size eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Create project: Borealis (other manager)",
+      "method": "POST",
+      "path": "/projects",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 15,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "manager.id eq {{manager2_id}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Managers cannot create projects",
+      "method": "POST",
+      "path": "/projects",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "The project manager must be a manager",
+      "method": "POST",
+      "path": "/projects",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field eq manager_id",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Duplicate project name",
+      "method": "POST",
+      "path": "/projects",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq conflict",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "End date before start date",
+      "method": "POST",
+      "path": "/projects",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 3,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "List projects (admin sees all)",
+      "method": "GET",
+      "path": "/projects",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 14,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "items type array",
+          "passed": true
+        },
+        {
+          "name": "page eq 1",
+          "passed": true
+        },
+        {
+          "name": "page_size eq 25",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "List projects (a manager sees only their own)",
+      "method": "GET",
+      "path": "/projects",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        },
+        {
+          "name": "items.0.id eq {{project_id}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "List projects (an unassigned employee sees none)",
+      "method": "GET",
+      "path": "/projects",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Search and filter projects",
+      "method": "GET",
+      "path": "/projects",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Get one project",
+      "method": "GET",
+      "path": "/projects/{{project_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "id eq {{project_id}}",
+          "passed": true
+        },
+        {
+          "name": "budget_amount eq 50000",
+          "passed": true
+        },
+        {
+          "name": "summary.schedule_pct type number",
+          "passed": true
+        },
+        {
+          "name": "summary.risk_reasons type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Another manager gets 404, not 403",
+      "method": "GET",
+      "path": "/projects/{{project_id}}",
+      "status": 404,
+      "expected_status": 404,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 404",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq not_found",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Manager adjusts the budget",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "budget_amount eq 60000",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Only an admin can reassign the manager",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "03 Projects",
+      "name": "Empty name is rejected",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 19,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Add milestone: Design",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq pending",
+          "passed": true
+        },
+        {
+          "name": "is_overdue eq False",
+          "passed": true
+        },
+        {
+          "name": "budget_amount eq 20000",
+          "passed": true
+        },
+        {
+          "name": "hours_worked eq 0",
+          "passed": true
+        },
+        {
+          "name": "assignees eq 0",
+          "passed": true
+        },
+        {
+          "name": "archived_at null",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Add milestone: Build",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Milestone outside the project dates",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Planned hours beyond the project's hours",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field eq allocated_hours",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Planned budget beyond the project's budget",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field eq budget_amount",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Duplicate milestone name",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq conflict",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "List milestones",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "planned_hours eq 600",
+          "passed": true
+        },
+        {
+          "name": "planned_budget eq 40000",
+          "passed": true
+        },
+        {
+          "name": "items.0.name eq Design",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Start the Build milestone",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq in_progress",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Completing is not an edit",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 3,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "04 Milestones",
+      "name": "Get one milestone",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 12,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "name eq Design",
+          "passed": true
+        },
+        {
+          "name": "deliverables_total eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Add deliverable: Wireframes",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "done eq False",
+          "passed": true
+        },
+        {
+          "name": "done_at null",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Add deliverable: Style guide",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 17,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Duplicate deliverable",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq conflict",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Checklist",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "done eq 0",
+          "passed": true
+        },
+        {
+          "name": "ready_to_complete eq False",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Tick off Wireframes after review",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{deliverable_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "done eq True",
+          "passed": true
+        },
+        {
+          "name": "done_by eq {{manager_id}}",
+          "passed": true
+        },
+        {
+          "name": "done_at type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Cannot complete with open deliverables",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/complete",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq deliverables_incomplete",
+          "passed": true
+        },
+        {
+          "name": "error.message contains Style guide",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Tick off Style guide",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{deliverable2_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "done eq True",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Checklist is ready",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "done eq 2",
+          "passed": true
+        },
+        {
+          "name": "ready_to_complete eq True",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Add an item that is not needed after all",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 11,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "done eq False",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "Take it off the checklist (archived, not deleted)",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{deliverable3_id}}/archive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "archived_at type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "05 Deliverables",
+      "name": "The checklist is unchanged",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "ready_to_complete eq True",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Put Alex on Design",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 11,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "name eq Alex Kim",
+          "passed": true
+        },
+        {
+          "name": "daily_hours eq 8",
+          "passed": true
+        },
+        {
+          "name": "start_date eq {{today}}",
+          "passed": true
+        },
+        {
+          "name": "end_date eq {{milestone1_due}}",
+          "passed": true
+        },
+        {
+          "name": "milestone_name eq Design",
+          "passed": true
+        },
+        {
+          "name": "labor_cost type number",
+          "passed": true
+        },
+        {
+          "name": "hourly_rate eq 50",
+          "passed": true
+        },
+        {
+          "name": "expected_hours type number",
+          "passed": true
+        },
+        {
+          "name": "expected_cost type number",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Adding the same person twice",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq conflict",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Only employees can be assigned",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field eq user_id",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Plan a milestone on Borealis",
+      "method": "POST",
+      "path": "/projects/{{project2_id}}/milestones",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 11,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "One milestone per day (overlap)",
+      "method": "POST",
+      "path": "/projects/{{project2_id}}/milestones/{{b_milestone_id}}/team",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq assignment_overlap",
+          "passed": true
+        },
+        {
+          "name": "error.message contains Design",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Put Priya on Build (it starts later)",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/team",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 12,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "start_date eq {{milestone2_start}}",
+          "passed": true
+        },
+        {
+          "name": "hours_worked eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Take her off before she starts",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/team/{{employee2_id}}/archive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 13,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "archived_at type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Archived assignments are admin-only",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/team",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Several people on one milestone: Priya joins Design",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 11,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "name eq Priya Shah",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Dates outside the milestone",
+      "method": "POST",
+      "path": "/projects/{{project2_id}}/milestones/{{b_milestone_id}}/team",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Milestone team (manager sees labor cost)",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 11,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "labor_cost type number",
+          "passed": true
+        },
+        {
+          "name": "items.0.daily_hours eq 8",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Milestone team (employee does not see labor cost)",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "labor_cost null",
+          "passed": true
+        },
+        {
+          "name": "items.0.labor_cost null",
+          "passed": true
+        },
+        {
+          "name": "items.0.expected_cost null",
+          "passed": true
+        },
+        {
+          "name": "items.0.hourly_rate null",
+          "passed": true
+        },
+        {
+          "name": "expected_cost null",
+          "passed": true
+        },
+        {
+          "name": "expected_hours type number",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Whole project team",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/team",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "items.0.milestone_name eq Design",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Change a person's dates",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team/{{employee_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 16,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "start_date eq {{today}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Employees cannot change the plan",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Employees can read the plan (without money)",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 12,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "planned_budget null",
+          "passed": true
+        },
+        {
+          "name": "items.0.budget_amount null",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06 Team",
+      "name": "Employee sees the project without money",
+      "method": "GET",
+      "path": "/projects/{{project_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "budget_amount null",
+          "passed": true
+        },
+        {
+          "name": "summary.total_cost null",
+          "passed": true
+        },
+        {
+          "name": "summary.forecast_cost null",
+          "passed": true
+        },
+        {
+          "name": "summary.team_size eq 2",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "Add a task with an owner, a priority and a due date",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq todo",
+          "passed": true
+        },
+        {
+          "name": "priority eq high",
+          "passed": true
+        },
+        {
+          "name": "assignee_id eq {{employee_id}}",
+          "passed": true
+        },
+        {
+          "name": "done eq False",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "Only someone on the milestone can own a task",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.details.0.field eq assignee_id",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "The board lists every live task with its milestone and owner",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/tasks",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total gte 1",
+          "passed": true
+        },
+        {
+          "name": "items.0.milestone_name type string",
+          "passed": true
+        },
+        {
+          "name": "items.0.is_overdue type boolean",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "Filter the board by owner",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/tasks",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "items.0.assignee_name eq Alex Kim",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "An unknown status is rejected",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/tasks",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "Alex starts their own task",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq in_progress",
+          "passed": true
+        },
+        {
+          "name": "done eq False",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "Alex cannot finish it: a manager reviews",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "My tasks gathers what is mine",
+      "method": "GET",
+      "path": "/tasks/mine",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total gte 1",
+          "passed": true
+        },
+        {
+          "name": "items.0.project_name type string",
+          "passed": true
+        },
+        {
+          "name": "items.0.status eq in_progress",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "Only an admin or the manager sees nothing under another person",
+      "method": "GET",
+      "path": "/tasks/mine",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "The manager finishes it after review",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq done",
+          "passed": true
+        },
+        {
+          "name": "done eq True",
+          "passed": true
+        },
+        {
+          "name": "done_at type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06b Tasks",
+      "name": "Another manager cannot read the board",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/tasks",
+      "status": 404,
+      "expected_status": 404,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 404",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq not_found",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Add a license cost",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/costs",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "amount eq 1200",
+          "passed": true
+        },
+        {
+          "name": "category eq license",
+          "passed": true
+        },
+        {
+          "name": "archived_at null",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Add a technology cost",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/costs",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Invalid cost",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/costs",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 3,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Costs and totals against the budget",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/costs",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "other_cost eq 1500",
+          "passed": true
+        },
+        {
+          "name": "by_category.license eq 1200",
+          "passed": true
+        },
+        {
+          "name": "labor_cost type number",
+          "passed": true
+        },
+        {
+          "name": "total_cost type number",
+          "passed": true
+        },
+        {
+          "name": "budget_amount eq 60000",
+          "passed": true
+        },
+        {
+          "name": "budget_remaining type number",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Correct a cost",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/costs/{{cost2_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "amount eq 400",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Archive a cost",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/costs/{{cost_id}}/archive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "archived_at type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Archived costs no longer count",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/costs",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        },
+        {
+          "name": "other_cost eq 400",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Admins can see the archived cost",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/costs",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        },
+        {
+          "name": "items type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Employees cannot see costs",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/costs",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "07 Costs",
+      "name": "Another manager cannot see them either",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/costs",
+      "status": 404,
+      "expected_status": 404,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 404",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq not_found",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "08 Reports",
+      "name": "Overview (manager)",
+      "method": "GET",
+      "path": "/reports/overview",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "counts.projects eq 1",
+          "passed": true
+        },
+        {
+          "name": "counts.active eq 1",
+          "passed": true
+        },
+        {
+          "name": "totals.budget eq 60000",
+          "passed": true
+        },
+        {
+          "name": "totals.other_cost eq 400",
+          "passed": true
+        },
+        {
+          "name": "totals.spent type number",
+          "passed": true
+        },
+        {
+          "name": "totals.forecast_cost type number",
+          "passed": true
+        },
+        {
+          "name": "projects.0.name eq {{project_name}}",
+          "passed": true
+        },
+        {
+          "name": "allocation type array",
+          "passed": true
+        },
+        {
+          "name": "available_people type number",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "08 Reports",
+      "name": "Overview (admin sees all projects)",
+      "method": "GET",
+      "path": "/reports/overview",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "counts.projects eq 2",
+          "passed": true
+        },
+        {
+          "name": "projects type array",
+          "passed": true
+        },
+        {
+          "name": "allocation type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "08 Reports",
+      "name": "Employees have no overview",
+      "method": "GET",
+      "path": "/reports/overview",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "08 Reports",
+      "name": "My dashboard (employee)",
+      "method": "GET",
+      "path": "/reports/my-dashboard",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "current_work.milestone_name eq Design",
+          "passed": true
+        },
+        {
+          "name": "current_work.project_name eq {{project_name}}",
+          "passed": true
+        },
+        {
+          "name": "my_milestones.0.deliverables_total eq 3",
+          "passed": true
+        },
+        {
+          "name": "my_milestones.0.deliverables_done eq 3",
+          "passed": true
+        },
+        {
+          "name": "hours_today type number",
+          "passed": true
+        },
+        {
+          "name": "week_capacity eq 40",
+          "passed": true
+        },
+        {
+          "name": "projects.0.budget_amount null",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "08 Reports",
+      "name": "My dashboard (manager)",
+      "method": "GET",
+      "path": "/reports/my-dashboard",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 20,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "projects.0.id eq {{project_id}}",
+          "passed": true
+        },
+        {
+          "name": "current_work null",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Employees cannot complete a milestone",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/complete",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Complete the Design milestone",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/complete",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq completed",
+          "passed": true
+        },
+        {
+          "name": "completed_at type string",
+          "passed": true
+        },
+        {
+          "name": "archived_at type string",
+          "passed": true
+        },
+        {
+          "name": "review_note contains signed off",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "The manager no longer sees it",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        },
+        {
+          "name": "items.0.name eq Build",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Opening it directly gives 404",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}",
+      "status": 404,
+      "expected_status": 404,
+      "response_ms": 12,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 404",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq not_found",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "The admin can see the archive",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "items.0.status eq completed",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "A completed milestone cannot change",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq conflict",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "It still counts in the project's progress",
+      "method": "GET",
+      "path": "/projects/{{project_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 14,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "summary.milestones_total eq 2",
+          "passed": true
+        },
+        {
+          "name": "summary.milestones_done eq 1",
+          "passed": true
+        },
+        {
+          "name": "summary.milestones_pct eq 50",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Alex is free again from tomorrow",
+      "method": "POST",
+      "path": "/projects/{{project2_id}}/milestones/{{b_milestone_id}}/team",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 11,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "start_date eq {{tomorrow}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Plan a milestone by mistake",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Cancel it (archive, never delete)",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone3_id}}/archive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 16,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq pending",
+          "passed": true
+        },
+        {
+          "name": "archived_at type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Cancelled milestones do not count",
+      "method": "GET",
+      "path": "/projects/{{project_id}}",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "summary.milestones_total eq 2",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "There are no deletes",
+      "method": "DELETE",
+      "path": "/projects/{{project_id}}",
+      "status": 405,
+      "expected_status": 405,
+      "response_ms": 2,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 405",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq method_not_allowed",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Complete the project",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/complete",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 12,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq completed",
+          "passed": true
+        },
+        {
+          "name": "completed_at type string",
+          "passed": true
+        },
+        {
+          "name": "summary.risk_level eq done",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Completing twice",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/complete",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq conflict",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "A finished project cannot be edited",
+      "method": "PATCH",
+      "path": "/projects/{{project_id}}",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq conflict",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Managers cannot archive a project",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/archive",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Admin archives the project",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/archive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 11,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "status eq archived",
+          "passed": true
+        },
+        {
+          "name": "archived_at type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Archived projects are hidden",
+      "method": "GET",
+      "path": "/projects",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 1",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "...unless an admin asks for them",
+      "method": "GET",
+      "path": "/projects",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "A manager can no longer see it",
+      "method": "GET",
+      "path": "/projects/{{project_id}}",
+      "status": 404,
+      "expected_status": 404,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 404",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq not_found",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "09 Completion and archive",
+      "name": "Restore the project",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/unarchive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 10,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "archived_at null",
+          "passed": true
+        },
+        {
+          "name": "status eq completed",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "10 Admin",
+      "name": "Seeding demo data is admin only",
+      "method": "POST",
+      "path": "/admin/seed-demo",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "10 Admin",
+      "name": "Seed demo data",
+      "method": "POST",
+      "path": "/admin/seed-demo",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 2018,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "created eq True",
+          "passed": true
+        },
+        {
+          "name": "accounts type array",
+          "passed": true
+        },
+        {
+          "name": "accounts.0.temporary_password type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "10 Admin",
+      "name": "Seeding twice does nothing",
+      "method": "POST",
+      "path": "/admin/seed-demo",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "created eq False",
+          "passed": true
+        },
+        {
+          "name": "accounts len_eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "10 Admin",
+      "name": "Overview shows every health state",
+      "method": "GET",
+      "path": "/reports/overview",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 17,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "counts.overdue gte 1",
+          "passed": true
+        },
+        {
+          "name": "counts.at_risk gte 1",
+          "passed": true
+        },
+        {
+          "name": "counts.planned gte 1",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "Create an employee for the lock test",
+      "method": "POST",
+      "path": "/users",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 244,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.role eq employee",
+          "passed": true
+        },
+        {
+          "name": "user.username matches ^[a-z0-9]{6}$",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        },
+        {
+          "name": "temporary_password type string",
+          "passed": true
+        },
+        {
+          "name": "user.created_at matches Z$",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "Wrong password, attempt 1 of 5",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "expected_status": 401,
+      "response_ms": 263,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 401",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq invalid_credentials",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "Wrong password, attempt 2 of 5",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "expected_status": 401,
+      "response_ms": 244,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 401",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq invalid_credentials",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "Wrong password, attempt 3 of 5",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "expected_status": 401,
+      "response_ms": 243,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 401",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq invalid_credentials",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "Wrong password, attempt 4 of 5",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "expected_status": 401,
+      "response_ms": 254,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 401",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq invalid_credentials",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "Wrong password, attempt 5 of 5",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "expected_status": 401,
+      "response_ms": 252,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 401",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq invalid_credentials",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "The account is locked, even for the right password",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 429,
+      "expected_status": 429,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 429",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq account_locked",
+          "passed": true
+        },
+        {
+          "name": "error.message contains minute",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "An admin's password reset unlocks it",
+      "method": "POST",
+      "path": "/users/{{locktest_id}}/reset-password",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 255,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "temporary_password type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "Sign in works again",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 236,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "user.role eq employee",
+          "passed": true
+        },
+        {
+          "name": "user.must_change_password eq True",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "11 Security limits",
+      "name": "An admin cannot reset their own password",
+      "method": "POST",
+      "path": "/users/{{admin_id}}/reset-password",
+      "status": 409,
+      "expected_status": 409,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 409",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq self_reset",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "Admin reads the history, newest first",
+      "method": "GET",
+      "path": "/audit",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "items type array",
+          "passed": true
+        },
+        {
+          "name": "total gte 20",
+          "passed": true
+        },
+        {
+          "name": "page_size eq 5",
+          "passed": true
+        },
+        {
+          "name": "items.0.occurred_at type string",
+          "passed": true
+        },
+        {
+          "name": "items.0.actor_name type string",
+          "passed": true
+        },
+        {
+          "name": "items.0.summary type string",
+          "passed": true
+        },
+        {
+          "name": "items.0.changes type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "Filter by project",
+      "method": "GET",
+      "path": "/audit",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total gte 5",
+          "passed": true
+        },
+        {
+          "name": "items.0.project_name eq Apollo {{run_id}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "Filter by kind of record and action",
+      "method": "GET",
+      "path": "/audit",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total gte 1",
+          "passed": true
+        },
+        {
+          "name": "items.0.entity eq milestone",
+          "passed": true
+        },
+        {
+          "name": "items.0.action eq archive",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "Filter by date",
+      "method": "GET",
+      "path": "/audit",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 0",
+          "passed": true
+        },
+        {
+          "name": "items len_eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "An unknown kind is rejected",
+      "method": "GET",
+      "path": "/audit",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "Only admins read the whole log",
+      "method": "GET",
+      "path": "/audit",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "Employees cannot read it either",
+      "method": "GET",
+      "path": "/audit",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "A manager reads their own project's history",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/history",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total gte 5",
+          "passed": true
+        },
+        {
+          "name": "items.0.project_id type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "Another manager gets 404, not 403",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/history",
+      "status": 404,
+      "expected_status": 404,
+      "response_ms": 12,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 404",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq not_found",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "12 History",
+      "name": "An employee cannot read a project's history",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/history",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 3,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

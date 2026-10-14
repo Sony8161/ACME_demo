@@ -35,10 +35,10 @@ def update_deliverable(
     milestone_id: uuid.UUID,
     deliverable_id: uuid.UUID,
     payload: DeliverableUpdate,
-    actor: ManagerOrAdmin,
+    actor: ActiveUser,
     conn: DbConn,
 ) -> DeliverableOut:
-    """Rename a deliverable or tick it off after review (`done`: true)."""
+    """Edit a task, move it between board columns, or tick it off after review. Employees may only start or pause their own."""
     return service.update_deliverable(conn, actor, project_id, milestone_id, deliverable_id, payload)
 
 

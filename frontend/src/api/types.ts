@@ -96,8 +96,24 @@ export interface Deliverable {
   name: string
   description: string
   done: boolean
+  status: TaskStatus
+  priority: TaskPriority
+  dueDate: string | null
+  assigneeId: string | null
   doneAt: string | null
 }
+
+export type TaskStatus = 'todo' | 'in_progress' | 'done'
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+/** A deliverable as the board shows it: with its project, milestone and owner. */
+export interface Task extends Deliverable {
+  projectId: string
+  projectName: string
+  milestoneName: string
+  assigneeName: string | null
+  isOverdue: boolean
+}
+export interface TaskList { items: Task[]; total: number }
 
 export interface DeliverableList { items: Deliverable[]; total: number; done: number; readyToComplete: boolean }
 
