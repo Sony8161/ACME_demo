@@ -40,7 +40,7 @@ describe('AppShell on a wide screen', () => {
     renderShell('manager', '/people')
     const menu = screen.getByRole('navigation', { name: 'Main' })
     const links = within(menu).getAllByRole('link').map((l) => l.textContent)
-    expect(links).toEqual(['Dashboard', 'Projects', 'People'])
+    expect(links).toEqual(['Dashboard', 'Projects', 'Timeline', 'People'])
     expect(within(menu).getByRole('link', { name: 'People' })).toHaveClass('Mui-selected')
     expect(within(menu).getByRole('link', { name: 'Dashboard' })).not.toHaveClass('Mui-selected')
     expect(screen.getByText('people content')).toBeInTheDocument()
@@ -102,7 +102,7 @@ describe('AppShell on a narrow screen', () => {
     renderShell('manager', '/people')
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument()
     const bar = document.querySelector('.MuiBottomNavigation-root') as HTMLElement
-    expect(within(bar).getAllByRole('link').map((l) => l.textContent)).toEqual(['Dashboard', 'Projects', 'People'])
+    expect(within(bar).getAllByRole('link').map((l) => l.textContent)).toEqual(['Dashboard', 'Projects', 'Timeline', 'People'])
     expect(within(bar).getByRole('link', { name: 'People' })).toHaveClass('Mui-selected')
     expect(screen.queryByText('Alex Kim')).not.toBeInTheDocument()
     expect(screen.getByText('people content')).toBeInTheDocument()

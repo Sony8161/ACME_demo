@@ -2,7 +2,7 @@
 
 Each row is one minimum viable product item: why it matters, its status, and the evidence for it. The pictures are in
 [`demo-screenshots/`](./demo-screenshots) (taken by `cd frontend && npm run screenshots` on the running demo). The API results
-are in [`postman/results/`](./postman/results) (172 requests, 704 assertions, 46 of 46 API operations, all passing on LocalStack).
+are in [`postman/results/`](./postman/results) (176 requests, 721 assertions, 47 of 47 API operations, all passing on LocalStack).
 
 | # | MVP item | Why it matters | Status | Pictures | API (see `/docs`) | Proven by |
 |---|---|---|---|---|---|---|
@@ -13,9 +13,10 @@ are in [`postman/results/`](./postman/results) (172 requests, 704 assertions, 46
 | 5 | Hours and cost calculated from the calendar | Answers "how much budget is used" | Done | `mvp5-...` (3) | `GET .../team` (expected and so-far hours and cost), `GET /projects/{id}` (`summary`), `GET /projects/{id}/costs` | `test_workdays.py`, `test_precalculated.py` (stored fields, migration on old data), `test_reports.py`; Postman folders 06, 07, 08 |
 | 6 | Risk status with reasons | Answers "which projects are in trouble" | Done | `mvp6-...` (5) | `GET /projects`, `GET /projects/{id}` (`risk_level`, `risk_reasons`), `GET /reports/overview` | `test_metrics.py` (every rule), `test_reports.py`; Postman folders 03, 08, 10 |
 | 7 | Archive instead of delete | A hard requirement in the brief | Done | `mvp7-...` (4) | `POST .../archive`, `POST .../unarchive` on projects, people, milestones, deliverables, costs, assignments | `test_no_deletes.py` (no DELETE operation exists; archived records are admin-only); Postman folder 09 |
-| 8 | A basic screen for each role | People can use it without Postman | Done (demo scale) | `mvp8-...` (3, on a phone) and `mvp1-...` | `GET /reports/overview`, `GET /reports/my-dashboard` | 291 frontend tests (98.6% coverage), end-to-end test with accessibility scans |
+| 8 | A basic screen for each role | People can use it without Postman | Done (demo scale) | `mvp8-...` (3, on a phone) and `mvp1-...` | `GET /reports/overview`, `GET /reports/my-dashboard` | 315 frontend tests (98.8% coverage), end-to-end test with accessibility scans |
 | 9 | Deployed where users can reach it | Not viable until someone can use it | **LocalStack only, not AWS yet** | n/a | n/a | The same Postman collection passes on LocalStack; the AWS Terraform validates but has not been applied. Left for later |
 | + | Tasks: a deliverable with an owner, priority, due date and status, on a board and in a list, plus "my tasks" (an extra, toward a Jira/Asana-style tool) | Answers "what is everyone working on, and what is late" | Done | `extra-tasks-board` (4) | `GET /projects/{id}/tasks`, `GET /tasks/mine`, `PATCH .../deliverables/{id}` (status, owner, due date, priority) | `test_tasks.py` (15 tests: owners must be on the milestone, an owner starts but a manager finishes, the status and the tick stay in step, no past access); Postman folder 06b; `TasksTab`, `TaskBoard`, `MyTasksPage` tests; end-to-end test |
+| + | Timeline: every open project on one calendar, and one project with its milestones and each task as a diamond on its due date (an extra, toward a Jira/Asana-style tool) | Answers "what is when, and what is late" | Done | `extra-timeline` (2) | `GET /reports/timeline` | `test_timeline.py` (6 tests: scope by role, signed-off kept, cancelled left out, late); `timeline.ts`, `TimelineChart`, `TimelinePage`, `ProjectTimeline` tests; Postman folder 08; end-to-end test |
 | + | History: who changed what, and when (an extra, beyond the nine) | Answers "what happened, and who did it" | Done | `extra-history-and-audit` (4) | `GET /audit`, `GET /projects/{id}/history` | `test_audit.py` (22 tests: triggers, secrets never copied, append-only, who may read); Postman folder 12; `HistoryPage` tests; end-to-end test |
 
 ## What "calculated from the calendar" means now

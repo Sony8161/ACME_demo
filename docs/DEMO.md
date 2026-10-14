@@ -129,6 +129,12 @@ costs, and whether it is late."**
 3. Sign in as `omar01`, open **My tasks**. **Say:** "Employees see only their own tasks. Omar can start or pause his task, but only a manager can
    finish it, because a manager reviews the work." Click **Pause Data copied** then **Start Data copied**. Every move is in the **History**.
 
+### Act 8. The timeline (admin1, 1 min)
+
+1. Sign in as `admin1` and open **Timeline** in the menu. **Say:** "Every open project on one calendar, coloured the same way as everywhere else:
+   green on track, amber at risk, red overdue, grey signed off. The vertical line is today, and the filled part of a bar is the work done."
+2. Open **Data Platform Migration**, then its **Timeline** tab: the milestones as bars, each task a diamond on its due date. Switch **Show tasks** off and on.
+
 ### Close (30 seconds)
 
 "The API behind this passes 198 tests and a 161-request Postman run with no failures, both locally and on LocalStack.

@@ -33,6 +33,7 @@ and their status, dependency between deliverables (milestones), and budget consu
 - **A history of every change** (migration 004): database triggers write who changed what, and when, to an append-only `audit_log`; admins read all of it,
   a project's manager reads their project's. Chosen over logging in each service because no code path can forget it and it shares the change's transaction.
 - **Tasks (migration 005).** A deliverable gains a status, an owner (someone on the milestone), a due date and a priority, shown on a board and in a list. An owner can start or pause their own task; only a manager or admin finishes it, because finishing is the review. The tick and the status are kept in step by a trigger.
+- **Timeline.** `GET /reports/timeline` returns open projects with their milestones (signed-off ones stay, cancelled ones do not); the web app draws them on a date axis (a page for all projects, a tab for one) with a list-like structure for screen readers.
 - **Nothing is ever deleted** and the API has no DELETE operations. Removing means archiving, and only admins can see
   archived records (`include_archived`). A manager **completes a milestone after ticking every deliverable**; it then
   moves to the archive (still counted in project progress). Cancelling a milestone archives it without counting it.
@@ -47,19 +48,19 @@ and their status, dependency between deliverables (milestones), and budget consu
 ## What exists
 | Area | State |
 |---|---|
-| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 213 tests, 97.4% coverage, no DELETE endpoints |
-| `docs/postman` | Done: 172-request collection with saved example JSON, verified with Newman (704 assertions, all 46 operations) and a saved results file in `docs/postman/results/` |
+| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 219 tests, 97.5% coverage, no DELETE endpoints |
+| `docs/postman` | Done: 176-request collection with saved example JSON, verified with Newman (721 assertions, all 47 operations) and a saved results file in `docs/postman/results/` |
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; not applied to AWS |
 | LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (161 requests, 654 assertions) |
 | AWS deploy | **Not done** (`./bin/deploy-backend.sh` and `./bin/deploy-frontend.sh`) |
-| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 291 tests at 98.6% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
+| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 315 tests at 98.8% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
 | Demo | `docs/DEMO.md`: rehearsed script; `./bin/demo-ready.sh` loads the sample company with memorable logins |
 | CI workflow (`.github/workflows/ci.yml`), READMEs, testing guide | Written; the workflow has not run on GitHub yet |
 
 ## Run it
 The whole demo without LocalStack (Linux or macOS; only Linux has been tested): `./bin/demo-local.sh`, see `docs/DEMO.md`.
 ```sh
-./bin/test-backend.sh                       # lint + security scan + 213 tests (needs local Postgres)
+./bin/test-backend.sh                       # lint + security scan + 219 tests (needs local Postgres)
 cd backend/pm-api && source .venv/bin/activate
 POSTGRES_NAME=pm_dev uvicorn app.main:app --port 8000   # then open http://localhost:8000/docs
 # first login: admin1 / ChangeMe123!  (you must change it); POST /admin/seed-demo loads sample data

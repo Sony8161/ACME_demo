@@ -17,6 +17,7 @@ working on what.** Every Monday to Friday on a milestone is an 8-hour shift, so 
 | Risk | On track, at risk or overdue, always with the reasons (dates, hours, budget, forecast staffing cost) |
 | Archive, never delete | The API has no `DELETE`. Archived things are visible to admins, who can restore them |
 | **Tasks (new)** | A deliverable is a task with an owner, a priority, a due date and a status. A board (drag a card between To do, In progress and Done) and a list per project, and "My tasks" for employees. An owner starts or pauses their own task; only a manager or admin finishes it. Every move is in the history |
+| **Timeline (new)** | Every open project on one calendar, with its milestones; and one project's milestones with each task as a diamond on its due date. Same colours as everywhere else, a line for today, readable by a screen reader as a list |
 | **History** | Who created, edited, archived or restored what, and when, with the exact fields that changed. Admins read all of it, a manager reads their own project's; it cannot be edited or removed |
 | Protection | bcrypt, 8-hour tokens that can be revoked, forced first password change, request limits per person and per address, a lock after five wrong passwords |
 | Web app | React + TypeScript + MUI, one app for all roles, works on a phone |
@@ -28,10 +29,10 @@ but has never been applied; the demo runs on LocalStack).
 
 | Check | Result |
 |---|---|
-| Backend, on a real PostgreSQL (rules through HTTP, plus unit tests) | **213 pass**, 97.4% coverage (gate 80%); ruff and bandit clean |
-| Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **291 pass**, 98.6% statements, 96.4% branches (gate 80%); lint, types, build and `npm audit` clean |
-| API contract, every endpoint (Postman/Newman on LocalStack) | **172 requests, 704 assertions, 0 failed, 46 of 46 operations** (run against the API under uvicorn on this branch) |
-| End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **29 of 29 checks**, including 9 accessibility scans |
+| Backend, on a real PostgreSQL (rules through HTTP, plus unit tests) | **219 pass**, 97.5% coverage (gate 80%); ruff and bandit clean |
+| Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **315 pass**, 98.8% statements, 96.3% branches (gate 80%); lint, types, build and `npm audit` clean |
+| API contract, every endpoint (Postman/Newman on LocalStack) | **176 requests, 721 assertions, 0 failed, 47 of 47 operations** (run against the API under uvicorn on this branch) |
+| End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **34 of 34 checks**, including 11 accessibility scans |
 | Load, realistic (about 19 requests a second across three people) | 1,197 requests, **0 failed**, median 20 ms, 95th percentile 35 ms |
 
 How: **tests run on a real database, not a mock**, because most of the risk is in rules that cross layers (who may see a project, overlap

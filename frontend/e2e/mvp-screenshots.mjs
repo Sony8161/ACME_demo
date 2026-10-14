@@ -25,6 +25,7 @@ const MVPS = {
   8: 'mvp8-a-screen-for-each-role',
   10: 'extra-history-and-audit',
   11: 'extra-tasks-board',
+  12: 'extra-timeline',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -291,6 +292,19 @@ await page.getByRole('link', { name: 'My tasks', exact: true }).first().click()
 await page.getByRole('heading', { name: 'My tasks', exact: true }).waitFor()
 await page.getByRole('button', { name: 'Pause Data copied' }).waitFor()
 await shot(11, 'k4-an-employee-sees-only-their-own-tasks')
+await signOut()
+
+// Extra: the timeline
+await signIn('admin1')
+await page.getByText('Projects, most urgent first').waitFor()
+await page.getByRole('link', { name: 'Timeline', exact: true }).first().click()
+await page.getByRole('list', { name: 'All projects' }).waitFor()
+await shot(12, 'l1-every-open-project-on-one-calendar')
+await page.getByRole('link', { name: 'Projects', exact: true }).first().click()
+await openProject('Data Platform Migration')
+await page.getByRole('tab', { name: 'Timeline' }).click()
+await page.getByRole('list', { name: 'Project timeline' }).waitFor()
+await shot(12, 'l2-one-project-with-its-tasks-as-diamonds')
 await signOut()
 
 await browser.close()

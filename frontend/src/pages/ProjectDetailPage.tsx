@@ -15,6 +15,7 @@ import { RiskChip, StatusChip } from '../components/RiskChip'
 import { dateRange, formatDate, hours, money, percent, todayIso } from '../format'
 import { CostsTab } from './CostsTab'
 import { ProjectHistory } from './ProjectHistory'
+import { ProjectTimeline } from './ProjectTimeline'
 import { TasksTab } from './TasksTab'
 import { TeamTab } from './TeamTab'
 
@@ -50,7 +51,7 @@ export function ProjectDetailPage() {
         const canManage = !!user && !finished && (isAdmin || (user.role === 'manager' && p.manager.id === user.id))
         const showMoney = s.totalCost !== null
         const canSeeHistory = isAdmin || (user?.role === 'manager' && p.manager.id === user.id)
-        const tabs = ['Milestones', 'Tasks', 'Team', ...(showMoney ? ['Costs'] : []), ...(canSeeHistory ? ['History'] : [])]
+        const tabs = ['Milestones', 'Tasks', ...(canSeeHistory ? ['Timeline'] : []), 'Team', ...(showMoney ? ['Costs'] : []), ...(canSeeHistory ? ['History'] : [])]
         const current = tabs[tab] ?? 'Milestones'
         const ticks: PulseTick[] = (milestones.data?.items ?? [])
           .filter((m) => m.archivedAt === null)
@@ -114,6 +115,7 @@ export function ProjectDetailPage() {
               </Stack>
             )}
             {current === 'Tasks' && <TasksTab projectId={p.id} canManage={canManage} milestones={milestones.data?.items ?? []} onChanged={reloadAll} />}
+            {current === 'Timeline' && <ProjectTimeline projectId={p.id} />}
             {current === 'Team' && <TeamTab projectId={p.id} />}
             {current === 'Costs' && <CostsTab project={p} canManage={canManage} onChanged={reloadAll} />}
             {current === 'History' && <ProjectHistory projectId={p.id} />}

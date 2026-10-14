@@ -3,7 +3,7 @@ import type { Role } from '../api/types'
 export interface NavItem {
   label: string
   to: string
-  icon: 'dashboard' | 'projects' | 'people' | 'archive' | 'history' | 'work' | 'tasks'
+  icon: 'dashboard' | 'projects' | 'people' | 'archive' | 'history' | 'work' | 'tasks' | 'timeline'
 }
 
 /** What each role can open. The server enforces the same rules; this only decides what to show. */
@@ -12,6 +12,7 @@ export function navFor(role: Role): NavItem[] {
   const items: NavItem[] = [
     { label: 'Dashboard', to: '/dashboard', icon: 'dashboard' },
     { label: 'Projects', to: '/projects', icon: 'projects' },
+    { label: 'Timeline', to: '/timeline', icon: 'timeline' },
     { label: 'People', to: '/people', icon: 'people' },
   ]
   if (role === 'admin') items.push({ label: 'History', to: '/history', icon: 'history' }, { label: 'Archive', to: '/archive', icon: 'archive' })

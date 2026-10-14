@@ -24,6 +24,9 @@ from app.domains.reports.schemas import (
     OverviewCounts,
     OverviewTotals,
     PersonAllocation,
+    Timeline,
+    TimelineMilestone,
+    TimelineProject,
     WorkRef,
 )
 
@@ -166,4 +169,43 @@ def my_dashboard(conn: psycopg.Connection[Any], actor: CurrentUser) -> MyDashboa
         hours_today=float(dates.DAILY_HOURS) if current and today.weekday() < 5 else 0.0,
         hours_this_week=round(week, 2),
         week_capacity=dates.WORK_WEEK_HOURS,
+    )
+
+
+def timeline(conn: psycopg.Connection[Any], actor: CurrentUser, *, project_id: uuid.UUID | None) -> Timeline:
+    """Open projects in the actor's scope with their milestones (signed-off ones stay, cancelled ones are left out)."""
+    today = dates.today()
+    rows, _ = projects_repo.search(
+        conn, today=today, viewer_id=actor.id, viewer_role=actor.role, include_archived=False, limit=500, offset=0
+    )
+    projects = [projects_service.present(r, actor) for r in rows if project_id is None or r["id"] == project_id]
+    projects.sort(key=lambda p: (p.start_date, p.name.lower()))
+    by_project: dict[uuid.UUID, list[TimelineMilestone]] = {p.id: [] for p in projects}
+    if projects:
+        found = conn.execute(
+            """
+            SELECT m.id, m.project_id, m.name, m.start_date, m.due_date, m.status,
+                   (SELECT count(*) FROM deliverables d
+                     WHERE d.milestone_id = m.id AND d.archived_at IS NULL) AS tasks_total,
+                   (SELECT count(*) FROM deliverables d
+                     WHERE d.milestone_id = m.id AND d.archived_at IS NULL AND d.done) AS tasks_done
+            FROM milestones m
+            WHERE m.project_id = ANY(%s) AND (m.archived_at IS NULL OR m.status = 'completed')
+            ORDER BY m.start_date, lower(m.name)
+            """,
+            ([p.id for p in projects],),
+        ).fetchall()
+        for m in found:
+            fields = {k: m[k] for k in ("id", "name", "start_date", "due_date", "status", "tasks_total", "tasks_done")}
+            overdue = m["status"] != "completed" and m["due_date"] < today
+            by_project[m["project_id"]].append(TimelineMilestone(**fields, is_overdue=overdue))
+    return Timeline(
+        as_of=today,
+        projects=[
+            TimelineProject(
+                id=p.id, name=p.name, manager_name=p.manager.name, status=p.status, start_date=p.start_date, end_date=p.end_date,
+                risk_level=p.summary.risk_level, milestones=by_project[p.id],
+            )
+            for p in projects
+        ],
     )

@@ -97,3 +97,36 @@ class MyDashboard(BaseModel):
     hours_today: float = Field(description="8 on a working day when you are on a milestone, otherwise 0")
     hours_this_week: float
     week_capacity: int
+
+
+class TimelineMilestone(BaseModel):
+    """A milestone as a bar on the timeline."""
+
+    id: uuid.UUID
+    name: str
+    start_date: dt.date
+    due_date: dt.date
+    status: Literal["pending", "in_progress", "completed"]
+    is_overdue: bool = Field(description="Past its due date and not signed off")
+    tasks_total: int
+    tasks_done: int
+
+
+class TimelineProject(BaseModel):
+    """A project as a bar on the timeline, with its milestones in start order."""
+
+    id: uuid.UUID
+    name: str
+    manager_name: str
+    status: str
+    start_date: dt.date
+    end_date: dt.date
+    risk_level: Literal["done", "on_track", "at_risk", "overdue"]
+    milestones: list[TimelineMilestone]
+
+
+class Timeline(BaseModel):
+    """Projects and milestones laid out by date. Signed-off milestones stay; cancelled ones are left out."""
+
+    as_of: dt.date
+    projects: list[TimelineProject]

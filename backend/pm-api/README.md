@@ -4,7 +4,7 @@ FastAPI on AWS Lambda (Mangum) with PostgreSQL. Projects are built from mileston
 hours, cost and risk are calculated from dates. Nothing is ever deleted: removing means archiving, and only admins see the archive.
 
 Interactive API docs: `/docs` (Swagger) and `/openapi.json` when the API runs directly with `uvicorn`.
-A 172-request Postman collection with saved example responses is in [`docs/postman`](../../docs/postman/README.md).
+A 176-request Postman collection with saved example responses is in [`docs/postman`](../../docs/postman/README.md).
 
 ## Run it
 
@@ -96,7 +96,7 @@ work that failed to save. Business rules live only in `service.py`; SQL lives on
 | Tasks (board) | `GET /projects/{id}/tasks` (filters `status`, `assignee_id`, `milestone_id`), `GET /tasks/mine` |
 | Team | `GET /projects/{id}/team`, `GET/POST .../milestones/{mid}/team`, `PATCH .../team/{uid}`, `POST .../team/{uid}/archive` |
 | Costs | `GET/POST /projects/{id}/costs`, `PATCH .../{cid}`, `POST .../{cid}/archive` |
-| Reports | `GET /reports/overview`, `GET /reports/my-dashboard` |
+| Reports | `GET /reports/overview`, `GET /reports/my-dashboard`, `GET /reports/timeline` (open projects with their milestones by date; admin: all, manager: own; `project_id` narrows it) |
 | History | `GET /audit` (admin: filters `project_id`, `actor_id`, `entity`, `action`, `from`, `to`, paged), `GET /projects/{id}/history` (admin or the project's manager) |
 | Admin | `POST /admin/seed-demo`, `GET /health` |
 
@@ -109,7 +109,7 @@ returning `200` with the archived record rather than `DELETE` returning `204`, b
 ./bin/test-backend.sh        # from the repository root: ruff, bandit, then pytest with a coverage gate
 ```
 
-213 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.4% coverage. "Today" is frozen to Wednesday
+219 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.4% coverage. "Today" is frozen to Wednesday
 2026-03-11 so date maths is repeatable. See [`docs/TESTING.md`](../../docs/TESTING.md) for the full picture.
 
 ## Known limits

@@ -240,3 +240,25 @@ export interface AuditEntry {
   changes: AuditChange[]
 }
 export interface AuditList { items: AuditEntry[]; total: number; page: number; pageSize: number }
+
+export interface TimelineMilestone {
+  id: string
+  name: string
+  startDate: string
+  dueDate: string
+  status: MilestoneStatus
+  isOverdue: boolean
+  tasksTotal: number
+  tasksDone: number
+}
+export interface TimelineProject {
+  id: string
+  name: string
+  managerName: string
+  status: string
+  startDate: string
+  endDate: string
+  riskLevel: RiskLevel
+  milestones: TimelineMilestone[]
+}
+export interface Timeline { asOf: string; projects: TimelineProject[] }
