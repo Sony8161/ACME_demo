@@ -31,7 +31,9 @@ dashboard. It creates two managers, six employees and four projects and shows th
 |---|---|
 | `npm run dev` | Dev server on port 3000 |
 | `npm run build` | Type check, then production build into `dist/` |
-| `npm test` | Vitest: API client, case conversion, formatting, sign-in and role guards, pulse bar |
+| `npm test` | Vitest and React Testing Library: 253 tests across the API client, every page and dialog, role guards, session refresh |
+| `npm run test:coverage` | The same with an 80% gate on statements, branches, functions and lines (currently 99% / 98%) |
+| `npm run e2e` | Playwright through the real stack (see `docs/TESTING.md`): the demo journey for all three roles plus axe accessibility scans |
 | `npm run lint` | ESLint (TypeScript, React hooks rules) |
 
 ## Layout
