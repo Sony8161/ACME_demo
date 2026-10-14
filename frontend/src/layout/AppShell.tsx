@@ -36,13 +36,26 @@ export function AppShell() {
   const current = items.find((item) => pathname.startsWith(item.to))?.to ?? false
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="fixed" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', zIndex: (t) => t.zIndex.drawer + 1 }}>
+    <Box sx={{ minHeight: '100vh' }}>
+      <AppBar
+        position="fixed" color="inherit" elevation={0}
+        sx={{
+          borderBottom: 1, borderColor: 'divider', zIndex: (t) => t.zIndex.drawer + 1, backgroundImage: 'none',
+          bgcolor: 'rgba(15,10,30,.78)', backdropFilter: 'blur(10px)',
+          '&::after': { content: '""', position: 'absolute', left: 0, right: 0, bottom: -1, height: '1px', background: 'linear-gradient(90deg, #a78bfa, rgba(167,139,250,0) 55%)' },
+        }}
+      >
         <Toolbar sx={{ gap: 1.5 }}>
-          <Box sx={{ width: 28, height: 28, borderRadius: 1.5, bgcolor: 'primary.main', position: 'relative', flexShrink: 0 }} aria-hidden>
-            <Box sx={{ position: 'absolute', left: 6, right: 6, bottom: 8, height: 3, borderRadius: 2, bgcolor: 'rgba(255,255,255,.5)' }} />
-            <Box sx={{ position: 'absolute', left: 6, width: 10, bottom: 8, height: 3, borderRadius: 2, bgcolor: '#fff' }} />
-            <Box sx={{ position: 'absolute', right: 6, top: 6, width: 6, height: 6, borderRadius: '50%', bgcolor: '#fbbf24' }} />
+          <Box
+            sx={{
+              width: 28, height: 28, borderRadius: 1, position: 'relative', flexShrink: 0,
+              background: 'linear-gradient(135deg, #c4b5fd 0%, #7c3aed 100%)', boxShadow: '0 0 18px -2px rgba(167,139,250,.7)',
+            }}
+            aria-hidden
+          >
+            <Box sx={{ position: 'absolute', left: 6, right: 6, bottom: 8, height: 3, borderRadius: 2, bgcolor: 'rgba(20,11,38,.35)' }} />
+            <Box sx={{ position: 'absolute', left: 6, width: 10, bottom: 8, height: 3, borderRadius: 2, bgcolor: '#140b26' }} />
+            <Box sx={{ position: 'absolute', right: 6, top: 6, width: 6, height: 6, borderRadius: '50%', bgcolor: '#fff' }} />
           </Box>
           <Typography variant="h6" sx={{ flexGrow: 1 }} noWrap>ACME Projects</Typography>
           {isDesktop && <Typography variant="body2" color="text.secondary">{user.name}</Typography>}
@@ -56,12 +69,19 @@ export function AppShell() {
       {isDesktop && (
         <Drawer
           variant="permanent"
-          sx={{ width: DRAWER_WIDTH, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box', borderRight: 1, borderColor: 'divider' } }}
+          sx={{ width: DRAWER_WIDTH, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box', borderRight: 1, borderColor: 'divider', bgcolor: 'rgba(15,10,30,.6)', backgroundImage: 'none' } }}
         >
           <Toolbar />
           <List component="nav" aria-label="Main" sx={{ p: 1.5 }}>
             {items.map((item) => (
-              <ListItemButton key={item.to} component={NavLink} to={item.to} selected={current === item.to} sx={{ borderRadius: 2, mb: 0.5 }}>
+              <ListItemButton key={item.to} component={NavLink} to={item.to} selected={current === item.to}
+                sx={{
+                  borderRadius: 1, mb: 0.5, position: 'relative',
+                  '&.Mui-selected': { bgcolor: 'rgba(167,139,250,.12)', color: 'primary.light', boxShadow: 'inset 0 0 24px -12px rgba(167,139,250,.9)' },
+                  '&.Mui-selected::before': { content: '""', position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, borderRadius: 2, bgcolor: 'primary.main', boxShadow: '0 0 10px #a78bfa' },
+                  '&.Mui-selected .MuiListItemIcon-root': { color: 'primary.main' },
+                }}
+              >
                 <ListItemIcon sx={{ minWidth: 40 }}>{ICONS[item.icon]}</ListItemIcon>
                 <ListItemText primary={item.label} />
               </ListItemButton>

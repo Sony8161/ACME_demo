@@ -23,7 +23,7 @@ const FILL: Record<RiskLevel, string> = {
   on_track: 'success.main',
   at_risk: 'warning.main',
   overdue: 'error.main',
-  done: 'grey.500',
+  done: 'text.secondary',
 }
 
 const clamp = (n: number) => Math.min(100, Math.max(0, n))
@@ -39,7 +39,7 @@ export function PulseBar({ schedulePct, workPct, risk, ticks = [], showLabels = 
 
   return (
     <Box role="img" aria-label={label} sx={{ width: '100%' }}>
-      <Box sx={{ position: 'relative', height: 12, borderRadius: 6, bgcolor: 'grey.200', overflow: 'visible' }}>
+      <Box sx={{ position: 'relative', height: 12, borderRadius: 6, bgcolor: 'action.selected', overflow: 'visible' }}>
         <Box sx={{ height: '100%', width: `${work}%`, borderRadius: 6, bgcolor: FILL[risk], transition: 'width .3s' }} />
         {ticks.map((tick) => (
           <Tooltip key={tick.id} title={tick.name} arrow describeChild>

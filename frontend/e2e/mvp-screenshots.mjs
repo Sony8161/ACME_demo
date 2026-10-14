@@ -258,8 +258,9 @@ await page.getByRole('button', { name: /Show details: Signed off milestone Build
 await page.getByText(/→ Completed/).first().waitFor()
 await shot(10, 'h2-an-entry-opened-to-show-exactly-what-changed')
 await page.getByRole('combobox', { name: 'Person' }).click()
-await page.getByRole('option', { name: 'Maria Lopez' }).click()
+await page.getByRole('option', { name: 'System Admin' }).click()  // this script acts as the admin, so the admin is who the history credits
 await page.waitForTimeout(700)
+await page.getByText('Signed off milestone Build').first().waitFor()
 await shot(10, 'h3-filtered-to-one-person')
 await page.getByRole('link', { name: 'Projects', exact: true }).first().click()
 await openProject('Website Redesign')

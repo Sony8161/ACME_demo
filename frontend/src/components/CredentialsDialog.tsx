@@ -31,7 +31,7 @@ export function CredentialsDialog({ open, title, accounts, onClose }: Props) {
           {accounts.map((a) => (
             <Box key={`${a.name}-${a.password}`} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 2 }}>
               <Typography sx={{ fontWeight: 600 }}>{a.name}{a.role ? ` · ${a.role}` : ''}</Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {a.username ? `username ${a.username}   ` : ''}password {a.password}
               </Typography>
             </Box>

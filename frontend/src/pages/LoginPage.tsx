@@ -31,7 +31,7 @@ export function LoginPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', px: 2, bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', px: 2 }}>
       <Paper sx={{ p: { xs: 3, sm: 4 }, width: '100%', maxWidth: 400 }}>
         <Typography variant="h5" component="h1" gutterBottom>ACME Projects</Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
