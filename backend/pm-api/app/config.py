@@ -43,6 +43,9 @@ class Settings:
     rate_limit_per_minute: int  # requests a person may make per minute (0 = off)
     login_rate_limit_per_minute: int  # sign-in attempts per address per minute (0 = off)
     max_failed_logins: int  # failed sign-ins before an account is locked
+    anthropic_api_key: str  # the AI key for the assistant; empty = the built-in assistant answers instead
+    assistant_model: str  # which model the assistant uses when there is a key
+    assistant_rate_limit_per_minute: int  # assistant questions a person may ask per minute (0 = off)
     serialize_requests: bool  # handle one request at a time (for a threaded server such as uvicorn; Lambda already does)
     login_lock_minutes: int  # how long it stays locked
     pg_host: str
@@ -93,6 +96,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         rate_limit_per_minute=int(env.get("RATE_LIMIT_PER_MINUTE", "600")),
         login_rate_limit_per_minute=int(env.get("LOGIN_RATE_LIMIT_PER_MINUTE", "120")),
         max_failed_logins=int(env.get("MAX_FAILED_LOGINS", "5")),
+        anthropic_api_key=env.get("ANTHROPIC_API_KEY", "").strip(),
+        assistant_model=env.get("ASSISTANT_MODEL", "claude-sonnet-5-5").strip() or "claude-sonnet-5-5",
+        assistant_rate_limit_per_minute=int(env.get("ASSISTANT_RATE_LIMIT_PER_MINUTE", "20")),
         serialize_requests=_as_bool(env.get("SERIALIZE_REQUESTS"), default=False),
         login_lock_minutes=int(env.get("LOGIN_LOCK_MINUTES", "15")),
         pg_host=env.get("POSTGRES_HOST", "localhost"),

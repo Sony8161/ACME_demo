@@ -33,6 +33,7 @@ and their status, dependency between deliverables (milestones), and budget consu
 - **A history of every change** (migration 004): database triggers write who changed what, and when, to an append-only `audit_log`; admins read all of it,
   a project's manager reads their project's. Chosen over logging in each service because no code path can forget it and it shares the change's transaction.
 - **Tasks (migration 005).** A deliverable gains a status, an owner (someone on the milestone), a due date and a priority, shown on a board and in a list. An owner can start or pause their own task; only a manager or admin finishes it, because finishing is the review. The tick and the status are kept in step by a trigger.
+- **Assistant.** A read-only chat. The model (when `ANTHROPIC_API_KEY` is set) never gets raw data access: it can only call six lookups that run with the asker's permissions; the built-in assistant answers common questions from the same lookups when there is no key or the service fails. Nothing is stored. Open: the key is read from the environment, so in AWS it still has to be supplied from Secrets Manager; project data is sent to the AI provider when a key is set, so decide that with the data owner first.
 - **Dependencies (migration 006).** Milestone-to-milestone (any project the person manages; admins any) and project-to-project links, finish-to-start: the later one cannot be started or completed until the earlier is completed; loops refused; cancelled predecessors do not block; archived, never deleted; names in projects a person cannot see are hidden.
 - **Timeline.** `GET /reports/timeline` returns open projects with their milestones (signed-off ones stay, cancelled ones do not); the web app draws them on a date axis (a page for all projects, a tab for one) with a list-like structure for screen readers.
 - **Nothing is ever deleted** and the API has no DELETE operations. Removing means archiving, and only admins can see
@@ -49,19 +50,19 @@ and their status, dependency between deliverables (milestones), and budget consu
 ## What exists
 | Area | State |
 |---|---|
-| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 236 tests, 97.6% coverage, no DELETE endpoints |
-| `docs/postman` | Done: 196-request collection with saved example JSON, verified with Newman (808 assertions, all 53 operations) and a saved results file in `docs/postman/results/` |
+| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 262 tests, 97.4% coverage, no DELETE endpoints |
+| `docs/postman` | Done: 203-request collection with saved example JSON, verified with Newman (839 assertions, all 55 operations) and a saved results file in `docs/postman/results/` |
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; not applied to AWS |
 | LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (161 requests, 654 assertions) |
 | AWS deploy | **Not done** (`./bin/deploy-backend.sh` and `./bin/deploy-frontend.sh`) |
-| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 336 tests at 98.7% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
+| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 351 tests at 98.7% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
 | Demo | `docs/DEMO.md`: rehearsed script; `./bin/demo-ready.sh` loads the sample company with memorable logins |
 | CI workflow (`.github/workflows/ci.yml`), READMEs, testing guide | Written; the workflow has not run on GitHub yet |
 
 ## Run it
 The whole demo without LocalStack (Linux or macOS; only Linux has been tested): `./bin/demo-local.sh`, see `docs/DEMO.md`.
 ```sh
-./bin/test-backend.sh                       # lint + security scan + 236 tests (needs local Postgres)
+./bin/test-backend.sh                       # lint + security scan + 262 tests (needs local Postgres)
 cd backend/pm-api && source .venv/bin/activate
 POSTGRES_NAME=pm_dev uvicorn app.main:app --port 8000   # then open http://localhost:8000/docs
 # first login: admin1 / ChangeMe123!  (you must change it); POST /admin/seed-demo loads sample data

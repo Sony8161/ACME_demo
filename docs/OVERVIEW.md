@@ -17,7 +17,8 @@ working on what.** Every Monday to Friday on a milestone is an 8-hour shift, so 
 | Risk | On track, at risk or overdue, always with the reasons (dates, hours, budget, forecast staffing cost) |
 | Archive, never delete | The API has no `DELETE`. Archived things are visible to admins, who can restore them |
 | **Tasks (new)** | A deliverable is a task with an owner, a priority, a due date and a status. A board (drag a card between To do, In progress and Done) and a list per project, and "My tasks" for employees. An owner starts or pauses their own task; only a manager or admin finishes it. Every move is in the history |
-| **Dependencies (new)** | A milestone (in any project you manage) or a project can wait for another. The later one cannot be started or completed until the earlier is completed, loops are refused, and the screens say what is waiting on what. Links are archived, never deleted, and are in the history |
+| **Assistant (new)** | A chat box on every screen. It answers from read-only lookups run as the person asking, so it cannot see more than they can. Built-in answers with no setup; with an `ANTHROPIC_API_KEY` a model chooses the lookups. It cannot change anything |
+| **Dependencies** | A milestone (in any project you manage) or a project can wait for another. The later one cannot be started or completed until the earlier is completed, loops are refused, and the screens say what is waiting on what. Links are archived, never deleted, and are in the history |
 | **Timeline** | Every open project on one calendar, with its milestones; and one project's milestones with each task as a diamond on its due date. Same colours as everywhere else, a line for today, readable by a screen reader as a list |
 | **History** | Who created, edited, archived or restored what, and when, with the exact fields that changed. Admins read all of it, a manager reads their own project's; it cannot be edited or removed |
 | Protection | bcrypt, 8-hour tokens that can be revoked, forced first password change, request limits per person and per address, a lock after five wrong passwords |
@@ -30,10 +31,10 @@ but has never been applied; the demo runs on LocalStack).
 
 | Check | Result |
 |---|---|
-| Backend, on a real PostgreSQL (rules through HTTP, plus unit tests) | **236 pass**, 97.6% coverage (gate 80%); ruff and bandit clean |
-| Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **336 pass**, 98.7% statements, 96.4% branches (gate 80%); lint, types, build and `npm audit` clean |
-| API contract, every endpoint (Postman/Newman on LocalStack) | **196 requests, 808 assertions, 0 failed, 53 of 53 operations** (run against the API under uvicorn on this branch) |
-| End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **38 of 38 checks**, including 12 accessibility scans |
+| Backend, on a real PostgreSQL (rules through HTTP, plus unit tests) | **262 pass**, 97.4% coverage (gate 80%); ruff and bandit clean |
+| Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **351 pass**, 98.7% statements, 96.3% branches (gate 80%); lint, types, build and `npm audit` clean |
+| API contract, every endpoint (Postman/Newman on LocalStack) | **203 requests, 839 assertions, 0 failed, 55 of 55 operations** (run against the API under uvicorn on this branch) |
+| End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **42 of 42 checks**, including 13 accessibility scans |
 | Load, realistic (about 19 requests a second across three people) | 1,197 requests, **0 failed**, median 20 ms, 95th percentile 35 ms |
 
 How: **tests run on a real database, not a mock**, because most of the risk is in rules that cross layers (who may see a project, overlap

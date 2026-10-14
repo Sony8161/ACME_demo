@@ -143,6 +143,14 @@ costs, and whether it is late."**
 3. As `admin1`, open **Customer Portal** and its **Dependencies** tab: the project waits for **Website Redesign**, so it cannot be completed until then.
    Try **Add dependency**: it lists only what makes sense, never the item itself and never what is already linked. Loops are refused, and every link is in the **History**.
 
+### Act 10. The assistant (admin1, 1 min)
+
+1. Click **Assistant** at the bottom right. **Say:** "A chat box on every screen. It can only read, and it answers from the same lookups as the
+   screens, run as the person asking, so a manager hears about their own projects and an employee never hears about money."
+2. Click **What is late?**, then type **What is blocked?**. Note **Looked at: ...** under each answer, and the **Built-in** tag in the header:
+   with an AI key set on the server it says **AI** and a model chooses the lookups; without one nothing leaves the machine.
+3. Optional: sign in as `alex01` and ask the same question: only Alex's own work, no money.
+
 ### Close (30 seconds)
 
 "The API behind this passes 198 tests and a 161-request Postman run with no failures, both locally and on LocalStack.

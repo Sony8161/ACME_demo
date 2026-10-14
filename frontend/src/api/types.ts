@@ -280,3 +280,7 @@ export interface DependencyRef {
   visible: boolean
 }
 export interface DependencyList { blockedBy: DependencyRef[]; blocks: DependencyRef[]; isBlocked: boolean }
+
+export interface ChatMessage { role: 'user' | 'assistant'; content: string }
+export interface ChatReply { reply: string; mode: 'ai' | 'offline'; toolsUsed: string[]; notice: string | null }
+export interface AssistantStatus { mode: 'ai' | 'offline'; model: string | null }

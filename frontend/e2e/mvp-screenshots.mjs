@@ -27,6 +27,7 @@ const MVPS = {
   11: 'extra-tasks-board',
   12: 'extra-timeline',
   13: 'extra-dependencies',
+  14: 'extra-assistant',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -319,6 +320,17 @@ await openProject('Data Platform Migration')
 await page.getByRole('tab', { name: 'Timeline' }).click()
 await page.getByRole('list', { name: 'Project timeline' }).waitFor()
 await shot(12, 'l2-one-project-with-its-tasks-as-diamonds')
+
+// Extra: the assistant
+await page.getByRole('button', { name: 'Ask the assistant' }).click()
+const assistant = page.getByRole('complementary', { name: 'Assistant' })
+await assistant.getByRole('button', { name: 'What is late?' }).waitFor()
+await shot(14, 'n1-a-chat-box-on-every-screen-with-questions-to-try')
+await assistant.getByRole('button', { name: 'What is late?' }).click()
+await assistant.getByText(/Mobile App Launch/).first().waitFor()
+await page.waitForTimeout(400)
+await shot(14, 'n2-it-answers-from-what-the-person-may-see')
+await page.keyboard.press('Escape')
 await signOut()
 
 await browser.close()

@@ -31,9 +31,9 @@ dashboard. It creates two managers, six employees and four projects and shows th
 |---|---|
 | `npm run dev` | Dev server on port 3000 |
 | `npm run build` | Type check, then production build into `dist/` |
-| `npm test` | Vitest and React Testing Library: 336 tests across the API client, every page and dialog, role guards, session refresh |
+| `npm test` | Vitest and React Testing Library: 351 tests across the API client, every page and dialog, role guards, session refresh |
 | `npm run test:coverage` | The same with an 80% gate on statements, branches, functions and lines (currently 99% / 98%) |
-| `npm run screenshots` | Re-takes the 44 demo pictures in `docs/demo-screenshots/` (one folder per MVP item) from the running demo |
+| `npm run screenshots` | Re-takes the 46 demo pictures in `docs/demo-screenshots/` (one folder per MVP item) from the running demo |
 | `npm run e2e` | Playwright through the real stack (see `docs/TESTING.md`): the demo journey for all three roles plus axe accessibility scans |
 | `npm run lint` | ESLint (TypeScript, React hooks rules) |
 
@@ -45,7 +45,7 @@ src/
                types.ts (response shapes), useApi.ts (load data for a screen)
   auth/        AuthProvider (token + user, kept in localStorage), route guards
   layout/      AppShell: side menu on a laptop, bottom tab bar on a phone (react-responsive)
-  components/  PulseBar (the signature progress bar), RiskChip, ProjectCard, MilestoneCard, HistoryList, Pager, TaskBoard, TaskCard, TaskTable, TimelineChart, DependencyPanel,
+  components/  PulseBar (the signature progress bar), RiskChip, ProjectCard, MilestoneCard, HistoryList, Pager, TaskBoard, TaskCard, TaskTable, TimelineChart, DependencyPanel, AssistantChat,
                FormDialog (every "fill in and confirm" action), CredentialsDialog, Async
   pages/       Login, ChangePassword, Dashboard, Projects, ProjectDetail (+Tasks, Timeline, Dependencies, Team, Costs, History), People, History (admin), Archive, MyWork, MyTasks (employees), Timeline (admin, manager; also a project tab)
 ```

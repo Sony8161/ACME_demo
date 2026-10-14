@@ -4,7 +4,7 @@ FastAPI on AWS Lambda (Mangum) with PostgreSQL. Projects are built from mileston
 hours, cost and risk are calculated from dates. Nothing is ever deleted: removing means archiving, and only admins see the archive.
 
 Interactive API docs: `/docs` (Swagger) and `/openapi.json` when the API runs directly with `uvicorn`.
-A 196-request Postman collection with saved example responses is in [`docs/postman`](../../docs/postman/README.md).
+A 203-request Postman collection with saved example responses is in [`docs/postman`](../../docs/postman/README.md).
 
 ## Run it
 
@@ -26,6 +26,9 @@ On LocalStack use `./bin/demo-postgres.sh` and `./bin/start-dev.sh` from the rep
 | `BOOTSTRAP_ADMIN_PASSWORD` | First admin's one-time password. Required in the cloud; Terraform generates it | `ChangeMe123!` locally |
 | `ACCESS_TOKEN_TTL_MINUTES` | Login token lifetime | `480` |
 | `RATE_LIMIT_PER_MINUTE` | Requests one person may make per minute, per Lambda container (0 = off) | `600` |
+| `ANTHROPIC_API_KEY` | The AI key for the assistant. Empty = the built-in assistant answers and nothing is sent anywhere. Never commit it; in AWS it belongs in Secrets Manager, not in a plain variable | empty |
+| `ASSISTANT_MODEL` | Which model answers when there is a key | `claude-sonnet-5-5` |
+| `ASSISTANT_RATE_LIMIT_PER_MINUTE` | Assistant questions one person may ask per minute, per container (0 = off) | `20` |
 | `LOGIN_RATE_LIMIT_PER_MINUTE` | Sign-in attempts per address per minute, per container (0 = off); an office shares one address, so it is generous | `120` |
 | `MAX_FAILED_LOGINS`, `LOGIN_LOCK_MINUTES` | Failed sign-ins before an account locks, and for how long | `5`, `15` |
 | `APP_ENV`, `AUTO_MIGRATE` | Environment label; run migrations on first request | `local`, `true` |
@@ -41,7 +44,7 @@ app/
                    dates (UTC "today", freezable in tests), money (compare to the cent), observability (access log),
                    ratelimit (per-person and per-address request limits)
   domains/<name>/  router.py (URLs), schemas.py (validation), service.py (the rules), repository.py (SQL)
-                   auth, users, projects, milestones, deliverables, assignments, costs, reports, admin, audit, tasks, dependencies
+                   auth, users, projects, milestones, deliverables, assignments, costs, reports, admin, audit, tasks, dependencies, assistant
   migrations/      001_initial.sql, 002_milestone_work.sql, 003_precalculated_cost_and_login_throttle.sql, 004_audit_log.sql, 005_tasks.sql, 006_dependencies.sql
                    (plain SQL, applied once, in order, under a lock)
   seed.py          first admin and the sample company
@@ -76,6 +79,12 @@ work that failed to save. Business rules live only in `service.py`; SQL lives on
 - **Tasks.** A deliverable is a task: `status` (todo, in_progress, done), `priority`, `due_date` and an owner (`assignee_id`, who must be on the
   milestone's team). A trigger keeps `status = done` and the old `done` tick in step, so the milestone sign-off rule is unchanged. An employee may
   move their own task between To do and In progress; finishing it is a manager's review. `app/domains/tasks` only reads (the board and "my tasks").
+- **Assistant.** A chat that answers from six read-only lookups (`app/domains/assistant/tools.py`: projects, one project's details, my tasks,
+  my work, what needs attention, who is free), each run **as the person asking** through the same services as the screens, so it cannot see
+  more than they can: no money for employees, nothing from other managers' projects. With `ANTHROPIC_API_KEY` set, a model chooses the lookups
+  (at most four rounds, the last ten turns, 900 tokens; tool results are data, never instructions); without a key, or if the AI service fails,
+  a built-in assistant recognises common questions and answers from the same lookups. It changes nothing, stores no conversation, and
+  limits each person to `ASSISTANT_RATE_LIMIT_PER_MINUTE` questions a minute.
 - **Dependencies.** A milestone can wait for another milestone (in the same project, or another project you manage; an admin may link any two) and
   a project can wait for another project. Finish-to-start: the later one cannot be started (milestones) or completed until the earlier is completed
   (409 `blocked`, naming what it waits for). Loops are refused (`dependency_loop`), duplicates too, a cancelled milestone no longer blocks and cannot
@@ -102,6 +111,7 @@ work that failed to save. Business rules live only in `service.py`; SQL lives on
 | Team | `GET /projects/{id}/team`, `GET/POST .../milestones/{mid}/team`, `PATCH .../team/{uid}`, `POST .../team/{uid}/archive` |
 | Costs | `GET/POST /projects/{id}/costs`, `PATCH .../{cid}`, `POST .../{cid}/archive` |
 | Reports | `GET /reports/overview`, `GET /reports/my-dashboard`, `GET /reports/timeline` (open projects with their milestones by date; admin: all, manager: own; `project_id` narrows it) |
+| Assistant | `GET /assistant/status` (AI or built-in), `POST /assistant/chat` (the conversation in, one answer out; read-only) |
 | Dependencies | `GET/POST /projects/{id}/milestones/{mid}/dependencies`, `POST .../{dep}/archive`; `GET/POST /projects/{id}/dependencies`, `POST .../{dep}/archive` |
 | History | `GET /audit` (admin: filters `project_id`, `actor_id`, `entity`, `action`, `from`, `to`, paged), `GET /projects/{id}/history` (admin or the project's manager) |
 | Admin | `POST /admin/seed-demo`, `GET /health` |
@@ -115,7 +125,7 @@ returning `200` with the archived record rather than `DELETE` returning `204`, b
 ./bin/test-backend.sh        # from the repository root: ruff, bandit, then pytest with a coverage gate
 ```
 
-236 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.4% coverage. "Today" is frozen to Wednesday
+262 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.4% coverage. "Today" is frozen to Wednesday
 2026-03-11 so date maths is repeatable. See [`docs/TESTING.md`](../../docs/TESTING.md) for the full picture.
 
 ## Known limits

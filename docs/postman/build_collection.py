@@ -615,6 +615,29 @@ SPEC: list[Folder] = [
           check=[("counts.overdue", "gte", 1), ("counts.at_risk", "gte", 1), ("counts.planned", "gte", 1)]),
     ]),
 
+    Folder("10b Assistant", "A chat that answers questions from read-only lookups made with the caller's own permissions. Without an AI key "
+           "the built-in assistant answers; nothing is changed either way.", [
+        R("Which assistant is answering", "GET", "/assistant/status", auth="manager_token", check=[("mode", "eq", "offline"), ("model", "null", None)]),
+        R("Ask what is late", "POST", "/assistant/chat", auth="manager_token",
+          body={"messages": [{"role": "user", "content": "What is late?"}]},
+          check=[("mode", "eq", "offline"), ("reply", "type", "string"), ("tools_used.0", "eq", "attention"), ("notice", "null", None)],
+          desc="Answered from the same lookups the screens use, so it only mentions projects this manager may see."),
+        R("A follow-up carries the conversation", "POST", "/assistant/chat", auth="manager_token",
+          body={"messages": [{"role": "user", "content": "What is late?"}, {"role": "assistant", "content": "Nothing."},
+                             {"role": "user", "content": "What can you do?"}]},
+          check=[("reply", "contains", "Try:")]),
+        R("An employee cannot ask who is free", "POST", "/assistant/chat", auth="employee_token",
+          body={"messages": [{"role": "user", "content": "Who is free this week?"}]},
+          check=[("reply", "contains", "Only managers and admins")]),
+        R("No messages is refused", "POST", "/assistant/chat", auth="manager_token", status=400, body={"messages": []},
+          check=[ERR("validation_error")] + VALID_ENVELOPE),
+        R("The question must come last", "POST", "/assistant/chat", auth="manager_token", status=400,
+          body={"messages": [{"role": "user", "content": "hi"}, {"role": "assistant", "content": "hello"}]},
+          check=[ERR("validation_error")] + VALID_ENVELOPE),
+        R("It needs a signed-in person", "POST", "/assistant/chat", auth=None, status=401,
+          body={"messages": [{"role": "user", "content": "hi"}]}, check=[ERR("unauthenticated")] + VALID_ENVELOPE),
+    ]),
+
     Folder("11 Security limits", "An account locks after repeated failed sign-ins; an admin cannot reset their own password. "
            "(The per-minute request limit is covered by the automated tests: it needs hundreds of requests to trigger.)", [
         create_user("Create an employee for the lock test", "locktest", {

@@ -15,6 +15,7 @@ import LogoutIcon from '@mui/icons-material/LogoutOutlined'
 import { useMediaQuery } from 'react-responsive'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/context'
+import { AssistantChat } from '../components/AssistantChat'
 import { navFor, type NavItem } from './nav'
 
 const ICONS: Record<NavItem['icon'], ReactElement> = {
@@ -78,6 +79,8 @@ export function AppShell() {
           <Outlet />
         </Box>
       </Box>
+
+      <AssistantChat role={user.role} compact={!isDesktop && items.length > 1} />
 
       {!isDesktop && items.length > 1 && (
         <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: (t) => t.zIndex.appBar, borderRadius: 0 }}>
