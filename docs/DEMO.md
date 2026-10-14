@@ -113,7 +113,7 @@ costs, and whether it is late."**
 
 ### Close (30 seconds)
 
-"The API behind this passes 154 tests and a 138-request Postman run with no failures, both locally and on LocalStack.
+"The API behind this passes 175 tests and a 151-request Postman run with no failures, both locally and on LocalStack.
 What is left: the AWS deployment, and growing this demo UI into the full app."
 
 ### 5-minute cut
@@ -136,7 +136,7 @@ Act 1 (steps 1 to 4), Act 3 steps 3, 5 and 6 only, then Act 5 steps 3 and 4.
 | The site does not load at all | `./bin/start-dev.sh` restarts the proxy and website |
 | LocalStack was restarted or the machine rebooted | `./bin/demo-postgres.sh`, `./bin/start-dev.sh`, then `./bin/demo-ready.sh` |
 | The browser offers to save a password | Dismiss it |
-| Everything fails on stage | Walk through `docs/demo-screenshots/` (one picture per step), then show the saved responses in the Postman collection |
+| Everything fails on stage | Walk through `docs/demo-screenshots/` (32 pictures, one folder per MVP item; see `docs/MVP.md`), then show the saved responses in the Postman collection and `docs/postman/results/` |
 
 ## 6. Other commands
 
@@ -145,7 +145,7 @@ Act 1 (steps 1 to 4), Act 3 steps 3, 5 and 6 only, then Act 5 steps 3 and 4.
 | `./bin/demo-reset.sh` | Empties all data (first admin only, `admin1` / `ChangeMe123!`, forced password change) |
 | `./bin/demo-postgres.sh --reset` | Throws away the whole database volume |
 | `./bin/demo-postgres.sh --stop` | Stops the database container |
-| `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | Full API test (run `./bin/demo-reset.sh` first, and `./bin/demo-ready.sh` after). Expect 138 requests, 554 assertions, 0 failures |
+| `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | Full API test (run `./bin/demo-reset.sh` first, and `./bin/demo-ready.sh` after). Expect 151 requests, 611 assertions, 0 failures |
 
 ## 7. Why it is set up this way
 

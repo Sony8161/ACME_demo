@@ -28,6 +28,8 @@ and their status, dependency between deliverables (milestones), and budget consu
 - **No time tracking.** Every Monday-Friday inside an assignment is an 8-hour shift, so hours and cost follow from the
   calendar: working days x 8 x `salary`. Worked time counts up to today; a forecast counts the whole planned range.
 - `salary` is an **hourly** rate. A milestone has a planned hours figure and budget set by the manager (business needs).
+- **Expected hours and cost are precalculated fields** on each assignment (a database trigger computes them from the working days and the
+  hourly rate stored on the assignment). A raise applies to work that has not started, so it never reprices the past.
 - **Nothing is ever deleted** and the API has no DELETE operations. Removing means archiving, and only admins can see
   archived records (`include_archived`). A manager **completes a milestone after ticking every deliverable**; it then
   moves to the archive (still counted in project progress). Cancelling a milestone archives it without counting it.
@@ -42,10 +44,10 @@ and their status, dependency between deliverables (milestones), and budget consu
 ## What exists
 | Area | State |
 |---|---|
-| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, demo-data. 154 tests, 97.1% coverage, no DELETE endpoints |
-| `docs/postman` | Done: 138-request collection with saved example JSON, verified with Newman (554 assertions) |
+| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, demo-data. 175 tests, 97.4% coverage, no DELETE endpoints |
+| `docs/postman` | Done: 151-request collection with saved example JSON, verified with Newman (611 assertions, all 42 operations) and a saved results file in `docs/postman/results/` |
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; not applied to AWS |
-| LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (138 requests, 554 assertions) |
+| LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (151 requests, 611 assertions) |
 | AWS deploy | **Not done** (`./bin/deploy-backend.sh` and `./bin/deploy-frontend.sh`) |
 | `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 253 tests at 99% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
 | Demo | `docs/DEMO.md`: rehearsed script; `./bin/demo-ready.sh` loads the sample company with memorable logins |
@@ -53,7 +55,7 @@ and their status, dependency between deliverables (milestones), and budget consu
 
 ## Run it
 ```sh
-./bin/test-backend.sh                       # lint + security scan + 154 tests (needs local Postgres)
+./bin/test-backend.sh                       # lint + security scan + 175 tests (needs local Postgres)
 cd backend/pm-api && source .venv/bin/activate
 POSTGRES_NAME=pm_dev uvicorn app.main:app --port 8000   # then open http://localhost:8000/docs
 # first login: admin1 / ChangeMe123!  (you must change it); POST /admin/seed-demo loads sample data
@@ -69,10 +71,9 @@ npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/
 - LocalStack Lambda reaches Postgres at `172.17.0.1`. The system Postgres listens on `127.0.0.1` only and changing that needs sudo, so `./bin/demo-postgres.sh` runs a Docker Postgres on that address instead.
 
 ## Known limits
-- Labor cost uses today's salary for all worked days, so a raise reprices history (fix: store the rate per assignment).
 - Public holidays are not modelled: every Monday-Friday is a shift.
 - The old time-entry and project-assignment tables are kept as `legacy_*` (migration 002) because nothing is dropped.
-- No login throttling. One shared DB connection per Lambda container (fine on Lambda, not for threaded servers).
+- Request rate limiting is per Lambda container (best effort); the cross-container control (AWS WAF rate rule) is not set up. One shared DB connection per Lambda container (fine on Lambda, not for threaded servers).
 - Aurora minimum capacity is 0.5 ACU (about $43 a month) so it never pauses.
 
 ## Next steps

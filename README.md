@@ -20,7 +20,7 @@ calculated from dates instead of timesheets. FastAPI on AWS Lambda, PostgreSQL, 
 | [docs/CONTEXT.md](./docs/CONTEXT.md) | Requirements, decisions and trade-offs, what is done and what is not |
 | [backend/pm-api/README.md](./backend/pm-api/README.md) | The API: architecture, rules, endpoints, how to run and test it |
 | [frontend/README.md](./frontend/README.md) | The web app |
-| [docs/postman](./docs/postman/README.md) | The API collection: 138 requests with saved examples |
+| [docs/postman](./docs/postman/README.md) | The API collection: 151 requests with saved examples, and a saved results file |
 
 Quick start (about 3 minutes the first time): `./bin/demo-postgres.sh && ./bin/start-dev.sh`, then `./bin/demo-ready.sh` in a
 second terminal, then open http://localhost:3000 and sign in as `admin1` / `Demo1234!`.

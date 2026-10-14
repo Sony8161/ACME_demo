@@ -7,12 +7,13 @@ The structure follows the Testing Expectations in [full-stack.md](./full-stack.m
 
 | Layer | What | Command | Result |
 |---|---|---|---|
-| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **154 tests pass**, 97.1% coverage (gate 80%) |
+| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **175 tests pass**, 97.4% coverage (gate 80%) |
 | Backend lint and security | `ruff` and `bandit` (same scan as CI) | `./bin/test-backend.sh` | clean |
 | Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **253 tests pass**, 99.2% statements, 98.1% branches (gate 80%) |
 | Frontend static checks | ESLint, TypeScript, production build, `npm audit` | `npm run lint && npm run typecheck && npm run build && npm audit` | clean, 0 vulnerabilities |
 | End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **17 of 17 checks pass** (11 journey, 6 axe scans) |
-| API contract | 138 requests with 554 assertions (Postman/Newman) | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | 0 failures, locally and on LocalStack |
+| API contract, every endpoint | 151 requests with 611 assertions (Postman/Newman); all 42 operations of the API | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | **0 failures** locally and on LocalStack; saved as `docs/postman/results/postman-results-localstack.json` |
+| Demo pictures | 32 pictures, one folder per MVP item | `cd frontend && npm run screenshots` | Retaken from the running demo; indexed in `docs/demo-screenshots/README.md` and `docs/MVP.md` |
 | Performance | Artillery load test | `npx artillery run docs/load/artillery.yml` | see Load test below |
 
 ## Backend
@@ -33,9 +34,29 @@ and skip themselves if PostgreSQL is not reachable. "Today" is frozen to Wednesd
 | Role rules and privilege escalation | role matrix in each domain's tests: a manager cannot change role or salary, an admin cannot change their own role, hidden things are 404, an employee never receives money |
 | "Archive, never delete" | `test_no_deletes.py` asserts the API has no DELETE operation and that archived records are admin-only |
 | Observability | `test_observability.py`: one access-log line per request, request id returned, tokens and search text never logged |
+| Rate limiting and the account lock | `test_ratelimit.py`: the limiter (window, per person, per address, forged forwarding header, health check exempt), the real app refusing a flood with 429 and `Retry-After`, five wrong passwords locking an account even for the right one, the count surviving the request's rollback, unlock after 15 minutes or by an admin reset |
+| Precalculated hours and cost | `test_precalculated.py`: the stored expected hours, cost and rate; recomputed when dates change; project and milestone totals add up the stored fields; a raise changes future work and never the past; and migration 003 run on data written by the old version |
 
-Coverage: 97.1% overall. All nine router files and `app/core/errors.py` (the error handlers) are at 100%. The lowest files are
+Coverage: 97.4% overall. All nine router files and `app/core/errors.py` (the error handlers) are at 100%. The lowest files are
 `app/main.py` (94%, the health check's database-down branch) and `app/domains/users/service.py` (95%).
+
+## API contract: every endpoint (Postman)
+
+```sh
+./bin/demo-reset.sh        # the collection needs an empty database: it signs in with the first-run password
+npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json \
+    --reporters cli,json --reporter-json-export /tmp/newman-localstack.json
+(cd backend/pm-api && source .venv/bin/activate && python ../../docs/postman/report.py /tmp/newman-localstack.json localstack http://localhost:3001/api/pm-api)
+./bin/demo-ready.sh        # put the demo back
+```
+
+11 folders walk the whole API in order. `report.py` compares the run with the API's own list of operations and writes
+`docs/postman/results/postman-results-localstack.json`: for each request its expected and actual status, every assertion and its result, and
+the time it took; and for each operation which requests exercised it. The raw Newman export is never committed because it holds tokens and
+one-time passwords; the saved file holds none.
+
+Result on 2026-10-14, LocalStack: **151 requests, 611 assertions, 0 failed, 42 of 42 operations exercised**. The one thing the collection does
+not do is exceed the 600-requests-a-minute limit (that needs hundreds of requests); `test_ratelimit.py` covers it.
 
 ## Frontend
 
@@ -75,13 +96,16 @@ npx artillery run docs/load/artillery.yml                 # realistic: 5 new use
 npx artillery run docs/load/artillery.yml -e stress       # finds the limit; see the warning below
 ```
 
-Read-only traffic as a manager: overview, project list, one project, its milestones, people, health. Run on LocalStack on a
+Read-only traffic as managers and an admin: overview, project list, one project, its milestones or team, people, health. Run on LocalStack on a
 2-CPU, 8 GB cloud desktop with the API warm.
 
 | Profile | Requests | Failed | Median | p95 | p99 | Max |
 |---|---|---|---|---|---|---|
-| Realistic (up to 5 users/s, about 23 requests/s observed) | 1,440 | **0** | 16 ms | 23 ms | 34 ms | 51 ms |
-| Stress (ramp to 15 users/s, about 90 requests/s offered) | 2,554 | 1,769 (HTTP 500 x1,228, 502 x96, timeouts x445) | 1.7 s | 5.1 s | 6.7 s | 7.9 s |
+| Realistic, on the final code with rate limiting (5 new users/s across three people, about 19 requests/s observed) | 1,189 | **0** (all 200, no 429) | 27 ms | 51 ms | 99 ms | 1.8 s (a container starting) |
+| Stress, measured before the limiter was added (ramp to 15 users/s, about 90 requests/s offered) | 2,554 | 1,769 (HTTP 500 x1,228, 502 x96, timeouts x445) | 1.7 s | 5.1 s | 6.7 s | 7.9 s |
+
+The scenario spreads the traffic over three people (maria1, james1, admin1) because the API now limits each person to 600 requests a minute;
+a single login hammered at over 20 requests a second would, correctly, receive 429.
 
 What the stress run means:
 - The 500s are **not application errors**. LocalStack's own log says `Could not start new environment ... OSError(24, 'Too many open files')`:

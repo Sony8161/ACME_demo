@@ -1,6 +1,6 @@
 # Postman collection: ACME Project Tracker API
 
-A complete, self-checking test flow for the API: **138 requests, 554 assertions**, with the expected JSON
+A complete, self-checking test flow for the API: **151 requests, 611 assertions**, with the expected JSON
 response saved as an example on every request.
 
 | File | What it is |

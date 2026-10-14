@@ -2,10 +2,12 @@
 #
 #   ./bin/demo-ready.sh                       # the logins below exist after this
 #   npx artillery run docs/load/artillery.yml
-#   npx artillery run docs/load/artillery.yml -e aws --target https://<cloudfront>/api/pm-api   # only with your own test users
+#   npx artillery run docs/load/artillery.yml --target https://<cloudfront>/api/pm-api     # only against a stack with these test users
 #
-# One manager signs in once (bcrypt makes login deliberately slow, so it is not the thing under test); every virtual user
-# then reads the pages a manager opens most: the overview, the project list, one project and the people list.
+# Three people sign in once (bcrypt makes login deliberately slow, so it is not the thing under test); every virtual user then
+# reads the pages a manager or admin opens most: the overview, the project list, one project, its milestones and the people list.
+# The traffic is spread over three people because the API limits each person to 600 requests a minute (RATE_LIMIT_PER_MINUTE);
+# one login hammered at 20+ requests a second would, correctly, be answered with 429.
 config:
   target: "http://localhost:3001/api/pm-api"
   # Default: what this tool really sees. 5 new users a second, each making 6 calls, is about 30 requests a second,
@@ -24,27 +26,42 @@ config:
         - { name: "Ramp up", duration: 30, arrivalRate: 2, rampTo: 15 }
         - { name: "Hold", duration: 30, arrivalRate: 15 }
   variables:
-    username: "maria1"
     password: "Demo1234!"
 before:
   flow:
-    - post:
-        url: "/auth/login"
-        json: { username: "{{ username }}", password: "{{ password }}" }
-        capture:
-          - { json: "$.access_token", as: "token" }
+    - post: { url: "/auth/login", json: { username: "maria1", password: "{{ password }}" }, capture: [{ json: "$.access_token", as: "tokenMaria" }] }
+    - post: { url: "/auth/login", json: { username: "james1", password: "{{ password }}" }, capture: [{ json: "$.access_token", as: "tokenJames" }] }
+    - post: { url: "/auth/login", json: { username: "admin1", password: "{{ password }}" }, capture: [{ json: "$.access_token", as: "tokenAdmin" }] }
     - get:
         url: "/projects"
-        headers: { Authorization: "Bearer {{ token }}" }
+        headers: { Authorization: "Bearer {{ tokenMaria }}" }
         capture:
           - { json: "$.items[0].id", as: "projectId" }
 scenarios:
-  - name: "Manager reads"
+  - name: "Maria reads"
+    weight: 1
+    flow: &reads
+      - get: { url: "/reports/overview", headers: { Authorization: "Bearer {{ tokenMaria }}" } }
+      - get: { url: "/projects", headers: { Authorization: "Bearer {{ tokenMaria }}" } }
+      - get: { url: "/projects/{{ projectId }}", headers: { Authorization: "Bearer {{ tokenMaria }}" } }
+      - get: { url: "/projects/{{ projectId }}/milestones", headers: { Authorization: "Bearer {{ tokenMaria }}" } }
+      - get: { url: "/users", headers: { Authorization: "Bearer {{ tokenMaria }}" } }
+      - think: 1
+      - get: { url: "/health" }
+  - name: "James reads"
+    weight: 1
     flow:
-      - get: { url: "/reports/overview", headers: { Authorization: "Bearer {{ token }}" } }
-      - get: { url: "/projects", headers: { Authorization: "Bearer {{ token }}" } }
-      - get: { url: "/projects/{{ projectId }}", headers: { Authorization: "Bearer {{ token }}" } }
-      - get: { url: "/projects/{{ projectId }}/milestones", headers: { Authorization: "Bearer {{ token }}" } }
-      - get: { url: "/users", headers: { Authorization: "Bearer {{ token }}" } }
+      - get: { url: "/reports/overview", headers: { Authorization: "Bearer {{ tokenJames }}" } }
+      - get: { url: "/projects", headers: { Authorization: "Bearer {{ tokenJames }}" } }
+      - get: { url: "/users", headers: { Authorization: "Bearer {{ tokenJames }}" } }
+      - think: 1
+      - get: { url: "/health" }
+  - name: "Admin reads"
+    weight: 1
+    flow:
+      - get: { url: "/reports/overview", headers: { Authorization: "Bearer {{ tokenAdmin }}" } }
+      - get: { url: "/projects", headers: { Authorization: "Bearer {{ tokenAdmin }}" } }
+      - get: { url: "/projects/{{ projectId }}", headers: { Authorization: "Bearer {{ tokenAdmin }}" } }
+      - get: { url: "/projects/{{ projectId }}/team", headers: { Authorization: "Bearer {{ tokenAdmin }}" } }
       - think: 1
       - get: { url: "/health" }
