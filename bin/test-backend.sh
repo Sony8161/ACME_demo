@@ -49,7 +49,7 @@ if [ "$(cat .venv/.reqs_hash 2>/dev/null)" != "$REQS_HASH" ]; then
 fi
 
 echo "INFO: ruff (lint)"
-ruff check app tests
+ruff check app tests scripts
 
 echo "INFO: bandit (security scan, same as CI)"
 # Only tracked files, like CI on a clean checkout: ./bin/start-dev.sh pip-installs the dependencies into

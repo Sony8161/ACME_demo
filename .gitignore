@@ -265,3 +265,6 @@ tfplan
 
 # Machine-specific Claude Code permissions
 .claude/settings.local.json
+
+# bin/demo-local.sh: pid files and logs
+.demo-local/

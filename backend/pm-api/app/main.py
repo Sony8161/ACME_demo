@@ -13,7 +13,7 @@ from app.config import API_PREFIX, get_settings
 from app.core.errors import register_error_handlers
 from app.core.observability import RequestLogMiddleware, configure_logging
 from app.core.ratelimit import RateLimitMiddleware, SlidingWindowLimiter
-from app.db import TransactionMiddleware, get_connection, register_post_migrate_hook
+from app.db import SerializeRequestsMiddleware, TransactionMiddleware, get_connection, register_post_migrate_hook
 from app.domains.admin.router import router as admin_router
 from app.domains.assignments.router import router as team_router
 from app.domains.auth.router import router as auth_router
@@ -78,6 +78,8 @@ def create_app() -> FastAPI:
 
     # Middleware added last runs first: the root path is fixed before the transaction starts.
     app.add_middleware(TransactionMiddleware)
+    if get_settings().serialize_requests:
+        app.add_middleware(SerializeRequestsMiddleware)  # outside the transaction: one request in the database at a time
     app.add_middleware(RootPathMiddleware)
     settings = get_settings()
     app.add_middleware(  # outside the transaction: a refused request never touches the database

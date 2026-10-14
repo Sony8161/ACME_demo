@@ -13,6 +13,7 @@ first request, serialised across containers with a PostgreSQL advisory lock.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from collections.abc import Callable
@@ -217,6 +218,26 @@ class TransactionMiddleware:
         except BaseException:
             finalize_transaction(ok=False)
             raise
+
+
+class SerializeRequestsMiddleware:
+    """Handle one request at a time, from the first byte in to the commit out.
+
+    The API keeps one shared database connection per process. A Lambda container serves one request at a time, so that is safe;
+    ``uvicorn`` serves requests in parallel threads, so two requests would share one transaction. Set ``SERIALIZE_REQUESTS=true``
+    when running under ``uvicorn`` (``bin/demo-local.sh`` does). Place it outside ``TransactionMiddleware``.
+    """
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+        self._lock = asyncio.Lock()
+
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        async with self._lock:
+            await self.app(scope, receive, send)
 
 
 def _commit_failed_response() -> tuple[dict[str, Any], dict[str, Any]]:

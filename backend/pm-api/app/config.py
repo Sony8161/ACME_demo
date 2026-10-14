@@ -43,6 +43,7 @@ class Settings:
     rate_limit_per_minute: int  # requests a person may make per minute (0 = off)
     login_rate_limit_per_minute: int  # sign-in attempts per address per minute (0 = off)
     max_failed_logins: int  # failed sign-ins before an account is locked
+    serialize_requests: bool  # handle one request at a time (for a threaded server such as uvicorn; Lambda already does)
     login_lock_minutes: int  # how long it stays locked
     pg_host: str
     pg_port: int
@@ -92,6 +93,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         rate_limit_per_minute=int(env.get("RATE_LIMIT_PER_MINUTE", "600")),
         login_rate_limit_per_minute=int(env.get("LOGIN_RATE_LIMIT_PER_MINUTE", "120")),
         max_failed_logins=int(env.get("MAX_FAILED_LOGINS", "5")),
+        serialize_requests=_as_bool(env.get("SERIALIZE_REQUESTS"), default=False),
         login_lock_minutes=int(env.get("LOGIN_LOCK_MINUTES", "15")),
         pg_host=env.get("POSTGRES_HOST", "localhost"),
         pg_port=int(env.get("POSTGRES_PORT", "5432")),

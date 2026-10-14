@@ -50,3 +50,32 @@ def test_error_envelope_shape(client):
 def test_api_prefix_is_accepted(client):
     assert client.get("/api/pm-api/health").status_code == 200
     assert client.get("/health").status_code == 200
+
+
+def test_serialized_requests_never_overlap():
+    """With SERIALIZE_REQUESTS (uvicorn), two requests arriving together are handled one after the other, not at the same time."""
+    import asyncio
+
+    import httpx
+    from fastapi import FastAPI
+
+    from app.db import SerializeRequestsMiddleware
+
+    events: list[str] = []
+    app = FastAPI()
+    app.add_middleware(SerializeRequestsMiddleware)
+
+    @app.get("/slow/{name}")
+    async def slow(name: str) -> dict[str, str]:
+        events.append(f"start {name}")
+        await asyncio.sleep(0.05)
+        events.append(f"end {name}")
+        return {"name": name}
+
+    async def run() -> None:
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+            await asyncio.gather(client.get("/slow/a"), client.get("/slow/b"))
+
+    asyncio.run(run())
+    assert len(events) == 4
+    assert events[0].startswith("start") and events[1].startswith("end") and events[0][6:] == events[1][4:]  # a whole request, then the next

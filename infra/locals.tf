@@ -56,7 +56,7 @@ locals {
       runtime          = "python3.13"
       handler          = "function.handler"
       path             = abspath(format("%s/../backend/%s", path.module, name))
-      patterns         = ["!__pycache__/.*", "!\\..*", "!tests/.*", "!htmlcov/.*"]
+      patterns         = ["!__pycache__/.*", "!\\..*", "!tests/.*", "!htmlcov/.*", "!scripts/.*"]
       pip_requirements = true
     }
   }
