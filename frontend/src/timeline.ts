@@ -4,18 +4,36 @@ import type { RiskLevel } from './api/types'
 // Dates are 'YYYY-MM-DD' strings read as UTC days, so the browser's time zone can never shift a bar.
 
 const DAY = 86_400_000
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+export const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+/** Week numbers are drawn only when the range is this many days or fewer; beyond it they would crowd each other. */
+const WEEKS_UP_TO_DAYS = 200
 
 export const dayNumber = (iso: string) => Date.parse(iso.slice(0, 10)) / DAY
 
 export interface Tick { pct: number; label: string }
+/** One calendar month, as a band across the top and a tinted stripe behind the rows. */
+export interface MonthBand {
+  /** Where the band starts and how wide it is, as percentages of the chart (clipped to the range). */
+  pct: number
+  width: number
+  name: string
+  year: number
+  /** "October 2026". */
+  label: string
+  /** Index of the month in the year (0 to 11), used to tint alternate months. */
+  index: number
+}
 export interface Scale {
   /** Where a date falls along the chart, 0 to 100 (clamped). */
   pct: (iso: string) => number
-  /** The month starts inside the range, labelled; thinned to every third month when the range is long. */
-  ticks: Tick[]
   /** Where today falls, or null when it is far outside the range. */
   today: number | null
+  /** Every calendar month the range touches, partial months at the ends included. */
+  months: MonthBand[]
+  /** The Mondays inside the range, labelled with the day of the month; empty when the range is too long for them. */
+  weeks: Tick[]
+  /** How many months wide the range is (fractions allowed), so the chart can be given room for each one. */
+  monthCount: number
 }
 
 /** A scale that fits every span, with a little room at both ends, and today when it is near the range. */
@@ -37,17 +55,24 @@ export function buildScale(spans: { start: string; end: string }[], today: strin
   const pct = (iso: string) => Math.min(100, Math.max(0, ((dayNumber(iso) - min) / span) * 100))
 
   const first = new Date(min * DAY)
-  const months: { day: number; label: string }[] = []
-  for (let y = first.getUTCFullYear(), m = first.getUTCMonth() + 1; ; m += 1) {
-    const day = Date.UTC(y + Math.floor(m / 12), m % 12, 1) / DAY
-    if (day > max) break
-    const month = ((m % 12) + 12) % 12
+  const months: MonthBand[] = []
+  for (let y = first.getUTCFullYear(), m = first.getUTCMonth(); ; m += 1) {
     const year = y + Math.floor(m / 12)
-    months.push({ day, label: month === 0 || months.length === 0 ? `${MONTHS[month]} ${year}` : MONTHS[month] })
+    const index = ((m % 12) + 12) % 12
+    const start = Date.UTC(year, index, 1) / DAY
+    if (start > max) break
+    const end = Date.UTC(year, index + 1, 1) / DAY
+    const from = Math.max(start, min)
+    const to = Math.min(end, max)
+    months.push({ pct: ((from - min) / span) * 100, width: ((to - from) / span) * 100, name: MONTH_NAMES[index], year, label: `${MONTH_NAMES[index]} ${year}`, index })
   }
-  const every = months.length > 14 ? 3 : 1
-  const ticks = months.filter((_, i) => i % every === 0).map((mo) => ({ pct: ((mo.day - min) / span) * 100, label: mo.label }))
-  return { pct, ticks, today: near ? pct(today) : null }
+
+  const weeks: Tick[] = []
+  if (span <= WEEKS_UP_TO_DAYS) {
+    const firstMonday = Math.ceil((min - 4) / 7) * 7 + 4 // day 4 since the epoch (1970-01-05) was a Monday
+    for (let d = firstMonday; d <= max; d += 7) weeks.push({ pct: ((d - min) / span) * 100, label: String(new Date(d * DAY).getUTCDate()) })
+  }
+  return { pct, today: near ? pct(today) : null, months, weeks, monthCount: span / 30.44 }
 }
 
 /** Left edge and width of a bar, as percentages; never thinner than a sliver, so a one-day milestone is still visible. */

@@ -36,21 +36,36 @@ describe('buildScale', () => {
     expect(near.pct('2026-12-05')).toBeGreaterThan(near.pct('2026-11-30'))
   })
 
-  it('labels each month start, with the year on the first and on every January', () => {
-    const labels = buildScale([{ start: '2026-11-10', end: '2027-02-20' }], '2026-12-01').ticks.map((t) => t.label)
-    expect(labels).toEqual(['Dec 2026', 'Jan 2027', 'Feb'])
+  it('names every month the range touches, with the year, and sizes each band by its days', () => {
+    const s = buildScale([{ start: '2026-11-10', end: '2027-02-20' }], '2026-12-01')
+    expect(s.months.map((m) => m.label)).toEqual(['November 2026', 'December 2026', 'January 2027', 'February 2027'])
+    const dec = s.months[1]
+    const jan = s.months[2]
+    expect(dec.width).toBeGreaterThan(jan.width * 0.9) // 31 days each
+    expect(jan.pct).toBeCloseTo(dec.pct + dec.width)
+    expect(s.months[0].pct).toBeGreaterThanOrEqual(0)
+    expect(s.months.reduce((n, m) => n + m.width, 0)).toBeCloseTo(100)
   })
 
-  it('thins the labels to every third month when the range is long', () => {
-    const ticks = buildScale([{ start: '2024-01-15', end: '2026-12-15' }], '2025-06-01').ticks
-    expect(ticks.length).toBeLessThanOrEqual(14)
-    expect(ticks.length).toBeGreaterThan(8)
+  it('lists the Mondays with their day of the month when the range is short', () => {
+    const s = buildScale([{ start: '2026-10-01', end: '2026-10-31' }], '2026-10-14')
+    expect(s.weeks.map((w) => w.label)).toEqual(['5', '12', '19', '26', '2']) // the last is Nov 2, inside the small margin the chart leaves after Oct 31
+    expect(s.weeks[0].pct).toBeLessThan(s.weeks[1].pct)
+  })
+
+  it('leaves the week numbers out when the range is long', () => {
+    expect(buildScale([{ start: '2026-01-01', end: '2026-12-31' }], '2026-06-01').weeks).toEqual([])
+  })
+
+  it('says how many months wide the range is', () => {
+    expect(buildScale([{ start: '2026-01-01', end: '2026-12-31' }], '2026-06-01').monthCount).toBeGreaterThan(11)
+    expect(buildScale([{ start: '2026-10-01', end: '2026-10-31' }], '2026-10-14').monthCount).toBeLessThan(2)
   })
 
   it('still draws something when there is nothing to show', () => {
     const s = buildScale([], '2026-10-15')
     expect(s.today).not.toBeNull()
-    expect(s.ticks.length).toBeGreaterThan(0)
+    expect(s.months.length).toBeGreaterThan(0)
   })
 })
 

@@ -133,7 +133,7 @@ costs, and whether it is late."**
 ### Act 8. The timeline (admin1, 1 min)
 
 1. Sign in as `admin1`, open **Projects** and switch to **Timeline**. **Say:** "Every open project on one calendar, coloured the same way as everywhere else:
-   green on track, amber at risk, red overdue, grey signed off. The vertical line is today, and the filled part of a bar is the work done."
+   green on track, amber at risk, red overdue, grey signed off. The header names every month with its year and numbers each week by its Monday; the labelled line is today, and the filled part of a bar is the work done. A long range scrolls sideways, and the names column stays put."
 2. Open **Data Platform Migration**; on the **Plan** tab switch **List** to **Timeline**: the milestones as bars, each task a diamond on its due date. Switch **Show tasks** off and on.
 
 ### Act 9. Dependencies (maria1, then admin1, 1.5 min)

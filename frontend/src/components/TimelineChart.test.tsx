@@ -38,11 +38,31 @@ describe('TimelineChart', () => {
     expect(container.querySelectorAll('[title^="Press kit"]')).toHaveLength(0)
   })
 
-  it('labels the months across the top and shows the footer', () => {
+  it('names each month with its year across the top, and shows the footer', () => {
     show()
-    expect(screen.getByText('Sep 2026')).toBeInTheDocument()
-    expect(screen.getByText('Oct')).toBeInTheDocument()
+    expect(screen.getByText('September 2026')).toBeInTheDocument()
+    expect(screen.getByText('October 2026')).toBeInTheDocument()
+    expect(screen.getByText('November 2026')).toBeInTheDocument()
     expect(screen.getByText('how to read it')).toBeInTheDocument()
+  })
+
+  it('marks today in the header', () => {
+    show()
+    expect(screen.getByText('Today')).toBeInTheDocument()
+  })
+
+  it('numbers the weeks when the range is short, and leaves them out when it is long', () => {
+    const { unmount } = show([{ key: 'a', label: 'Sprint', tone: 'brand', start: '2026-10-01', end: '2026-10-31', summary: 'Sprint' }], '2026-10-14')
+    expect(screen.getByText('12')).toBeInTheDocument() // the Monday of today's week
+    unmount()
+    show([{ key: 'a', label: 'Year', tone: 'brand', start: '2026-01-01', end: '2026-12-31', summary: 'Year' }], '2026-06-01')
+    expect(screen.queryByText('12')).not.toBeInTheDocument()
+  })
+
+  it('gives every month room, so a long range scrolls sideways instead of squeezing', () => {
+    const { container } = show([{ key: 'a', label: 'Year', tone: 'brand', start: '2026-01-01', end: '2026-12-31', summary: 'Year' }], '2026-06-01')
+    const widths = Array.from(container.querySelectorAll('div')).map((d) => getComputedStyle(d).minWidth).filter((w) => w.endsWith('px')).map((w) => parseInt(w, 10))
+    expect(Math.max(...widths)).toBeGreaterThan(1300)
   })
 
   it('says so when there is nothing to show', () => {
