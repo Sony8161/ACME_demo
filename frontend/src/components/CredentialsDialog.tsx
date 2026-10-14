@@ -19,8 +19,9 @@ export function CredentialsDialog({ open, title, accounts, onClose }: Props) {
   const copy = (text: string) => navigator.clipboard?.writeText(text).catch(() => undefined)
   const all = accounts.map((a) => `${a.name}${a.role ? ` (${a.role})` : ''}: ${a.username ? `${a.username} / ` : ''}${a.password}`).join('\n')
 
+  // Only the button closes it: a click outside or Esc would throw away a password that is shown once.
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={(_, reason) => { if (!reason) onClose() }} fullWidth maxWidth="sm">
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <Alert severity="warning" sx={{ mb: 2 }}>

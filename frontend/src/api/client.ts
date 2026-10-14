@@ -1,7 +1,5 @@
+import axios, { type AxiosResponse } from 'axios'
 import { keysToCamel, keysToSnake } from './case'
-
-/** Address of the API. Empty VITE_API_URL means "same address as the site" (dev proxy or CloudFront). */
-const BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/pm-api`
 
 /** Every API failure arrives in one shape: {error: {code, message, details}}. This is that shape as an Error. */
 export class ApiError extends Error {
@@ -17,6 +15,15 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * The one axios instance. Empty VITE_API_URL means "same address as the site" (the dev proxy or CloudFront).
+ * The timeout is long on purpose: the first call after a quiet period waits for the Lambda container to start.
+ */
+export const http = axios.create({
+  baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api/pm-api`,
+  timeout: 100_000,
+})
+
 let token: string | null = null
 let onUnauthorized: () => void = () => {}
 
@@ -29,52 +36,51 @@ export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler
 }
 
-type Query = Record<string, string | number | boolean | undefined | null>
+// Outgoing: add the login token and turn camelCase body keys into the API's snake_case.
+http.interceptors.request.use((config) => {
+  if (token) config.headers.set('Authorization', `Bearer ${token}`)
+  if (config.data !== undefined) config.data = keysToSnake(config.data)
+  return config
+})
 
-function buildUrl(path: string, query?: Query) {
-  const params = new URLSearchParams()
-  Object.entries(query ?? {}).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') params.set(key, String(value))
-  })
-  const qs = params.toString()
-  return `${BASE}${path}${qs ? `?${qs}` : ''}`
+// Incoming: turn snake_case into camelCase, and every failure into an ApiError carrying the server's own sentence.
+http.interceptors.response.use(
+  (response: AxiosResponse) => {
+    response.data = keysToCamel(response.data)
+    return response
+  },
+  (error: unknown) => Promise.reject(toApiError(error)),
+)
+
+function toApiError(error: unknown): ApiError {
+  if (!axios.isAxiosError(error)) return new ApiError(0, 'unknown_error', 'Something went wrong. Please try again.')
+  if (!error.response) {
+    return error.code === 'ECONNABORTED'
+      ? new ApiError(0, 'timeout', 'The server took too long to answer. Please try again.')
+      : new ApiError(0, 'network_error', 'Cannot reach the server. Check your connection and try again.')
+  }
+  const data = keysToCamel<{ error?: { code?: string; message?: string; details?: ApiError['details'] } } | string>(error.response.data)
+  const body = typeof data === 'object' && data !== null ? data.error : undefined
+  const apiError = new ApiError(
+    error.response.status,
+    body?.code ?? 'unknown_error',
+    body?.message ?? 'Something went wrong. Please try again.',
+    body?.details ?? [],
+  )
+  // A 401 on a signed-in call means the session ended; a failed login is just a wrong password.
+  if (error.response.status === 401 && token && apiError.code !== 'invalid_credentials') onUnauthorized()
+  return apiError
 }
 
-async function request<T>(method: string, path: string, body?: unknown, query?: Query): Promise<T> {
-  let response: Response
-  try {
-    response = await fetch(buildUrl(path, query), {
-      method,
-      headers: {
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: body !== undefined ? JSON.stringify(keysToSnake(body)) : undefined,
-    })
-  } catch {
-    throw new ApiError(0, 'network_error', 'Cannot reach the server. Check your connection and try again.')
-  }
+type Query = Record<string, string | number | boolean | undefined | null>
 
-  const text = await response.text()
-  const data: unknown = text ? JSON.parse(text) : null
-
-  if (!response.ok) {
-    const error = keysToCamel<{ error?: { code?: string; message?: string; details?: ApiError['details'] } }>(data).error
-    const apiError = new ApiError(
-      response.status,
-      error?.code ?? 'unknown_error',
-      error?.message ?? 'Something went wrong. Please try again.',
-      error?.details ?? [],
-    )
-    // A 401 on a signed-in call means the session ended; a failed login is just a wrong password.
-    if (response.status === 401 && token && apiError.code !== 'invalid_credentials') onUnauthorized()
-    throw apiError
-  }
-  return keysToCamel<T>(data)
+/** Query parameters without the empty ones (an empty search box should not send `q=`). */
+function cleanQuery(query?: Query) {
+  return Object.fromEntries(Object.entries(query ?? {}).filter(([, v]) => v !== undefined && v !== null && v !== ''))
 }
 
 export const api = {
-  get: <T>(path: string, query?: Query) => request<T>('GET', path, undefined, query),
-  post: <T>(path: string, body?: unknown) => request<T>('POST', path, body ?? {}),
-  patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
+  get: async <T>(path: string, query?: Query) => (await http.get<T>(path, { params: cleanQuery(query) })).data,
+  post: async <T>(path: string, body?: unknown) => (await http.post<T>(path, body ?? {})).data,
+  patch: async <T>(path: string, body: unknown) => (await http.patch<T>(path, body)).data,
 }

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '../auth/AuthProvider'
+import { mockApi, restoreApi } from '../test/mockApi'
 import { RequireAuth, RequireRole } from '../auth/guards'
 import { LoginPage } from './LoginPage'
 
@@ -10,9 +11,6 @@ const user = (role: string, mustChangePassword = false) => ({
   must_change_password: mustChangePassword, archived_at: null, salary: null,
 })
 
-function mockFetch(status: number, body: unknown) {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: status < 400, status, text: async () => JSON.stringify(body) }))
-}
 
 function renderApp(path = '/login') {
   return render(
@@ -32,13 +30,13 @@ function renderApp(path = '/login') {
 }
 
 afterEach(() => {
-  vi.unstubAllGlobals()
+  restoreApi()
   localStorage.clear()
 })
 
 describe('sign in', () => {
   it('shows the server sentence when the password is wrong', async () => {
-    mockFetch(401, { error: { code: 'invalid_credentials', message: 'Invalid username or password' } })
+    mockApi(401, { error: { code: 'invalid_credentials', message: 'Invalid username or password' } })
     renderApp()
     await userEvent.type(screen.getByLabelText(/username/i), 'ab12cd')
     await userEvent.type(screen.getByLabelText(/password/i), 'nope')
@@ -47,7 +45,7 @@ describe('sign in', () => {
   })
 
   it('sends an employee to their own page after signing in', async () => {
-    mockFetch(200, { access_token: 't', expires_at: Math.floor(Date.now() / 1000) + 3600, user: user('employee') })
+    mockApi(200, { access_token: 't', expires_at: Math.floor(Date.now() / 1000) + 3600, user: user('employee') })
     renderApp()
     await userEvent.type(screen.getByLabelText(/username/i), 'ab12cd')
     await userEvent.type(screen.getByLabelText(/password/i), 'Secret123')
@@ -56,7 +54,7 @@ describe('sign in', () => {
   })
 
   it('forces a new password before anything else when the account has a one-time password', async () => {
-    mockFetch(200, { access_token: 't', expires_at: Math.floor(Date.now() / 1000) + 3600, user: user('manager', true) })
+    mockApi(200, { access_token: 't', expires_at: Math.floor(Date.now() / 1000) + 3600, user: user('manager', true) })
     renderApp()
     await userEvent.type(screen.getByLabelText(/username/i), 'ab12cd')
     await userEvent.type(screen.getByLabelText(/password/i), 'OneTime123')

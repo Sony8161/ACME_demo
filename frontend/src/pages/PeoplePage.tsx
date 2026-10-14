@@ -66,7 +66,8 @@ export function PeoplePage() {
                     {isAdmin && <TableCell align="right">{p.salary === null ? '—' : `${money(p.salary)}/h`}</TableCell>}
                     {isAdmin && (
                       <TableCell align="right">
-                        <Button size="small" onClick={() => setTarget({ person: p, action: 'reset' })}>New password</Button>
+                        {/* Not on your own row: a reset signs you out and shows the new password once. */}
+                        {p.id !== user?.id && <Button size="small" onClick={() => setTarget({ person: p, action: 'reset' })}>New password</Button>}
                         {p.id !== user?.id && <Button size="small" color="error" onClick={() => setTarget({ person: p, action: 'archive' })}>Archive</Button>}
                       </TableCell>
                     )}

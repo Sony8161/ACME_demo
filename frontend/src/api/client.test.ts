@@ -1,55 +1,59 @@
+import { mockApi, mockNoAnswer, restoreApi } from '../test/mockApi'
 import { ApiError, api, setToken, setUnauthorizedHandler } from './client'
 
-function respond(status: number, body: unknown) {
-  return vi.fn().mockResolvedValue({ ok: status < 400, status, text: async () => (body === null ? '' : JSON.stringify(body)) })
-}
-
 afterEach(() => {
-  vi.unstubAllGlobals()
+  restoreApi()
   setToken(null)
   setUnauthorizedHandler(() => {})
 })
 
-describe('api client', () => {
+describe('api client (axios)', () => {
   it('sends the token and converts keys both ways', async () => {
-    const fetchMock = respond(200, { project_id: 'p1' })
-    vi.stubGlobal('fetch', fetchMock)
+    const sent = mockApi(200, { project_id: 'p1' })
     setToken('abc')
     const out = await api.post<{ projectId: string }>('/projects', { managerId: 'm1' })
     expect(out.projectId).toBe('p1')
-    const [url, init] = fetchMock.mock.calls[0]
-    expect(url).toBe('/api/pm-api/projects')
-    expect(init.headers.Authorization).toBe('Bearer abc')
-    expect(JSON.parse(init.body)).toEqual({ manager_id: 'm1' })
+    expect(sent[0].baseURL).toMatch(/\/api\/pm-api$/) // with or without VITE_API_URL
+    expect(sent[0].url).toBe('/projects')
+    expect(sent[0].headers.get('Authorization')).toBe('Bearer abc')
+    expect(JSON.parse(sent[0].data)).toEqual({ manager_id: 'm1' })
   })
 
   it('turns the API error shape into an ApiError with the server sentence', async () => {
-    vi.stubGlobal('fetch', respond(409, { error: { code: 'assignment_overlap', message: 'Alex is already on another milestone', details: [{ field: 'start_date', message: 'Overlaps' }] } }))
-    await expect(api.post('/x')).rejects.toMatchObject({ status: 409, code: 'assignment_overlap', message: 'Alex is already on another milestone' })
+    mockApi(409, { error: { code: 'assignment_overlap', message: 'Alex is already on another milestone', details: [{ field: 'start_date', message: 'Overlaps' }] } })
+    await expect(api.post('/x')).rejects.toMatchObject({
+      status: 409, code: 'assignment_overlap', message: 'Alex is already on another milestone', details: [{ field: 'start_date', message: 'Overlaps' }],
+    })
   })
 
   it('drops empty query values and sends the rest', async () => {
-    const fetchMock = respond(200, { items: [] })
-    vi.stubGlobal('fetch', fetchMock)
-    await api.get('/projects', { q: '', status: 'active', page_size: 10 })
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/pm-api/projects?status=active&page_size=10')
+    const sent = mockApi(200, { items: [] })
+    await api.get('/projects', { q: '', status: 'active', page_size: 10, manager_id: undefined })
+    expect(sent[0].params).toEqual({ status: 'active', page_size: 10 })
   })
 
   it('signs the user out when a signed-in call gets 401, but not on a wrong password', async () => {
     const handler = vi.fn()
     setUnauthorizedHandler(handler)
     setToken('abc')
-    vi.stubGlobal('fetch', respond(401, { error: { code: 'token_revoked', message: 'Please sign in again' } }))
+    mockApi(401, { error: { code: 'token_revoked', message: 'Please sign in again' } })
     await expect(api.get('/auth/me')).rejects.toBeInstanceOf(ApiError)
     expect(handler).toHaveBeenCalledTimes(1)
 
-    vi.stubGlobal('fetch', respond(401, { error: { code: 'invalid_credentials', message: 'Invalid username or password' } }))
+    mockApi(401, { error: { code: 'invalid_credentials', message: 'Invalid username or password' } })
     await expect(api.post('/auth/login', {})).rejects.toBeInstanceOf(ApiError)
     expect(handler).toHaveBeenCalledTimes(1)
   })
 
-  it('explains a network failure in plain words', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+  it('explains a dropped connection and a timeout in plain words', async () => {
+    mockNoAnswer('ERR_NETWORK')
     await expect(api.get('/health')).rejects.toMatchObject({ code: 'network_error', message: expect.stringContaining('Cannot reach the server') })
+    mockNoAnswer('ECONNABORTED')
+    await expect(api.get('/health')).rejects.toMatchObject({ code: 'timeout', message: expect.stringContaining('too long') })
+  })
+
+  it('still gives a readable error when the answer is not the API error shape (for example a proxy page)', async () => {
+    mockApi(502, '<html>Bad Gateway</html>')
+    await expect(api.get('/health')).rejects.toMatchObject({ status: 502, code: 'unknown_error', message: expect.stringContaining('Something went wrong') })
   })
 })

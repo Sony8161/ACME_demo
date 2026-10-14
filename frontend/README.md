@@ -38,7 +38,7 @@ dashboard. It creates two managers, six employees and four projects and shows th
 
 ```
 src/
-  api/         client.ts (one fetch wrapper: token, error shape, 401), case.ts (snake_case <-> camelCase),
+  api/         client.ts (one axios instance with interceptors: token, error shape, 401), case.ts (snake_case <-> camelCase),
                types.ts (response shapes), useApi.ts (load data for a screen)
   auth/        AuthProvider (token + user, kept in localStorage), route guards
   layout/      AppShell: side menu on a laptop, bottom tab bar on a phone (react-responsive)
@@ -52,7 +52,7 @@ src/
 - One question per screen. Colour means status only (green on track, amber at risk, red overdue, grey done).
 - The **pulse bar** shows work done (the fill) against the calendar (the dark marker): fill short of the marker means behind.
 - Plain words, a confirmation that says what will happen before anything is archived or completed, and every server error shown as the sentence the server wrote.
-- Phone first: tables become cards, the menu becomes a bottom bar, forms stack.
+- Phone first: the menu becomes a bottom bar, forms stack.
 
 ## Known limits (demo scope)
 
