@@ -68,8 +68,10 @@ export function MilestoneCard({ project, milestone: m, canManage, onChanged }: P
 
       <Stack direction="row" spacing={3} sx={{ mt: 1.5, flexWrap: 'wrap' }} useFlexGap>
         <Fact label="Planned" value={hours(m.allocatedHours)} />
+        <Fact label="Expected" value={hours(m.expectedHours)} />
         <Fact label="Worked" value={hours(m.hoursWorked)} />
         {m.budgetAmount !== null && <Fact label="Budget" value={money(m.budgetAmount)} />}
+        {m.expectedCost !== null && <Fact label="Expected cost" value={money(m.expectedCost)} />}
         {m.laborCost !== null && <Fact label="Labor so far" value={money(m.laborCost)} />}
       </Stack>
 

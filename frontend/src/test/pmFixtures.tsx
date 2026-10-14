@@ -34,7 +34,7 @@ export function renderPage(ui: ReactElement, path = '/', route = '/') {
 export function summary(overrides: Record<string, unknown> = {}) {
   return {
     days_total: 100, days_elapsed: 40, days_remaining: 60, schedule_pct: 40,
-    hours_worked: 120, hours_remaining: 380, hours_pct: 24,
+    hours_worked: 120, hours_remaining: 380, expected_hours: 400, hours_pct: 24,
     milestones_total: 4, milestones_done: 1, milestones_overdue: 0, milestones_pct: 25,
     team_size: 3, risk_level: 'on_track', risk_reasons: [],
     labor_cost: 12000, forecast_cost: 50000, other_cost: 3000, total_cost: 15000, budget_remaining: 35000, budget_pct: 30,
@@ -60,7 +60,7 @@ export function employeeProject(overrides: Record<string, unknown> = {}) {
 export function milestone(overrides: Record<string, unknown> = {}) {
   return {
     id: 'm1', project_id: 'p1', name: 'Design', description: 'Wireframes and mockups', start_date: '2026-09-01', due_date: '2026-10-31',
-    status: 'in_progress', is_overdue: false, allocated_hours: 100, hours_worked: 40, budget_amount: 8000, labor_cost: 3200, budget_pct: 40,
+    status: 'in_progress', is_overdue: false, allocated_hours: 100, hours_worked: 40, budget_amount: 8000, labor_cost: 3200, expected_hours: 80, expected_cost: 6400, budget_pct: 40,
     assignees: 1, deliverables_total: 2, deliverables_done: 1, completed_at: null, review_note: '', archived_at: null, ...overrides,
   }
 }

@@ -19,9 +19,9 @@ const person = (id: string, name: string, jobTitle = '') => ({
 })
 const assignee = (overrides: Record<string, unknown> = {}) => ({
   assignment_id: 'a1', user_id: 'u1', name: 'Ann Designer', job_title: 'Designer', milestone_id: 'm1', milestone_name: 'Design',
-  start_date: '2026-09-01', end_date: '2026-09-30', days_worked: 10, hours_worked: 80, labor_cost: 2400, ...overrides,
+  start_date: '2026-09-01', end_date: '2026-09-30', days_worked: 10, hours_worked: 80, labor_cost: 2400, expected_hours: 160, expected_cost: 4800, hourly_rate: 30, ...overrides,
 })
-const team = (items: unknown[] = []) => ({ items, total: items.length, hours_worked: 0, labor_cost: 0 })
+const team = (items: unknown[] = []) => ({ items, total: items.length, hours_worked: 0, labor_cost: 0, expected_hours: 0, expected_cost: 0 })
 
 interface Setup {
   milestone?: Record<string, unknown>
@@ -92,7 +92,7 @@ describe('MilestoneCard: what it shows', () => {
   })
 
   it('leaves out the money figures when the server did not send them', async () => {
-    setup({ milestone: { budget_amount: null, labor_cost: null, budget_pct: null } })
+    setup({ milestone: { budget_amount: null, labor_cost: null, expected_cost: null, budget_pct: null } })
     await screen.findByText('Nobody assigned yet.')
     expect(screen.queryByText('Budget')).not.toBeInTheDocument()
     expect(screen.queryByText('Labor so far')).not.toBeInTheDocument()

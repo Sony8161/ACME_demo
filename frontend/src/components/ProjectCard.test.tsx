@@ -7,7 +7,7 @@ const project = (summary: Partial<Project['summary']> = {}): Project => ({
   id: 'p1', name: 'Apollo', description: '', manager: { id: 'm1', name: 'Maya Chen' }, status: 'active',
   startDate: '2026-03-02', endDate: '2026-06-26', allocatedHours: 400, budgetAmount: 100000, completedAt: null, archivedAt: null,
   summary: {
-    daysTotal: 100, daysElapsed: 40, daysRemaining: 60, schedulePct: 40, hoursWorked: 100, hoursRemaining: 300, hoursPct: 25,
+    daysTotal: 100, daysElapsed: 40, daysRemaining: 60, schedulePct: 40, hoursWorked: 100, hoursRemaining: 300, expectedHours: 320, hoursPct: 25,
     milestonesTotal: 5, milestonesDone: 2, milestonesOverdue: 0, milestonesPct: 40, teamSize: 4, riskLevel: 'on_track', riskReasons: [],
     laborCost: 30000, forecastCost: 80000, otherCost: 5000, totalCost: 35000, budgetRemaining: 65000, budgetPct: 35, ...summary,
   },

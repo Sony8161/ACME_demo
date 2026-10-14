@@ -13,7 +13,7 @@ export function TeamTab({ projectId }: { projectId: string }) {
       {(team) => (
         <>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Hours are not typed in. Every Monday to Friday of an assignment is an 8-hour shift, counted up to today.
+            Hours are not typed in. Every Monday to Friday of an assignment is an 8-hour shift. "Expected" is the whole range, worked out when the work is planned, at the hourly rate it was planned at; "so far" counts up to today.
           </Typography>
           <TableContainer component={Paper}>
             <Table size="small">
@@ -23,8 +23,10 @@ export function TeamTab({ projectId }: { projectId: string }) {
                   <TableCell>Milestone</TableCell>
                   <TableCell>Dates</TableCell>
                   <TableCell align="right">Days</TableCell>
-                  <TableCell align="right">Hours</TableCell>
+                  <TableCell align="right">Hours so far</TableCell>
+                  <TableCell align="right">Expected hours</TableCell>
                   {team.laborCost !== null && <TableCell align="right">Cost so far</TableCell>}
+                  {team.laborCost !== null && <TableCell align="right">Expected cost</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -35,15 +37,24 @@ export function TeamTab({ projectId }: { projectId: string }) {
                     <TableCell>{dateRange(a.startDate, a.endDate)}</TableCell>
                     <TableCell align="right">{a.daysWorked}</TableCell>
                     <TableCell align="right">{hours(a.hoursWorked)}</TableCell>
+                    <TableCell align="right">{hours(a.expectedHours)}</TableCell>
                     {team.laborCost !== null && <TableCell align="right">{money(a.laborCost)}</TableCell>}
+                    {team.laborCost !== null && (
+                      <TableCell align="right">
+                        {money(a.expectedCost)}
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>at {money(a.hourlyRate)}/h</Typography>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
-                {team.items.length === 0 && <TableRow><TableCell colSpan={6}><Typography color="text.secondary">Nobody is assigned to a milestone yet.</Typography></TableCell></TableRow>}
+                {team.items.length === 0 && <TableRow><TableCell colSpan={8}><Typography color="text.secondary">Nobody is assigned to a milestone yet.</Typography></TableCell></TableRow>}
                 {team.items.length > 0 && (
                   <TableRow>
                     <TableCell colSpan={4}><strong>Total</strong></TableCell>
                     <TableCell align="right"><strong>{hours(team.hoursWorked)}</strong></TableCell>
+                    <TableCell align="right"><strong>{hours(team.expectedHours)}</strong></TableCell>
                     {team.laborCost !== null && <TableCell align="right"><strong>{money(team.laborCost)}</strong></TableCell>}
+                    {team.laborCost !== null && <TableCell align="right"><strong>{money(team.expectedCost)}</strong></TableCell>}
                   </TableRow>
                 )}
               </TableBody>

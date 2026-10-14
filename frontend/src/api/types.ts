@@ -30,6 +30,7 @@ export interface ProjectSummary {
   schedulePct: number
   hoursWorked: number
   hoursRemaining: number
+  expectedHours: number
   hoursPct: number | null
   milestonesTotal: number
   milestonesDone: number
@@ -76,6 +77,8 @@ export interface Milestone {
   hoursWorked: number
   budgetAmount: number | null
   laborCost: number | null
+  expectedHours: number
+  expectedCost: number | null
   budgetPct: number | null
   assignees: number
   deliverablesTotal: number
@@ -110,9 +113,19 @@ export interface Assignee {
   daysWorked: number
   hoursWorked: number
   laborCost: number | null
+  hourlyRate: number | null
+  expectedHours: number
+  expectedCost: number | null
 }
 
-export interface AssigneeList { items: Assignee[]; total: number; hoursWorked: number; laborCost: number | null }
+export interface AssigneeList {
+  items: Assignee[]
+  total: number
+  hoursWorked: number
+  laborCost: number | null
+  expectedHours: number
+  expectedCost: number | null
+}
 
 export type CostCategory = 'technology' | 'license' | 'vendor' | 'travel' | 'other'
 

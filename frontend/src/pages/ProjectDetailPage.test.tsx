@@ -12,9 +12,9 @@ const body = (c: InternalAxiosRequestConfig) => JSON.parse(c.data as string)
 const milestones = (items: unknown[]) => ({ items, total: items.length, planned_hours: 100, planned_budget: 8000 })
 const team = (laborCost: number | null = 2400) => ({
   items: [
-    { assignment_id: 'a1', user_id: 'u1', name: 'Ann Designer', job_title: 'Designer', milestone_id: 'm1', milestone_name: 'Design', start_date: '2026-09-01', end_date: '2026-09-30', days_worked: 10, hours_worked: 80, labor_cost: laborCost === null ? null : 2400 },
+    { assignment_id: 'a1', user_id: 'u1', name: 'Ann Designer', job_title: 'Designer', milestone_id: 'm1', milestone_name: 'Design', start_date: '2026-09-01', end_date: '2026-09-30', days_worked: 10, hours_worked: 80, labor_cost: laborCost === null ? null : 2400, expected_hours: 160, expected_cost: laborCost === null ? null : 4800, hourly_rate: laborCost === null ? null : 30 },
   ],
-  total: 1, hours_worked: 80, labor_cost: laborCost,
+  total: 1, hours_worked: 80, labor_cost: laborCost, expected_hours: 160, expected_cost: laborCost === null ? null : 4800,
 })
 const costs = {
   items: [{ id: 'c1', category: 'license', description: 'Figma seats', amount: 900, incurred_on: '2026-09-15' }],
@@ -27,7 +27,7 @@ function serve(p: unknown = project(), extra: Record<string, unknown> = {}) {
     'GET /projects/:id': p,
     'GET /projects/:id/milestones': milestones([milestone()]),
     'GET /projects/:id/milestones/:id/deliverables': { items: [], total: 0, done: 0, ready_to_complete: false },
-    'GET /projects/:id/milestones/:id/team': { items: [], total: 0, hours_worked: 0, labor_cost: 0 },
+    'GET /projects/:id/milestones/:id/team': { items: [], total: 0, hours_worked: 0, labor_cost: 0, expected_hours: 0, expected_cost: 0 },
     'GET /projects/:id/team': team(),
     'GET /projects/:id/costs': costs,
     ...extra,
@@ -146,12 +146,16 @@ describe('Project detail: what everyone sees', () => {
     expect(row).toHaveTextContent('Sep 1, 2026 to Sep 30, 2026')
     expect(row).toHaveTextContent('80 h')
     expect(row).toHaveTextContent('$2,400')
-    expect(screen.getByText('Total').closest('tr')).toHaveTextContent('80 h$2,400')
+    // what the whole range will take, worked out when the work was planned, and the rate it was planned at
+    expect(row).toHaveTextContent('160 h')
+    expect(row).toHaveTextContent('$4,800')
+    expect(row).toHaveTextContent('at $30/h')
+    expect(screen.getByText('Total').closest('tr')).toHaveTextContent('80 h160 h$2,400$4,800')
   })
 
   it('says nobody is assigned when the team is empty', async () => {
     signIn('manager', { id: 'someone-else' })
-    serve(project(), { 'GET /projects/:id/team': { items: [], total: 0, hours_worked: 0, labor_cost: 0 } })
+    serve(project(), { 'GET /projects/:id/team': { items: [], total: 0, hours_worked: 0, labor_cost: 0, expected_hours: 0, expected_cost: 0 } })
     page()
     await userEvent.click(await screen.findByRole('tab', { name: 'Team' }))
     expect(await screen.findByText('Nobody is assigned to a milestone yet.')).toBeInTheDocument()
@@ -176,7 +180,7 @@ describe('Project detail: employee', () => {
 
   it('sees no Costs tab, no Budget tile and no money anywhere', async () => {
     serve(employeeProject(), {
-      'GET /projects/:id/milestones': milestones([milestone({ budget_amount: null, labor_cost: null, budget_pct: null })]),
+      'GET /projects/:id/milestones': milestones([milestone({ budget_amount: null, labor_cost: null, expected_cost: null, budget_pct: null })]),
       'GET /projects/:id/team': team(null),
     })
     const { container } = page()
