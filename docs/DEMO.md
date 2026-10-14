@@ -146,7 +146,7 @@ Act 1 (steps 1 to 4), Act 3 steps 3, 5 and 6 only, then Act 5 steps 3 and 4 and 
 | The site does not load at all | `./bin/start-dev.sh` restarts the proxy and website |
 | LocalStack was restarted or the machine rebooted | `./bin/demo-postgres.sh`, `./bin/start-dev.sh`, then `./bin/demo-ready.sh` |
 | The browser offers to save a password | Dismiss it |
-| Everything fails on stage | Walk through `docs/demo-screenshots/` (32 pictures, one folder per MVP item; see `docs/MVP.md`), then show the saved responses in the Postman collection and `docs/postman/results/` |
+| Everything fails on stage | Walk through `docs/demo-screenshots/` (36 pictures, one folder per MVP item and one for the history; see `docs/MVP.md`), then show the saved responses in the Postman collection and `docs/postman/results/` |
 
 ## 6. Other commands
 

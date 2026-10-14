@@ -112,7 +112,7 @@ Starts the complete development environment with hot-reload.
 
 ### `demo-postgres.sh`, `demo-ready.sh`, `demo-reset.sh`, `test-backend.sh`
 
-Added for the ACME Project Tracker demo and its checks (Linux only; the demo scripts need Docker).
+Added for the ACME Project Tracker demo and its checks (the LocalStack scripts are Linux only and need Docker; `demo-local.sh` is portable but untested on a Mac).
 
 | Script | What it does |
 |---|---|

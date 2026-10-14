@@ -144,6 +144,7 @@ curl http://localhost:3001/api/pm-api/health      # {"status":"ok","database":"o
 - **The CI workflow has not run on GitHub yet** (`.github/workflows/ci.yml`); the same commands pass locally.
 - **No automated test for concurrent assignment**: the row lock that stops two managers booking the same person at once has no test
   with two real connections, so deleting it would not fail a test. Listed in the review findings.
+- **The history's triggers are tested through the API on a real PostgreSQL** (`test_audit.py`), not on data from a production-sized database; the table's growth over years is a plan (see `docs/OVERVIEW.md`), not a measurement.
 - **Frontend tests mock the API**; only the end-to-end script runs the real stack, and it covers the demo journey, not every screen
   (editing a project, moving an employee between managers and costs are not driven end to end).
-- **Open code-review findings** (about 22 lesser items, listed in the presentation document, section 17), including no login throttling.
+- **Open code-review findings** (about 20 lesser items, listed in `docs/OVERVIEW.md` section 6 and the presentation document, section 17). Login throttling and the account lock are done.

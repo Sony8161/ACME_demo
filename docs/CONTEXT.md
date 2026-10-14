@@ -30,6 +30,8 @@ and their status, dependency between deliverables (milestones), and budget consu
 - `salary` is an **hourly** rate. A milestone has a planned hours figure and budget set by the manager (business needs).
 - **Expected hours and cost are precalculated fields** on each assignment (a database trigger computes them from the working days and the
   hourly rate stored on the assignment). A raise applies to work that has not started, so it never reprices the past.
+- **A history of every change** (migration 004): database triggers write who changed what, and when, to an append-only `audit_log`; admins read all of it,
+  a project's manager reads their project's. Chosen over logging in each service because no code path can forget it and it shares the change's transaction.
 - **Nothing is ever deleted** and the API has no DELETE operations. Removing means archiving, and only admins can see
   archived records (`include_archived`). A manager **completes a milestone after ticking every deliverable**; it then
   moves to the archive (still counted in project progress). Cancelling a milestone archives it without counting it.
@@ -45,15 +47,16 @@ and their status, dependency between deliverables (milestones), and budget consu
 | Area | State |
 |---|---|
 | `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 198 tests, 97.4% coverage, no DELETE endpoints |
-| `docs/postman` | Done: 151-request collection with saved example JSON, verified with Newman (611 assertions, all 42 operations) and a saved results file in `docs/postman/results/` |
+| `docs/postman` | Done: 161-request collection with saved example JSON, verified with Newman (654 assertions, all 44 operations) and a saved results file in `docs/postman/results/` |
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; not applied to AWS |
 | LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (161 requests, 654 assertions) |
 | AWS deploy | **Not done** (`./bin/deploy-backend.sh` and `./bin/deploy-frontend.sh`) |
 | `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 266 tests at 99% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
 | Demo | `docs/DEMO.md`: rehearsed script; `./bin/demo-ready.sh` loads the sample company with memorable logins |
-| CI workflow, backend README | Not written |
+| CI workflow (`.github/workflows/ci.yml`), READMEs, testing guide | Written; the workflow has not run on GitHub yet |
 
 ## Run it
+The whole demo without LocalStack (Linux or macOS; only Linux has been tested): `./bin/demo-local.sh`, see `docs/DEMO.md`.
 ```sh
 ./bin/test-backend.sh                       # lint + security scan + 198 tests (needs local Postgres)
 cd backend/pm-api && source .venv/bin/activate
@@ -73,10 +76,12 @@ npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/
 ## Known limits
 - Public holidays are not modelled: every Monday-Friday is a shift.
 - The old time-entry and project-assignment tables are kept as `legacy_*` (migration 002) because nothing is dropped.
-- Request rate limiting is per Lambda container (best effort); the cross-container control (AWS WAF rate rule) is not set up. One shared DB connection per Lambda container (fine on Lambda, not for threaded servers).
+- Request rate limiting is per Lambda container (best effort); the cross-container control (AWS WAF rate rule) is not set up. One shared DB connection per Lambda container (fine on Lambda; under `uvicorn`, set `SERIALIZE_REQUESTS=true`, as `bin/demo-local.sh` does).
+- The history table only grows (partition by month and archive old months when it reaches tens of millions of rows), and the application's database user could still drop it: restrict its privileges in production.
 - Aurora minimum capacity is 0.5 ACU (about $43 a month) so it never pauses.
 
 ## Next steps
 1. Deploy to AWS and check `/health` and a sign-in by hand. Run the Newman collection only against a throwaway stack: it changes the admin password and creates data that can never be deleted (LocalStack is done).
 2. Grow the demo frontend into the full app (profile editing, project editing, moving an employee between managers, TanStack Query, saved end-to-end tests).
-3. CI workflow (pytest, vitest), backend README, branches `develop`/`main`, release tag.
+3. Run the CI workflow on GitHub, create the branches `develop`/`main`, and tag a release.
+4. The improvements in `docs/OVERVIEW.md`, section 6 (one call for the project page, an edge rate rule, paging every list).

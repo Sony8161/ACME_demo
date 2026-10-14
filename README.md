@@ -26,6 +26,8 @@ calculated from dates instead of timesheets. FastAPI on AWS Lambda, PostgreSQL, 
 Quick start (about 3 minutes the first time): `./bin/demo-postgres.sh && ./bin/start-dev.sh`, then `./bin/demo-ready.sh` in a
 second terminal, then open http://localhost:3000 and sign in as `admin1` / `Demo1234!`.
 
+Without LocalStack (Linux or macOS, Python 3.11+ and Node 20+): `./bin/demo-local.sh`; it has only been tested on Linux.
+
 ## Coding Workshop Example
 
 Coding workshop organizer(s) will provide instructions to follow by email. Here

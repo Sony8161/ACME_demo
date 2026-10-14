@@ -33,7 +33,7 @@ dashboard. It creates two managers, six employees and four projects and shows th
 | `npm run build` | Type check, then production build into `dist/` |
 | `npm test` | Vitest and React Testing Library: 266 tests across the API client, every page and dialog, role guards, session refresh |
 | `npm run test:coverage` | The same with an 80% gate on statements, branches, functions and lines (currently 99% / 98%) |
-| `npm run screenshots` | Re-takes the 32 demo pictures in `docs/demo-screenshots/` (one folder per MVP item) from the running demo |
+| `npm run screenshots` | Re-takes the 36 demo pictures in `docs/demo-screenshots/` (one folder per MVP item) from the running demo |
 | `npm run e2e` | Playwright through the real stack (see `docs/TESTING.md`): the demo journey for all three roles plus axe accessibility scans |
 | `npm run lint` | ESLint (TypeScript, React hooks rules) |
 
@@ -45,9 +45,9 @@ src/
                types.ts (response shapes), useApi.ts (load data for a screen)
   auth/        AuthProvider (token + user, kept in localStorage), route guards
   layout/      AppShell: side menu on a laptop, bottom tab bar on a phone (react-responsive)
-  components/  PulseBar (the signature progress bar), RiskChip, ProjectCard, MilestoneCard,
+  components/  PulseBar (the signature progress bar), RiskChip, ProjectCard, MilestoneCard, HistoryList, Pager,
                FormDialog (every "fill in and confirm" action), CredentialsDialog, Async
-  pages/       Login, ChangePassword, Dashboard, Projects, ProjectDetail (+Team, Costs), People, Archive, MyWork
+  pages/       Login, ChangePassword, Dashboard, Projects, ProjectDetail (+Team, Costs, History), People, History (admin), Archive, MyWork
 ```
 
 ## Design rules
@@ -62,4 +62,4 @@ src/
 - Data is loaded with a small `useApi` hook. A production version would add a cache (TanStack Query) and, for the
   project page, one endpoint that returns milestones with their checklists instead of one request per milestone.
 - Not built yet: editing your own profile, editing a project's fields, moving an employee to another manager,
-  restoring archived milestones, pagination controls.
+  restoring archived milestones, pagination controls on the project and people lists (the History pages are paged).
