@@ -93,8 +93,9 @@ resource "aws_cloudfront_distribution" "this" {
     max_ttl     = 86400
     min_ttl     = 0
 
-    target_origin_id       = local.origin_id
-    viewer_protocol_policy = "redirect-to-https"
+    target_origin_id           = local.origin_id
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = element(aws_cloudfront_response_headers_policy.site_security.*.id, count.index)
 
     forwarded_values {
       query_string = false
@@ -126,6 +127,40 @@ resource "aws_cloudfront_distribution" "this" {
 
 # Viewer-request function: rewrites SPA routes (no file extension) to /index.html.
 # API paths are served by their own cache behaviors and never reach this function.
+# Browser protections for the website (the API sets its own). The policy lets the app load only its own scripts, styles, fonts and
+# images and talk only to its own address; MUI writes inline styles, hence 'unsafe-inline' for styles but never for scripts.
+locals {
+  site_csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+}
+
+resource "aws_cloudfront_response_headers_policy" "site_security" {
+  count = data.aws_caller_identity.this.id != "000000000000" ? 1 : 0
+  name  = format("%s-site-security-%s", var.aws_project, local.app_id)
+
+  security_headers_config {
+    content_security_policy {
+      content_security_policy = local.site_csp
+      override                = true
+    }
+    content_type_options {
+      override = true
+    }
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+    referrer_policy {
+      referrer_policy = "no-referrer"
+      override        = true
+    }
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = true
+      override                   = true
+    }
+  }
+}
+
 resource "aws_cloudfront_function" "spa_rewrite" {
   count   = data.aws_caller_identity.this.id != "000000000000" ? 1 : 0
   name    = format("%s-spa-rewrite-%s", var.aws_project, local.app_id)

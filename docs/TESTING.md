@@ -7,7 +7,7 @@ The structure follows the Testing Expectations in [full-stack.md](./full-stack.m
 
 | Layer | What | Command | Result |
 |---|---|---|---|
-| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **262 tests pass**, 97.4% coverage (gate 80%) |
+| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **267 tests pass**, 97.5% coverage (gate 80%) |
 | Backend lint and security | `ruff` and `bandit` (same scan as CI) | `./bin/test-backend.sh` | clean |
 | Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **498 tests pass**, 98.7% statements, 96.3% branches (gate 80%) |
 | Frontend static checks | ESLint, TypeScript, production build, `npm audit` | `npm run lint && npm run typecheck && npm run build && npm audit` | clean, 0 vulnerabilities |
@@ -37,7 +37,7 @@ and skip themselves if PostgreSQL is not reachable. "Today" is frozen to Wednesd
 | Rate limiting and the account lock | `test_ratelimit.py`: the limiter (window, per person, per address, forged forwarding header, health check exempt), the real app refusing a flood with 429 and `Retry-After`, five wrong passwords locking an account even for the right one, the count surviving the request's rollback, unlock after 15 minutes or by an admin reset |
 | Precalculated hours and cost | `test_precalculated.py`: the stored expected hours, cost and rate; recomputed when dates change; project and milestone totals add up the stored fields; a raise changes future work and never the past; and migration 003 run on data written by the old version |
 
-Coverage: 97.4% overall (the audit history is covered by `test_audit.py`: 22 tests). All nine router files and `app/core/errors.py` (the error handlers) are at 100%. The lowest files are
+Coverage: 97.5% overall (the audit history is covered by `test_audit.py`: 22 tests). All nine router files and `app/core/errors.py` (the error handlers) are at 100%. The lowest files are
 `app/main.py` (94%, the health check's database-down branch) and `app/domains/users/service.py` (95%).
 
 ## API contract: every endpoint (Postman)

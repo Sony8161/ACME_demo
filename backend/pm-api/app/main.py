@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from app import __version__
 from app.config import API_PREFIX, get_settings
 from app.core.errors import register_error_handlers
+from app.core.headers import SecurityHeadersMiddleware
 from app.core.observability import RequestLogMiddleware, configure_logging
 from app.core.ratelimit import RateLimitMiddleware, SlidingWindowLimiter
 from app.db import SerializeRequestsMiddleware, TransactionMiddleware, get_connection, register_post_migrate_hook
@@ -51,7 +52,12 @@ class RootPathMiddleware:
 def create_app() -> FastAPI:
     """Build the application: routers, error handlers, middleware, first-admin bootstrap."""
     configure_logging()
+    settings = get_settings()
     app = FastAPI(
+        # The interactive docs describe every route; they are for a laptop, not for the internet.
+        docs_url="/docs" if settings.is_local else None,
+        redoc_url="/redoc" if settings.is_local else None,
+        openapi_url="/openapi.json" if settings.is_local else None,
         title="ACME Project Tracker API",
         version=__version__,
         description=(
@@ -88,12 +94,12 @@ def create_app() -> FastAPI:
     if get_settings().serialize_requests:
         app.add_middleware(SerializeRequestsMiddleware)  # outside the transaction: one request in the database at a time
     app.add_middleware(RootPathMiddleware)
-    settings = get_settings()
     app.add_middleware(  # outside the transaction: a refused request never touches the database
         RateLimitMiddleware,
         per_person=SlidingWindowLimiter(settings.rate_limit_per_minute),
         sign_in=SlidingWindowLimiter(settings.login_rate_limit_per_minute),
     )
+    app.add_middleware(SecurityHeadersMiddleware, hsts=not settings.is_local)  # also on refusals and rate-limit answers
     app.add_middleware(RequestLogMiddleware)  # outermost: times everything, including the commit
     register_post_migrate_hook(ensure_bootstrap_admin)
     return app
