@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "test:coverage": "vitest run --coverage",
     "e2e": "node e2e/demo-flow.mjs",
+    "e2e:sample": "node e2e/sample-data.mjs",
     "screenshots": "node e2e/mvp-screenshots.mjs"
   },
   "dependencies": {

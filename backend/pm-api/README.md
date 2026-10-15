@@ -125,7 +125,7 @@ returning `200` with the archived record rather than `DELETE` returning `204`, b
 ./bin/test-backend.sh        # from the repository root: ruff, bandit, then pytest with a coverage gate
 ```
 
-267 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.5% coverage. "Today" is frozen to Wednesday
+278 tests against a real PostgreSQL (a throwaway `pm_test` database), 97.5% coverage. "Today" is frozen to Wednesday
 2026-03-11 so date maths is repeatable. See [`docs/TESTING.md`](../../docs/TESTING.md) for the full picture.
 
 ## Known limits

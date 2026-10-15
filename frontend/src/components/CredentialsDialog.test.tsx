@@ -84,4 +84,11 @@ describe('CredentialsDialog', () => {
     render(<CredentialsDialog open title="T" accounts={accounts} onClose={() => {}} />)
     expect(await screen.findByRole('dialog')).toHaveTextContent(/delete the file/i)
   })
+
+  it('makes the list reachable from the keyboard, since 30 logins scroll', async () => {
+    render(<CredentialsDialog open title="T" accounts={accounts} onClose={() => {}} />)
+    const list = await screen.findByRole('region', { name: 'One-time logins' })
+    expect(list).toHaveAttribute('tabindex', '0')
+    expect(list).toHaveTextContent('Ann Lee')
+  })
 })

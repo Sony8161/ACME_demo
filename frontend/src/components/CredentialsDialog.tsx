@@ -24,7 +24,7 @@ export function CredentialsDialog({ open, title, accounts, onClose }: Props) {
   return (
     <Dialog open={open} onClose={(_, reason) => { if (!reason) onClose() }} fullWidth maxWidth="sm">
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
+      <DialogContent tabIndex={0} role="region" aria-label="One-time logins">
         <Alert severity="warning" sx={{ mb: 2 }}>
           These passwords are shown only once and are not stored in readable form. Copy them now. Each person must choose a new password at first sign-in.
           A downloaded file holds the passwords in plain text: keep it somewhere private and delete the file once you have handed them out.
