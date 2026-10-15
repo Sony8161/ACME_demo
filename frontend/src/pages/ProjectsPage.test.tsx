@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { InternalAxiosRequestConfig } from 'axios'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
-import { project, renderPage, signIn } from '../test/pmFixtures'
+import { employeeProject, project, renderPage, signIn } from '../test/pmFixtures'
 import { ProjectsPage } from './ProjectsPage'
 
 // MUI dialogs are slow to open in jsdom on a busy machine.
@@ -297,5 +297,126 @@ describe('Projects list', () => {
       await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     })
+  })
+})
+
+describe('Projects table view', () => {
+  const rows = () => screen.getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('link')[0]?.textContent)
+  const three = [
+    project({ id: 'a', name: 'Alpha', end_date: '2026-12-31' }, { risk_level: 'on_track', milestones_done: 1, milestones_total: 4, milestones_pct: 25, budget_pct: 30 }),
+    project({ id: 'b', name: 'Beta', end_date: '2026-10-01', manager: { id: 'm2', name: 'Max Manager' } }, { risk_level: 'overdue', milestones_done: 0, milestones_total: 2, milestones_pct: 0, budget_pct: 80 }),
+    project({ id: 'c', name: 'Gamma', end_date: '2027-02-01' }, { risk_level: 'at_risk', milestones_done: 2, milestones_total: 3, milestones_pct: 66.7, budget_pct: 95 }),
+  ]
+
+  it.each(['admin', 'manager'] as const)('lets a %s switch to a table of the same projects and back', async (role) => {
+    signIn(role)
+    mockRoutes({ 'GET /projects': list(three) })
+    renderPage(<ProjectsPage />)
+    await screen.findByText('Alpha')
+    await userEvent.click(screen.getByRole('button', { name: 'Table' }))
+    expect(screen.getByRole('button', { name: 'Table' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['', 'Project', 'Manager', 'Health', 'Milestones', 'Budget used', 'Ends'])
+    const alpha = screen.getByRole('link', { name: 'Alpha' }).closest('tr')!
+    expect(alpha).toHaveTextContent('Mia Manager')
+    expect(alpha).toHaveTextContent('On track')
+    expect(alpha).toHaveTextContent('1 of 4')
+    expect(alpha).toHaveTextContent('30%')
+    expect(alpha).toHaveTextContent('Dec 31, 2026')
+    expect(screen.getByRole('link', { name: 'Alpha' })).toHaveAttribute('href', '/projects/a')
+    await userEvent.click(screen.getByRole('button', { name: 'List' }))
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('opens on the table from a ?view=table link', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list(three) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    expect(await screen.findByRole('table')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Table' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('starts with the most urgent first and sorts by the header pressed', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list(three) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await screen.findByRole('table')
+    expect(rows()).toEqual(['Beta', 'Gamma', 'Alpha']) // overdue, at risk, on track
+    await userEvent.click(screen.getByRole('button', { name: 'Ends' }))
+    expect(rows()).toEqual(['Beta', 'Alpha', 'Gamma']) // Oct 1, Dec 31, Feb 1
+    await userEvent.click(screen.getByRole('button', { name: 'Ends' }))
+    expect(rows()).toEqual(['Gamma', 'Alpha', 'Beta'])
+    await userEvent.click(screen.getByRole('button', { name: 'Budget used' }))
+    expect(rows()).toEqual(['Alpha', 'Beta', 'Gamma']) // 30, 80, 95
+    await userEvent.click(screen.getByRole('button', { name: 'Project' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Project' }))
+    expect(rows()).toEqual(['Gamma', 'Beta', 'Alpha']) // by name, descending
+    await userEvent.click(screen.getByRole('button', { name: 'Manager' }))
+    expect(rows()).toEqual(['Beta', 'Alpha', 'Gamma']) // Max, then the two Mias in the order the server sent them
+  })
+
+  it('ticks rows and the whole page, and clears', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list(three) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await screen.findByRole('table')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Alpha' }))
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select all 3 on this page' }))
+    expect(screen.getByText('3 selected')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear' }))
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument()
+  })
+
+  it('leaves out the budget column when the server sent no money', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list([employeeProject({ id: 'e', name: 'Epsilon' })]) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await screen.findByRole('table')
+    expect(screen.queryByRole('columnheader', { name: 'Budget used' })).not.toBeInTheDocument()
+  })
+
+  it('uses the same Health filter as the cards, and unticks what it hides', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list(three) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await screen.findByRole('table')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Alpha' }))
+    await userEvent.click(screen.getByRole('combobox', { name: 'Health' }))
+    await userEvent.click(screen.getByRole('option', { name: 'Overdue' }))
+    expect(rows()).toEqual(['Beta'])
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument()
+  })
+
+  it('says nothing matches, with a way back, when the filters leave no project', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list([three[0]]) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await screen.findByRole('table')
+    await userEvent.click(screen.getByRole('combobox', { name: 'Health' }))
+    await userEvent.click(screen.getByRole('option', { name: 'Overdue' }))
+    expect(screen.getByText('No projects match.')).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+    expect(screen.getByRole('table')).toBeInTheDocument()
+  })
+
+  it('shows 25 a page', async () => {
+    signIn('manager')
+    const many = Array.from({ length: 30 }, (_, i) => project({ id: `p${i}`, name: `Project ${String(i + 1).padStart(2, '0')}` }))
+    mockRoutes({ 'GET /projects': list(many) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await screen.findByText('Page 1 of 2 · 30 entries')
+    expect(rows()).toHaveLength(25)
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(rows()).toHaveLength(5)
+  })
+
+  it('gives an employee no table, and ignores ?view=table', async () => {
+    signIn('employee')
+    mockRoutes({ 'GET /projects': list([project({ name: 'Alpha' })]) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    expect(await screen.findByText('Alpha')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Table' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 })

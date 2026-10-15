@@ -11,6 +11,7 @@ import { DateField, NumberField } from '../components/fields'
 import { FormDialog } from '../components/FormDialog'
 import { PageHeader } from '../components/PageHeader'
 import { ProjectCard } from '../components/ProjectCard'
+import { ProjectsTable } from '../components/ProjectsTable'
 import { todayIso } from '../format'
 import { useDebouncedValue } from '../useDebouncedValue'
 import { TimelineView } from './TimelinePage'
@@ -19,7 +20,8 @@ export function ProjectsPage() {
   const { user } = useAuth()
   const [params, setParams] = useSearchParams()
   const isManager = user?.role !== 'employee'
-  const view = isManager && params.get('view') === 'timeline' ? 'timeline' : 'list'
+  const asked = params.get('view')
+  const view = isManager && (asked === 'timeline' || asked === 'table') ? asked : 'list'
   const [text, setText] = useState('')
   const q = useDebouncedValue(text.trim())
   const [status, setStatus] = useState('')
@@ -39,9 +41,10 @@ export function ProjectsPage() {
       {isManager && (
         <ToggleButtonGroup
           size="small" exclusive value={view} aria-label="View" sx={{ mb: 2 }}
-          onChange={(_, v: 'list' | 'timeline' | null) => v && setParams(v === 'timeline' ? { view: 'timeline' } : {}, { replace: true })}
+          onChange={(_, v: 'list' | 'table' | 'timeline' | null) => v && setParams(v === 'list' ? {} : { view: v }, { replace: true })}
         >
           <ToggleButton value="list">List</ToggleButton>
+          <ToggleButton value="table">Table</ToggleButton>
           <ToggleButton value="timeline">Timeline</ToggleButton>
         </ToggleButtonGroup>
       )}
@@ -68,13 +71,15 @@ export function ProjectsPage() {
             {(list) => {
               const shown = list.items.filter((p) => !health || p.summary.riskLevel === health)
               const filtered = Boolean(q || status || health)
+              const none = shown.length === 0 && (
+                filtered
+                  ? <EmptyState text="No projects match." action={{ label: 'Clear filters', onClick: clear }} />
+                  : <EmptyState text="There are no projects yet." action={user?.role === 'admin' ? { label: 'New project', onClick: () => setCreating(true) } : undefined} />
+              )
+              if (view === 'table' && shown.length > 0) return <ProjectsTable projects={shown} />
               return (
                 <Stack spacing={1.5}>
-                  {shown.length === 0 && (
-                    filtered
-                      ? <EmptyState text="No projects match." action={{ label: 'Clear filters', onClick: clear }} />
-                      : <EmptyState text="There are no projects yet." action={user?.role === 'admin' ? { label: 'New project', onClick: () => setCreating(true) } : undefined} />
-                  )}
+                  {none}
                   {shown.map((p) => <ProjectCard key={p.id} project={p} />)}
                 </Stack>
               )
