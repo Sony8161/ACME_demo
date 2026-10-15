@@ -137,6 +137,13 @@ def register_error_handlers(app: FastAPI) -> None:
         logger.warning("Unique violation: %s", exc)
         return _envelope(409, "conflict", "That value is already in use.")
 
+    @app.exception_handler(psycopg.DataError)
+    async def handle_bad_data(_: Request, exc: psycopg.DataError) -> JSONResponse:
+        # Text the database cannot store (a NUL byte) or a value out of range: the caller sent bad input, not the server failing.
+        logger.warning("Rejected input the database cannot store: %s", exc)
+        details = [{"field": "body", "message": "Contains characters that cannot be stored"}]
+        return _envelope(400, "validation_error", "Request validation failed", details)
+
     @app.exception_handler(psycopg.OperationalError)
     async def handle_db_unavailable(_: Request, exc: psycopg.OperationalError) -> JSONResponse:
         from app.db import reset_connection  # local import avoids a circular dependency

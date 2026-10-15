@@ -56,3 +56,25 @@ def test_docs_are_open_on_a_laptop_and_closed_in_the_cloud(monkeypatch: pytest.M
     finally:
         monkeypatch.undo()
         get_settings.cache_clear()
+
+
+@pytest.mark.integration
+def test_a_nul_byte_in_text_is_a_400_never_a_500(api, today):
+    """PostgreSQL text cannot hold NUL (0x00); every way text reaches the database must answer 400, also without signing in."""
+    maria = api.user("manager", "Maria Lopez")
+    alex = api.user("employee", "Alex Kim", manager=maria)
+    project, milestone = api.setup_work(maria, alex, project="Apollo")
+    task = api.deliverable(project["id"], milestone["id"], "Login page", manager=maria)
+    admin = api.admin.headers
+    comments = f"/projects/{project['id']}/milestones/{milestone['id']}/deliverables/{task['id']}/comments"
+
+    answers = [
+        api.client.get("/search", params={"q": "an\x00"}, headers=admin),
+        api.client.get("/projects", params={"q": "an\x00"}, headers=admin),
+        api.client.get("/users", params={"q": "an\x00"}, headers=admin),
+        api.client.post(comments, json={"body": "hi\x00there"}, headers=maria.headers),
+        api.client.post("/auth/login", json={"username": "ad\x00min", "password": "Whatever1"}),
+    ]
+    assert [a.status_code for a in answers] == [400] * 5
+    assert {a.json()["error"]["code"] for a in answers} == {"validation_error"}
+    assert api.client.get("/search", params={"q": "an"}, headers=admin).status_code == 200  # the connection is still good

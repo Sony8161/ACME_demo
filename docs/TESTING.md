@@ -116,6 +116,27 @@ Read-only traffic as managers and an admin: overview, project list, one project,
 The scenario spreads the traffic over three people (maria1, james1, admin1) because the API now limits each person to 600 requests a minute;
 a single login hammered at over 20 requests a second would, correctly, receive 429.
 
+### Load test of the newest endpoints (direct API, no LocalStack, 2026-10-15)
+
+Run against the plain API (one uvicorn process, requests handled one at a time as in the demo) on a throwaway database holding the sample company
+(12 projects, 30 people, ~100 tasks), with the extra endpoints added to the mix: `/search?q=an`, `/reports/changes`, `/reports/workload?weeks=8`, task comments,
+`/reports/overview`, `/projects`. The API, Postgres and Artillery shared the same 2 cores.
+
+| Step (new users per second) | Requests | Failed | req/s | p50 | p95 | p99 |
+|---|---|---|---|---|---|---|
+| 1x documented (5/s) | 1,516 | **0** | 25 | 11 ms | 28 ms | 38 ms |
+| 2x (10/s)* | 2,513 | 0 | 35 | 8 ms | 22 ms | 36 ms |
+| 4x (20/s)* | 3,451 | 0 | 49 | 8 ms | 52 ms | 87 ms |
+| 8x (40/s)* | 5,343 | 0 | 75 | 672 ms | 1.2 s | 1.3 s |
+
+\* The 600-requests-a-minute limit was raised for these steps; with it on, traffic spread over only three people got `429` (7% at 2x, 24% at 4x), which is the limiter working.
+Slowest endpoint at 1x: `/reports/overview` (p95 35 ms). Nothing was above 500 ms at the documented load and there was no 5xx at any step. The knee at 8x is requests
+queueing behind the single connection while the load generator competes for the same two cores; CPU stayed at 7-23%.
+
+Other checks run the same day: `POST /admin/seed-demo` on an empty database took 2.3 s (30 accounts at bcrypt cost 10), a second call 7 ms and created nothing;
+ten simultaneous calls (four runs, one and several worker processes) returned 200 every time and exactly one created the accounts (the advisory lock).
+The same run found that a NUL byte in text input gave a 500 (search, project and people filters, comments, login); it is now a 400 with a test.
+
 What the stress run means:
 - The 500s are **not application errors**. LocalStack's own log says `Could not start new environment ... OSError(24, 'Too many open files')`:
   the emulator ran out of file handles while starting about 40 Lambda containers on a 2-CPU machine.
