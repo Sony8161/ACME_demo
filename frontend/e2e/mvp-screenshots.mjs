@@ -33,6 +33,7 @@ const MVPS = {
   17: 'extra-pdf',
   18: 'extra-search',
   19: 'extra-workload',
+  20: 'extra-comments-and-dark-mode',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -382,6 +383,31 @@ await page.getByRole('listbox').waitFor()
 await shot(18, 's1-search-finds-projects-people-and-tasks')
 await page.keyboard.press('Escape')
 await page.keyboard.press('Escape')
+
+// Extra: comments on a task, and dark mode
+await page.getByRole('link', { name: 'Projects', exact: true }).first().click()
+await page.getByRole('link', { name: 'Payments Gateway Upgrade', exact: true }).first().click()
+await page.getByRole('tab', { name: 'Tasks' }).click()
+await page.getByRole('group', { name: 'Task view' }).getByRole('button', { name: 'List', exact: true }).click()
+await page.getByRole('button', { name: 'Card payments', exact: true }).click()
+await page.getByRole('dialog', { name: 'Card payments' }).waitFor()
+await page.getByRole('textbox', { name: 'Add a comment' }).fill('Checked with the bank: the sandbox keys arrive on Monday.')
+await page.getByRole('button', { name: 'Post' }).click()
+await page.getByRole('list', { name: 'Comments' }).getByText(/sandbox keys/).waitFor()
+await shot(20, 'u1-a-task-and-its-comments')
+await page.getByRole('button', { name: 'Close' }).click()
+await page.getByRole('dialog').waitFor({ state: 'detached' })
+await page.getByRole('button', { name: 'Account menu' }).click()
+await page.getByRole('menuitemradio', { name: 'Dark' }).click()
+await page.getByRole('link', { name: 'Dashboard', exact: true }).first().click()
+await page.getByRole('heading', { name: /need attention|Everything is on track/ }).waitFor()
+await shot(20, 'u2-dark-mode-dashboard')
+await page.getByRole('link', { name: 'People', exact: true }).first().click()
+await page.getByRole('button', { name: 'Workload', exact: true }).click()
+await page.getByRole('table', { name: 'Workload by week' }).waitFor()
+await shot(20, 'u3-dark-mode-workload')
+await page.getByRole('button', { name: 'Account menu' }).click()
+await page.getByRole('menuitemradio', { name: 'System' }).click()
 
 // Extra: the assistant
 await page.getByRole('button', { name: 'Ask the assistant' }).click()

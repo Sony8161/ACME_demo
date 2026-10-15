@@ -60,12 +60,14 @@ def user_names(conn: psycopg.Connection[Any], ids: set[uuid.UUID]) -> dict[str, 
 def changes_since(
     conn: psycopg.Connection[Any], *, since: dt.datetime, manager_id: uuid.UUID | None, exclude_actor: uuid.UUID, limit: int,
 ) -> tuple[list[dict[str, Any]], int, int]:
-    """History after ``since`` by anybody but ``exclude_actor``, newest first: the rows, how many in all, in how many projects.
+    """History after ``since`` by any person but ``exclude_actor`` (never the system itself), newest first.
+
+    Returns the rows, how many there are in all, and in how many projects.
 
     ``manager_id`` narrows it to that manager's own projects (and so leaves out account changes, which belong to no project).
     """
     where = (
-        "a.occurred_at > %(since)s AND a.actor_id IS DISTINCT FROM %(me)s "
+        "a.occurred_at > %(since)s AND a.actor_id IS NOT NULL AND a.actor_id <> %(me)s "
         "AND (%(manager)s::uuid IS NULL OR a.project_id IN (SELECT id FROM projects WHERE manager_id = %(manager)s))"
     )
     params = {"since": since, "me": exclude_actor, "manager": manager_id, "limit": limit}

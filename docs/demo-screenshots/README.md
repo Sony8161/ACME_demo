@@ -19,5 +19,6 @@ endpoints behind it and the tests that cover it). Use them as the backup walkthr
 | **Extra: PDF** | `r1` the project report: tick the sections that go in the PDF (folder `extra-pdf`). The export dialog's CSV or PDF choice is in `extra-export` |
 | **Extra: search** | `s1` the search box in the top bar, open: results in groups (Projects, People, Tasks) (folder `extra-search`) |
 | **Extra: workload** | `t1` People > Workload: every person by week, shaded by hours booked, with a free-week summary and a legend (folder `extra-workload`). The manager's dashboard (`1d`) shows the "Since you last visited" card when others changed something |
+| **Extra: comments and dark mode** | `u1` a task opened, with its comment thread and the box to write. `u2` the dashboard in dark mode. `u3` the workload heatmap in dark mode (folder `extra-comments-and-dark-mode`) |
 
 Deployment (item 9) is not pictured: the same app runs in AWS (see `docs/DEPLOYMENT.md`).

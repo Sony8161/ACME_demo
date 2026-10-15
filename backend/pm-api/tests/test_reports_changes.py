@@ -55,6 +55,11 @@ def test_your_own_changes_are_left_out(world):
     assert api.admin.id not in [i["actor_id"] for i in get(world, "admin", since=ago(hours=1), limit=50).json()["items"]]  # the admin did the set-up, and it is theirs
 
 
+def test_housekeeping_done_by_the_system_itself_is_not_news(world):
+    items = get(world, "admin", since=ago(days=7), limit=50).json()["items"]
+    assert items and all(i["actor_id"] is not None for i in items)  # e.g. creating the very first admin account
+
+
 def test_a_manager_sees_only_their_own_projects_and_no_account_changes(world):
     body = get(world, "maria", since=ago(hours=1), limit=50).json()
     assert body["projects"] == 1

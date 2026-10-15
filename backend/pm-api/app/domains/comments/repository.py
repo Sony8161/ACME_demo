@@ -16,7 +16,7 @@ _SELECT = """
 def list_for_task(conn: psycopg.Connection[Any], deliverable_id: uuid.UUID) -> list[dict[str, Any]]:
     """The live comments of a task, oldest first."""
     return conn.execute(
-        f"{_SELECT} WHERE c.deliverable_id = %s AND c.archived_at IS NULL ORDER BY c.created_at, c.id",  # noqa: S608  # nosec B608
+        f"{_SELECT} WHERE c.deliverable_id = %s AND c.archived_at IS NULL ORDER BY c.created_at, c.id",  # noqa: S608
         (deliverable_id,),
     ).fetchall()
 
@@ -24,7 +24,7 @@ def list_for_task(conn: psycopg.Connection[Any], deliverable_id: uuid.UUID) -> l
 def get(conn: psycopg.Connection[Any], deliverable_id: uuid.UUID, comment_id: uuid.UUID) -> dict[str, Any] | None:
     """One live comment of a task."""
     return conn.execute(
-        f"{_SELECT} WHERE c.id = %s AND c.deliverable_id = %s AND c.archived_at IS NULL",  # noqa: S608  # nosec B608
+        f"{_SELECT} WHERE c.id = %s AND c.deliverable_id = %s AND c.archived_at IS NULL",  # noqa: S608
         (comment_id, deliverable_id),
     ).fetchone()
 

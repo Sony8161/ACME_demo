@@ -7,11 +7,11 @@ The structure follows the Testing Expectations in [full-stack.md](./full-stack.m
 
 | Layer | What | Command | Result |
 |---|---|---|---|
-| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **309 tests pass**, 97.5% coverage (gate 80%) |
+| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **322 tests pass**, 97.5% coverage (gate 80%) |
 | Backend lint and security | `ruff` and `bandit` (same scan as CI) | `./bin/test-backend.sh` | clean |
-| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **686 tests pass**, 98.1% statements, 96.2% branches (gate 80%) |
+| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **731 tests pass**, 98.1% statements, 96.2% branches (gate 80%) |
 | Frontend static checks | ESLint, TypeScript, production build, `npm audit` | `npm run lint && npm run typecheck && npm run build && npm audit` | clean, 0 vulnerabilities |
-| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **108 of 108 checks pass** (96 in the demo journey incl. 26 axe scans; 12 in `e2e/sample-data.mjs`, incl. 3 axe scans) |
+| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **126 of 126 checks pass** (114 in the demo journey incl. 36 axe scans; 12 in `e2e/sample-data.mjs`, incl. 3 axe scans) |
 | API contract, every endpoint | 203 requests with 839 assertions (Postman/Newman); all 55 operations of the API | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | **0 failures** locally and on LocalStack; saved as `docs/postman/results/postman-results-localstack.json` |
 | Demo pictures | 46 pictures, one folder per MVP item (and the history, tasks, timeline and dependencies and assistant extras) | `cd frontend && npm run screenshots` | Retaken from the running demo; indexed in `docs/demo-screenshots/README.md` and `docs/MVP.md` |
 | Performance | Artillery load test | `npx artillery run docs/load/artillery.yml` | see Load test below |
@@ -55,7 +55,7 @@ npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/
 the time it took; and for each operation which requests exercised it. The raw Newman export is never committed because it holds tokens and
 one-time passwords; the saved file holds none.
 
-Result on 2026-10-15: **220 requests, 917 assertions, 0 failed, 58 of 58 operations exercised** (this run was against the API under uvicorn, saved as `postman-results-local.json`; the LocalStack run was not repeated for this branch). The one thing the collection does
+Result on 2026-10-15: **231 requests, 960 assertions, 0 failed, 61 of 61 operations exercised** (this run was against the API under uvicorn, saved as `postman-results-local.json`; the LocalStack run was not repeated for this branch). The one thing the collection does
 not do is exceed the 600-requests-a-minute limit (that needs hundreds of requests); `test_ratelimit.py` covers it.
 
 ## Frontend
@@ -67,7 +67,7 @@ npm run test:coverage       # with the 80% gate (statements, branches, functions
 npm run lint && npm run typecheck && npm run build
 ```
 
-686 tests in 66 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
+731 tests in 70 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
 mocked at the axios adapter (`src/test/mockApi.ts`), so tests exercise the real client code: key conversion, error mapping, the
 401 handler. Covered: every page, the dialogs (busy, error and success states), role differences (employees see no money, no manager
 buttons), route guards and redirects, the sliding session refresh, and the forced password change.
@@ -90,7 +90,7 @@ cd frontend && BASE_URL=http://localhost:3000 npm run e2e:sample
 ./bin/demo-local.sh ready                        # put the sample company back
 ```
 
-96 checks drive a real browser through: sign-in (with the show-password button), the People, Projects and task tables (sort, tick, filter, page, download a CSV and a PDF and read them back, bulk move, the project report, the search box as each role, the changes card, the workload heatmap),  the dashboard ranking, an employee with no money visible, a manager seeing only
+114 checks drive a real browser through: sign-in (with the show-password button), the People, Projects and task tables (sort, tick, filter, page, download a CSV and a PDF and read them back, bulk move, the project report, the search box as each role, the changes card, the workload heatmap, comments as three roles, and dark mode scanned on nine screens),  the dashboard ranking, an employee with no money visible, a manager seeing only
 their own projects, a refused double booking, a refused then accepted milestone sign-off, the forced first-login password change,
 an admin seeing the archived milestone, archive then restore, and the history page crediting each of those to the right person
 (with its filter and the project's own History tab), and the task board: a real drag of a card to In progress, the list view, an employee pausing and starting their own task, the timeline (every project on one calendar, then one project with its tasks as diamonds), and dependencies (a milestone that waits for another cannot be started and the refusal names it; finishing the first frees the second; a project that waits for another says so), and the assistant (a suggested question and a typed follow-up are answered from the real projects, and Escape closes it). The AI path is tested with a scripted stand-in for the model (the tool loop, the limits, the fallback) and the HTTP client with a patched network call; **no real AI request has been made**, so run it once with a key before relying on it. Fourteen screens are scanned with axe-core (sign-in, dashboard,
