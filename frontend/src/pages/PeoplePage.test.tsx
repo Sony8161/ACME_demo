@@ -428,3 +428,119 @@ describe('PeoplePage as a manager', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('You may not see people')
   })
 })
+
+describe('PeoplePage tables', () => {
+  const names = () => screen.getAllByRole('row').slice(1).map((r) => within(r).queryByText(/^[A-Z][a-z]+ [A-Z][a-z]+$|^Person \d+$/, { selector: 'p' })?.textContent)
+  const crowd = Array.from({ length: 27 }, (_, i) => person(`c${i}`, `Person ${String(i + 1).padStart(2, '0')}`, 'employee', { manager_id: 'm1', salary: 40 + i }))
+  const thirty = [admin, maya, eli, ...crowd]
+  const route = (items: ReturnType<typeof person>[]) => (config: { params?: Record<string, unknown> }) =>
+    config.params?.role === 'manager' ? { items: [maya], total: 1 } : { items, total: items.length }
+
+  beforeEach(() => signIn('admin'))
+
+  it('starts in name order and sorts again when a header is pressed, saying which way', async () => {
+    mockRoutes({ 'GET /users': route([maya, eli, admin]) })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    expect(names()).toEqual(['Ada Admin', 'Eli Employee', 'Maya Manager'])
+    expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'ascending')
+    await userEvent.click(screen.getByRole('button', { name: 'Name' }))
+    expect(names()).toEqual(['Maya Manager', 'Eli Employee', 'Ada Admin'])
+    expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'descending')
+  })
+
+  it('sorts by role, by who they report to (nobody last) and by hourly cost as numbers', async () => {
+    mockRoutes({ 'GET /users': route([admin, maya, eli]) })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    await userEvent.click(screen.getByRole('button', { name: 'Role' }))
+    expect(names()).toEqual(['Ada Admin', 'Eli Employee', 'Maya Manager'])
+    await userEvent.click(screen.getByRole('button', { name: 'Reports to' }))
+    expect(names()).toEqual(['Eli Employee', 'Ada Admin', 'Maya Manager']) // Eli reports to Maya; the other two to nobody, last
+    await userEvent.click(screen.getByRole('button', { name: 'Hourly cost' }))
+    expect(names()).toEqual(['Eli Employee', 'Maya Manager', 'Ada Admin']) // 35.5, 70, 90
+  })
+
+  it('does not offer to sort by hourly cost to a manager, who cannot see it', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /users': route([maya, eli]) })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    expect(screen.queryByRole('button', { name: 'Hourly cost' })).not.toBeInTheDocument()
+  })
+
+  it('filters by role and by who they report to', async () => {
+    mockRoutes({ 'GET /users': route([admin, maya, eli]) })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    await userEvent.click(screen.getByRole('combobox', { name: 'Role' }))
+    await userEvent.click(screen.getByRole('option', { name: 'Manager' }))
+    expect(names()).toEqual(['Maya Manager'])
+    await userEvent.click(screen.getByRole('combobox', { name: 'Role' }))
+    await userEvent.click(screen.getByRole('option', { name: 'All roles' }))
+    await userEvent.click(screen.getByRole('combobox', { name: 'Reports to' }))
+    await userEvent.click(screen.getByRole('option', { name: 'Maya Manager' }))
+    expect(names()).toEqual(['Eli Employee'])
+  })
+
+  it('offers to clear the filters when they leave nobody', async () => {
+    mockRoutes({ 'GET /users': route([admin, maya]) })
+    renderPage()
+    await screen.findByText('Ada Admin')
+    await userEvent.click(screen.getByRole('combobox', { name: 'Role' }))
+    await userEvent.click(screen.getByRole('option', { name: 'Employee' }))
+    expect(screen.getByText('Nobody matches.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+    expect(names()).toEqual(['Ada Admin', 'Maya Manager'])
+  })
+
+  it('ticks a row, ticks the page, and clears', async () => {
+    mockRoutes({ 'GET /users': route([admin, maya, eli]) })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Eli Employee' }))
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select all 3 on this page' }))
+    expect(screen.getByText('3 selected')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear' }))
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument()
+  })
+
+  it('shows 25 a page, and Select all takes everyone across the pages', async () => {
+    mockRoutes({ 'GET /users': route(thirty) })
+    renderPage()
+    await screen.findByText('Page 1 of 2 · 30 entries')
+    expect(names()).toHaveLength(25)
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select all 25 on this page' }))
+    expect(screen.getByText('25 selected')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Select all 30' }))
+    expect(screen.getByText('30 selected')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(names()).toHaveLength(5)
+    expect(screen.getByRole('checkbox', { name: 'Select all 5 on this page' })).toBeChecked()
+  })
+
+  it('unticks a person a filter hides, so nobody unseen stays selected', async () => {
+    mockRoutes({ 'GET /users': route([admin, maya, eli]) })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Eli Employee' }))
+    await userEvent.click(screen.getByRole('combobox', { name: 'Role' }))
+    await userEvent.click(screen.getByRole('option', { name: 'Manager' }))
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('combobox', { name: 'Role' }))
+    await userEvent.click(screen.getByRole('option', { name: 'All roles' }))
+    expect(screen.getByRole('checkbox', { name: 'Select Eli Employee' })).not.toBeChecked()
+  })
+
+  it('goes back to page 1 when the sort order changes', async () => {
+    mockRoutes({ 'GET /users': route(thirty) })
+    renderPage()
+    await screen.findByText('Page 1 of 2 · 30 entries')
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByText('Page 2 of 2 · 30 entries')
+    await userEvent.click(screen.getByRole('button', { name: 'Username' }))
+    expect(screen.getByText('Page 1 of 2 · 30 entries')).toBeInTheDocument()
+  })
+})

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Button, Chip, IconButton, Menu, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, ToggleButton,
   ToggleButtonGroup, Tooltip, Typography,
@@ -17,7 +17,15 @@ import { CredentialsDialog, type Credential } from '../components/CredentialsDia
 import { NumberField } from '../components/fields'
 import { FormDialog } from '../components/FormDialog'
 import { PageHeader } from '../components/PageHeader'
+import { Pager } from '../components/Pager'
 import { money } from '../format'
+import { SelectAllCell, SelectCell } from '../table/SelectCells'
+import { SelectionBar } from '../table/SelectionBar'
+import { SortHead } from '../table/SortHead'
+import { sortRows } from '../table/sort'
+import { usePaged } from '../table/usePaged'
+import { useSelection } from '../table/useSelection'
+import { useSort } from '../table/useSort'
 import { useDebouncedValue } from '../useDebouncedValue'
 
 export function PeoplePage() {
@@ -54,47 +62,11 @@ export function PeoplePage() {
       {view === 'people' && <TextField size="small" label="Search by name, email or job title" value={text} onChange={(e) => setText(e.target.value)} fullWidth sx={{ mb: 2.5 }} />}
       {view === 'people' && <Async state={state}>
         {(list) => (
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Username</TableCell>
-                  <TableCell>Reports to</TableCell>
-                  {isAdmin && <TableCell align="right">Hourly cost</TableCell>}
-                  {isAdmin && <TableCell align="right"><span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>Actions</span></TableCell>}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {list.items.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{p.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">{p.jobTitle || p.email}</Typography>
-                    </TableCell>
-                    <TableCell><Chip size="small" variant="outlined" label={p.role} sx={{ textTransform: 'capitalize' }} /></TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{p.username}</TableCell>
-                    <TableCell>{list.items.find((u) => u.id === p.managerId)?.name ?? managers.data?.items.find((m) => m.id === p.managerId)?.name ?? '—'}</TableCell>
-                    {isAdmin && <TableCell align="right">{p.salary === null ? '—' : `${money(p.salary)}/h`}</TableCell>}
-                    {isAdmin && (
-                      <TableCell align="right">
-                        {/* Not on your own row: a reset signs you out and shows the new password once. */}
-                        {p.id !== user?.id && (
-                          <Tooltip title="More">
-                            <IconButton aria-label={`Actions for ${p.name}`} onClick={(e) => setMenu({ person: p, anchor: e.currentTarget })} sx={{ width: 44, height: 44 }}>
-                              <MoreIcon />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {list.items.length === 0 && <EmptyState text="Nobody matches." action={text ? { label: 'Clear search', onClick: () => setText('') } : undefined} />}
-          </TableContainer>
+          <PeopleTable
+            people={list.items} isAdmin={isAdmin} meId={user?.id} searching={text !== ''} onClearSearch={() => setText('')}
+            nameOf={(id) => list.items.find((u) => u.id === id)?.name ?? managers.data?.items.find((m) => m.id === id)?.name}
+            onMenu={(person, anchor) => setMenu({ person, anchor })}
+          />
         )}
       </Async>}
       <Menu anchorEl={menu?.anchor} open={menu !== null} onClose={() => setMenu(null)}>
@@ -127,6 +99,110 @@ export function PeoplePage() {
         <Typography>Their current password stops working and every open session is signed out. They must choose a new password at the next sign-in.</Typography>
       </FormDialog>
       <CredentialsDialog open={credentials !== null} title="One-time password" accounts={credentials ?? []} onClose={() => setCredentials(null)} />
+    </>
+  )
+}
+
+type PeopleKey = 'name' | 'role' | 'username' | 'boss' | 'cost'
+const PAGE_SIZE = 25
+const ROLES: { value: Role; label: string }[] = [{ value: 'admin', label: 'Admin' }, { value: 'manager', label: 'Manager' }, { value: 'employee', label: 'Employee' }]
+
+interface TableProps {
+  people: User[]
+  isAdmin: boolean
+  meId: string | undefined
+  searching: boolean
+  onClearSearch: () => void
+  nameOf: (id: string | null) => string | undefined
+  onMenu: (person: User, anchor: HTMLElement) => void
+}
+
+/** Everyone the server returned, with filters, sortable columns, tick boxes and 25 rows a page. */
+function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, onMenu }: TableProps) {
+  const [role, setRole] = useState('')
+  const [boss, setBoss] = useState('')
+  const sort = useSort<PeopleKey>('name')
+
+  const bosses = useMemo(
+    () => Array.from(new Set(people.map((p) => p.managerId).filter((id): id is string => id !== null)))
+      .map((id) => ({ id, name: nameOf(id) ?? '—' })).sort((a, b) => a.name.localeCompare(b.name)),
+    [people, nameOf],
+  )
+  const shown = useMemo(() => {
+    const value = {
+      name: (p: User) => p.name, role: (p: User) => p.role, username: (p: User) => p.username,
+      boss: (p: User) => (p.managerId ? nameOf(p.managerId) : null), cost: (p: User) => p.salary,
+    }[sort.key]
+    return sortRows(people.filter((p) => (!role || p.role === role) && (!boss || p.managerId === boss)), value, sort.dir)
+  }, [people, role, boss, sort.key, sort.dir, nameOf])
+  const selection = useSelection(shown)
+  const paged = usePaged(shown, PAGE_SIZE, `${role}|${boss}|${sort.key}|${sort.dir}`)
+  const head = (key: PeopleKey, label: string, align?: 'right') => (
+    <SortHead label={label} active={sort.key === key} dir={sort.dir} onSort={() => sort.toggle(key)} align={align} />
+  )
+
+  return (
+    <>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+        <TextField select size="small" label="Role" value={role} onChange={(e) => setRole(e.target.value)} sx={{ minWidth: 160 }}>
+          <MenuItem value="">All roles</MenuItem>
+          {ROLES.map((r) => <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>)}
+        </TextField>
+        <TextField select size="small" label="Reports to" value={boss} onChange={(e) => setBoss(e.target.value)} sx={{ minWidth: 200 }}>
+          <MenuItem value="">Anyone</MenuItem>
+          {bosses.map((b) => <MenuItem key={b.id} value={b.id}>{b.name}</MenuItem>)}
+        </TextField>
+      </Stack>
+      <SelectionBar count={selection.count} total={shown.length} onSelectAll={selection.selectAll} onClear={selection.clear} />
+      <TableContainer component={Paper}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <SelectAllCell pageIds={paged.pageRows.map((p) => p.id)} ticked={selection.ids} onChange={(on) => selection.toggleMany(paged.pageRows.map((p) => p.id), on)} />
+              {head('name', 'Name')}
+              {head('role', 'Role')}
+              {head('username', 'Username')}
+              {head('boss', 'Reports to')}
+              {isAdmin && head('cost', 'Hourly cost', 'right')}
+              {isAdmin && <TableCell align="right"><span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>Actions</span></TableCell>}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paged.pageRows.map((p) => (
+              <TableRow key={p.id} selected={selection.has(p.id)}>
+                <SelectCell label={`Select ${p.name}`} checked={selection.has(p.id)} onChange={() => selection.toggle(p.id)} />
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{p.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">{p.jobTitle || p.email}</Typography>
+                </TableCell>
+                <TableCell><Chip size="small" variant="outlined" label={p.role} sx={{ textTransform: 'capitalize' }} /></TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{p.username}</TableCell>
+                <TableCell>{nameOf(p.managerId) ?? '—'}</TableCell>
+                {isAdmin && <TableCell align="right">{p.salary === null ? '—' : `${money(p.salary)}/h`}</TableCell>}
+                {isAdmin && (
+                  <TableCell align="right">
+                    {/* Not on your own row: a reset signs you out and shows the new password once. */}
+                    {p.id !== meId && (
+                      <Tooltip title="More">
+                        <IconButton aria-label={`Actions for ${p.name}`} onClick={(e) => onMenu(p, e.currentTarget)} sx={{ width: 44, height: 44 }}>
+                          <MoreIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {shown.length === 0 && (
+          <EmptyState
+            text="Nobody matches."
+            action={searching || role || boss ? { label: searching ? 'Clear search' : 'Clear filters', onClick: () => { onClearSearch(); setRole(''); setBoss('') } } : undefined}
+          />
+        )}
+      </TableContainer>
+      <Pager page={paged.page} pageSize={PAGE_SIZE} total={shown.length} onPage={paged.setPage} />
     </>
   )
 }
