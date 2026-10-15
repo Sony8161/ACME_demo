@@ -1,6 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { downloadCsv } from '../export/csv'
 import { CredentialsDialog, type Credential } from './CredentialsDialog'
+
+vi.mock('../export/csv', () => ({ downloadCsv: vi.fn() }))
 
 const accounts: Credential[] = [
   { name: 'Ann Lee', role: 'manager', username: 'al12ab', password: 'Pw-One-111' },
@@ -65,5 +68,20 @@ describe('CredentialsDialog', () => {
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true })
     await userEvent.click(screen.getByRole('button', { name: 'Copy all' }))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('Download CSV saves one row per account under a fixed file name', async () => {
+    render(<CredentialsDialog open title="T" accounts={accounts} onClose={() => {}} />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Download CSV' }))
+    expect(downloadCsv).toHaveBeenCalledWith('acme-logins.csv', [
+      ['Name', 'Role', 'Username', 'Password'],
+      ['Ann Lee', 'manager', 'al12ab', 'Pw-One-111'],
+      ['Bo Ray', '', '', 'Pw-Two-222'],
+    ])
+  })
+
+  it('tells people to keep the downloaded file safe and delete it afterwards', async () => {
+    render(<CredentialsDialog open title="T" accounts={accounts} onClose={() => {}} />)
+    expect(await screen.findByRole('dialog')).toHaveTextContent(/delete the file/i)
   })
 })

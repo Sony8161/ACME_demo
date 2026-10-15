@@ -1,4 +1,5 @@
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material'
+import { downloadCsv } from '../export/csv'
 
 export interface Credential {
   name: string
@@ -26,6 +27,7 @@ export function CredentialsDialog({ open, title, accounts, onClose }: Props) {
       <DialogContent>
         <Alert severity="warning" sx={{ mb: 2 }}>
           These passwords are shown only once and are not stored in readable form. Copy them now. Each person must choose a new password at first sign-in.
+          A downloaded file holds the passwords in plain text: keep it somewhere private and delete the file once you have handed them out.
         </Alert>
         <Stack spacing={1.5}>
           {accounts.map((a) => (
@@ -40,6 +42,10 @@ export function CredentialsDialog({ open, title, accounts, onClose }: Props) {
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={() => copy(all)}>Copy all</Button>
+        <Button onClick={() => downloadCsv('acme-logins.csv', [
+          ['Name', 'Role', 'Username', 'Password'],
+          ...accounts.map((a) => [a.name, a.role ?? '', a.username ?? '', a.password]),
+        ])}>Download CSV</Button>
         <Button variant="contained" onClick={onClose}>I have saved them</Button>
       </DialogActions>
     </Dialog>
