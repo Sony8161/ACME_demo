@@ -15,6 +15,7 @@ import { FormDialog } from '../components/FormDialog'
 import { MilestoneCard } from '../components/MilestoneCard'
 import { PageHeader } from '../components/PageHeader'
 import { PulseBar, type PulseTick } from '../components/PulseBar'
+import { ReportDialog } from '../components/ReportDialog'
 import { RiskChip, StatusChip } from '../components/RiskChip'
 import { dateRange, formatDate, hours, money, todayIso } from '../format'
 import { CostsTab } from './CostsTab'
@@ -24,7 +25,7 @@ import { TasksTab } from './TasksTab'
 import { TeamTab } from './TeamTab'
 
 type TabKey = 'plan' | 'tasks' | 'team' | 'history'
-type Dialog = 'milestone' | 'complete' | 'archive' | 'dependencies' | null
+type Dialog = 'milestone' | 'complete' | 'archive' | 'dependencies' | 'report' | null
 
 /** Where a milestone's due date falls on the project's calendar, 0 to 100 (for the ticks on the pulse bar). */
 function position(project: Project, iso: string): number {
@@ -91,7 +92,6 @@ export function ProjectDetailPage() {
           `${hours(s.hoursWorked)} of ${hours(p.allocatedHours)}`,
           ...(showMoney ? [`${money(s.totalCost)} of ${money(p.budgetAmount)}`] : []),
         ]
-        const hasMenu = canManage || (isAdmin && p.status !== 'archived') || manages
 
         return (
           <>
@@ -109,17 +109,16 @@ export function ProjectDetailPage() {
                     <Chip size="small" color="warning" clickable label={`Waiting for ${p.blockedByCount}`} onClick={() => setDialog('dependencies')} />
                   )}
                   <RiskChip level={s.riskLevel} />
-                  {hasMenu && (
-                    <Tooltip title="Project actions">
-                      <IconButton aria-label="Project actions" aria-haspopup="menu" onClick={(e) => setMenu(e.currentTarget)} sx={{ width: 44, height: 44 }}><MoreIcon /></IconButton>
-                    </Tooltip>
-                  )}
+                  <Tooltip title="Project actions">
+                    <IconButton aria-label="Project actions" aria-haspopup="menu" onClick={(e) => setMenu(e.currentTarget)} sx={{ width: 44, height: 44 }}><MoreIcon /></IconButton>
+                  </Tooltip>
                 </Stack>
               }
             />
             <Menu anchorEl={menu} open={menu !== null} onClose={() => setMenu(null)}>
               {canManage && p.status === 'active' && <MenuItem onClick={() => { setMenu(null); setDialog('complete') }}>Mark project complete</MenuItem>}
               {manages && <MenuItem onClick={() => { setMenu(null); setDialog('dependencies') }}>Project dependencies</MenuItem>}
+              <MenuItem onClick={() => { setMenu(null); setDialog('report') }}>Project report (PDF)</MenuItem>
               {isAdmin && p.status !== 'archived' && <MenuItem sx={{ color: 'error.main' }} onClick={() => { setMenu(null); setDialog('archive') }}>Archive project</MenuItem>}
             </Menu>
             {p.description && <Typography sx={{ mb: 2 }}>{p.description}</Typography>}
@@ -188,6 +187,10 @@ export function ProjectDetailPage() {
             </Box>
 
             <NewMilestoneDialog open={dialog === 'milestone'} project={p} onClose={() => setDialog(null)} onDone={reloadAll} />
+            <ReportDialog
+              open={dialog === 'report'} project={p} milestones={milestones.data?.items ?? []} money={showMoney} manages={manages}
+              onClose={() => setDialog(null)}
+            />
             <Dialog open={dialog === 'dependencies'} onClose={() => setDialog(null)} fullWidth maxWidth="sm" fullScreen={narrow}>
               <DialogTitle>Project dependencies</DialogTitle>
               <DialogContent>

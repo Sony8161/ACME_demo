@@ -253,7 +253,7 @@ describe('Project detail: what everyone sees', () => {
 describe('Project detail: employee', () => {
   beforeEach(() => signIn('employee'))
 
-  it('sees Plan, Tasks and Team only, no Costs, no money and no actions menu', async () => {
+  it('sees Plan, Tasks and Team only, no Costs, no money, and only the report in the actions menu', async () => {
     serve(employeeProject(), {
       'GET /projects/:id/milestones': milestones([milestone({ budget_amount: null, labor_cost: null, expected_cost: null, budget_pct: null })]),
       'GET /projects/:id/team': team(null),
@@ -261,7 +261,9 @@ describe('Project detail: employee', () => {
     const { container } = page()
     await screen.findByRole('heading', { name: 'Website redesign' })
     expect(tabNames()).toEqual(['Plan', 'Tasks', 'Team'])
-    expect(screen.queryByRole('button', { name: 'Project actions' })).not.toBeInTheDocument()
+    await openActions()
+    expect(menuItems()).toEqual(['Project report (PDF)'])
+    await userEvent.keyboard('{Escape}')
     await screen.findByRole('heading', { name: 'Design' })
     expect(container.textContent).not.toContain('$')
 
@@ -276,7 +278,7 @@ describe('Project detail: employee', () => {
     const calls = serve(employeeProject())
     page()
     await screen.findByRole('heading', { name: 'Website redesign' })
-    for (const name of ['Mark project complete', 'Archive project', 'Add milestone', 'Assign a person', 'Complete milestone', 'Project actions']) {
+    for (const name of ['Mark project complete', 'Archive project', 'Add milestone', 'Assign a person', 'Complete milestone']) {
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument()
     }
     expect(screen.queryByRole('group', { name: 'Plan view' })).not.toBeInTheDocument()
@@ -423,7 +425,7 @@ describe('Project detail: who can manage', () => {
     // a finished project can no longer be edited
     expect(screen.queryByRole('button', { name: 'Add milestone' })).not.toBeInTheDocument()
     await openActions()
-    expect(menuItems()).toEqual(['Project dependencies'])
+    expect(menuItems()).toEqual(['Project dependencies', 'Project report (PDF)'])
   })
 
   it('shows the server refusal inside the dialog when completing fails', async () => {
@@ -443,7 +445,7 @@ describe('Project detail: who can manage', () => {
     serve()
     page()
     await openActions()
-    expect(menuItems()).toEqual(['Mark project complete', 'Project dependencies'])
+    expect(menuItems()).toEqual(['Mark project complete', 'Project dependencies', 'Project report (PDF)'])
   })
 
   it('gives an admin all three actions on an active project', async () => {
@@ -451,7 +453,7 @@ describe('Project detail: who can manage', () => {
     serve()
     page()
     await openActions()
-    expect(menuItems()).toEqual(['Mark project complete', 'Project dependencies', 'Archive project'])
+    expect(menuItems()).toEqual(['Mark project complete', 'Project dependencies', 'Project report (PDF)', 'Archive project'])
   })
 
   it('gives an admin only Dependencies and Archive on a completed project', async () => {
@@ -460,15 +462,17 @@ describe('Project detail: who can manage', () => {
     page()
     await screen.findByText('Completed')
     await openActions()
-    expect(menuItems()).toEqual(['Project dependencies', 'Archive project'])
+    expect(menuItems()).toEqual(['Project dependencies', 'Project report (PDF)', 'Archive project'])
   })
 
-  it('gives another manager no actions menu and no buttons for a project they do not run', async () => {
+  it('gives another manager only the report in the actions menu, and no buttons for a project they do not run', async () => {
     signIn('manager', { id: 'someone-else' })
     serve()
     page()
     await screen.findByRole('heading', { name: 'Website redesign' })
-    expect(screen.queryByRole('button', { name: 'Project actions' })).not.toBeInTheDocument()
+    await openActions()
+    expect(menuItems()).toEqual(['Project report (PDF)'])
+    await userEvent.keyboard('{Escape}')
     expect(screen.queryByRole('button', { name: 'Add milestone' })).not.toBeInTheDocument()
   })
 
@@ -525,7 +529,7 @@ describe('Project detail: who can manage', () => {
     page()
     await screen.findByText('Archived')
     await openActions()
-    expect(menuItems()).toEqual(['Project dependencies'])
+    expect(menuItems()).toEqual(['Project dependencies', 'Project report (PDF)'])
     expect(screen.queryByRole('button', { name: 'Add milestone' })).not.toBeInTheDocument()
   })
 })
@@ -779,5 +783,31 @@ describe('Project detail: dependencies', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Project dependencies' })
     await within(dialog).findByText('Phase one')
     expect(within(dialog).queryByRole('button', { name: 'Add dependency' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Project report from the actions menu', () => {
+  it('opens the report dialog from the menu', async () => {
+    signIn('admin')
+    serve()
+    page()
+    await openActions()
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Project report (PDF)' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Project report' })
+    expect(within(dialog).getByRole('checkbox', { name: 'Summary' })).toBeDisabled()
+    expect(within(dialog).getByRole('checkbox', { name: 'Costs' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('checkbox', { name: 'History' })).toBeInTheDocument()
+  })
+
+  it('offers an employee neither Costs nor History', async () => {
+    signIn('employee')
+    serve(employeeProject())
+    page()
+    await openActions()
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Project report (PDF)' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Project report' })
+    expect(within(dialog).queryByRole('checkbox', { name: 'Costs' })).not.toBeInTheDocument()
+    expect(within(dialog).queryByRole('checkbox', { name: 'History' })).not.toBeInTheDocument()
+    expect(within(dialog).getByRole('checkbox', { name: 'Team' })).toBeInTheDocument()
   })
 })
