@@ -225,3 +225,23 @@ describe('AppShell on a narrow screen', () => {
     expect(localStorage.getItem('pm.auth')).toBeNull()
   })
 })
+
+describe('AppShell search', () => {
+  it.each(['admin', 'manager', 'employee'])('puts the search box in the top bar of a %s on a wide screen', (role) => {
+    renderShell(role, role === 'employee' ? '/my-work' : '/dashboard')
+    expect(screen.getByRole('combobox', { name: 'Search projects, people, tasks' })).toBeInTheDocument()
+  })
+
+  it('shows a search icon instead of the box on a phone', async () => {
+    wide = false
+    renderShell('manager')
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }))
+    expect(screen.getByRole('combobox', { name: 'Search projects, people, tasks' })).toBeInTheDocument()
+  })
+
+  it('shows nothing of it when nobody is signed in', () => {
+    renderShell(null)
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+  })
+})

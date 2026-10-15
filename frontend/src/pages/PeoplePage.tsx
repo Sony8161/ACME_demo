@@ -39,7 +39,11 @@ export function PeoplePage() {
   const isAdmin = user?.role === 'admin'
   const [params, setParams] = useSearchParams()
   const view = params.get('view') === 'availability' ? 'availability' : 'people'
-  const [text, setText] = useState('')
+  // The top-bar search sends people here as /people?q=Name; follow the address, also when this page is already open.
+  const fromAddress = params.get('q') ?? ''
+  const [text, setText] = useState(fromAddress)
+  const [seenAddress, setSeenAddress] = useState(fromAddress)
+  if (fromAddress !== seenAddress) { setSeenAddress(fromAddress); setText(fromAddress) }
   const q = useDebouncedValue(text.trim())
   const [creating, setCreating] = useState(false)
   const [menu, setMenu] = useState<{ person: User; anchor: HTMLElement } | null>(null)

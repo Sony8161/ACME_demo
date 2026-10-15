@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, useLocation } from 'react-router-dom'
+import { Link, MemoryRouter, useLocation } from 'react-router-dom'
 import { AuthProvider } from '../auth/AuthProvider'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
 import { downloadCsv } from '../export/csv'
@@ -29,7 +29,7 @@ function Where() {
   const { pathname, search } = useLocation()
   return <output aria-label="location">{pathname + search}</output>
 }
-const renderPage = (path = '/people') => render(<MemoryRouter initialEntries={[path]}><AuthProvider><PeoplePage /><Where /></AuthProvider></MemoryRouter>)
+const renderPage = (path = '/people') => render(<MemoryRouter initialEntries={[path]}><AuthProvider><PeoplePage /><Where /><Link to="/people?q=Maya%20Manager">go to Maya</Link></AuthProvider></MemoryRouter>)
 /** Open the ⋯ menu on a person's row. */
 const openMenu = (name: string) => userEvent.click(within(rowOf(name)).getByRole('button', { name: `Actions for ${name}` }))
 const allocation = (over: Record<string, unknown>) => ({ user_id: 'u1', name: 'Ann Busy', job_title: 'Designer', manager_name: 'Mia', state: 'allocated', current_work: null, next_work: null, hours_this_week: 32, week_capacity: 40, ...over })
@@ -626,5 +626,31 @@ describe('PeoplePage export and bulk actions', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select Eli Employee' }))
     expect(screen.getByText('1 selected')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
+  })
+})
+
+describe('PeoplePage reads ?q= from the address', () => {
+  beforeEach(() => signIn('admin'))
+
+  it('starts with that text in the search box and asks the server for it', async () => {
+    const seen: Record<string, unknown>[] = []
+    mockRoutes({ 'GET /users': (config: { params?: Record<string, unknown> }) => {
+      seen.push(config.params ?? {})
+      return config.params?.role === 'manager' ? { items: [maya], total: 1 } : { items: [eli], total: 1 }
+    } })
+    renderPage('/people?q=Eli')
+    expect(await screen.findByLabelText('Search by name, email or job title')).toHaveValue('Eli')
+    await screen.findByText('Eli Employee')
+    expect(seen.find((p) => p.role !== 'manager')?.q).toBe('Eli')
+  })
+
+  it('follows the address when it changes while the page is open (a person picked in the top search)', async () => {
+    mockRoutes({ 'GET /users': usersRoute() })
+    renderPage('/people')
+    await screen.findByText('Eli Employee')
+    expect(screen.getByLabelText('Search by name, email or job title')).toHaveValue('')
+    await userEvent.click(screen.getByRole('link', { name: 'go to Maya' }))
+    expect(await screen.findByLabelText('Search by name, email or job title')).toHaveValue('Maya Manager')
+    await waitFor(() => expect(screen.queryByText('Eli Employee')).not.toBeInTheDocument())
   })
 })

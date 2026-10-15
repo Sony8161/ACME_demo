@@ -16,6 +16,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/context'
 import { AccountMenu } from '../components/AccountMenu'
 import { AssistantChat } from '../components/AssistantChat'
+import { GlobalSearch } from '../components/GlobalSearch'
 import { SampleDataFlow } from '../components/SampleDataFlow'
 import { ToastProvider } from '../components/ToastProvider'
 import { moreFor, navFor, type NavItem } from './nav'
@@ -98,6 +99,7 @@ export function AppShell() {
                 )}
               </List>
             )}
+            <GlobalSearch compact={!isDesktop} />
             <AccountMenu user={user} onSignOut={logout} />
           </Toolbar>
         </AppBar>
