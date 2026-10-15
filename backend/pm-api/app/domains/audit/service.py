@@ -90,6 +90,11 @@ def _people_in(rows: list[dict[str, Any]]) -> set[uuid.UUID]:
     return ids
 
 
+def present_rows(conn: psycopg.Connection[Any], rows: list[dict[str, Any]]) -> list[AuditEntry]:
+    """Audit rows as API entries, with people's current names filled in."""
+    return _present(rows, repo.user_names(conn, _people_in(rows)))
+
+
 def search(
     conn: psycopg.Connection[Any], *, project_id: uuid.UUID | None, actor_id: uuid.UUID | None, entity: str | None,
     action: str | None, day_from: dt.date | None, day_to: dt.date | None, page: int, page_size: int,
@@ -99,7 +104,7 @@ def search(
         conn, project_id=project_id, actor_id=actor_id, entity=entity, action=action, day_from=day_from, day_to=day_to,
         limit=page_size, offset=(page - 1) * page_size,
     )
-    items = _present(rows, repo.user_names(conn, _people_in(rows)))
+    items = present_rows(conn, rows)
     return AuditList(items=items, total=total, page=page, page_size=page_size)
 
 

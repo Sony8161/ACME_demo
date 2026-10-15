@@ -14,10 +14,13 @@ import psycopg
 from app.core import dates
 from app.core.deps import CurrentUser
 from app.domains.assignments import repository as assignments_repo
+from app.domains.audit import repository as audit_repo
+from app.domains.audit import service as audit_service
 from app.domains.projects import repository as projects_repo
 from app.domains.projects import service as projects_service
 from app.domains.projects.schemas import ProjectOut
 from app.domains.reports.schemas import (
+    Changes,
     MyDashboard,
     MyMilestone,
     Overview,
@@ -213,3 +216,14 @@ def timeline(conn: psycopg.Connection[Any], actor: CurrentUser, *, project_id: u
             for p in projects
         ],
     )
+
+
+def changes(conn: psycopg.Connection[Any], actor: CurrentUser, since: dt.datetime | None, limit: int) -> Changes:
+    """What others changed since ``since`` (default a week ago, at most 30 days back). A manager sees only their own projects."""
+    now = dates.now()
+    moment = since if since is not None else now - dt.timedelta(days=7)
+    moment = min(max(moment, now - dt.timedelta(days=30)), now)
+    rows, total, projects = audit_repo.changes_since(
+        conn, since=moment, manager_id=None if actor.is_admin else actor.id, exclude_actor=actor.id, limit=limit
+    )
+    return Changes(since=moment, total=total, projects=projects, items=audit_service.present_rows(conn, rows))

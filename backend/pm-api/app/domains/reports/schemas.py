@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.domains.audit.schemas import AuditEntry
 from app.domains.projects.schemas import ProjectOut
 
 
@@ -132,3 +133,12 @@ class Timeline(BaseModel):
 
     as_of: dt.date
     projects: list[TimelineProject]
+
+
+class Changes(BaseModel):
+    """What other people changed since a moment, newest first (the 'since you last visited' card)."""
+
+    since: dt.datetime = Field(description="The moment used, after it was kept between 30 days ago and now")
+    total: int = Field(description="Every change since then, not just the ones listed")
+    projects: int = Field(description="In how many different projects")
+    items: list[AuditEntry]

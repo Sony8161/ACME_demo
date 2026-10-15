@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+from pydantic import AwareDatetime
 
 from app.core.deps import ActiveUser, DbConn, ManagerOrAdmin
 from app.domains.reports import service
-from app.domains.reports.schemas import MyDashboard, Overview, Timeline
+from app.domains.reports.schemas import Changes, MyDashboard, Overview, Timeline
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -29,3 +31,16 @@ def my_dashboard(actor: ActiveUser, conn: DbConn) -> MyDashboard:
 def timeline(actor: ManagerOrAdmin, conn: DbConn, project_id: uuid.UUID | None = None) -> Timeline:
     """Open projects with their milestones by date (admin: all, manager: own). Narrow it with `project_id`."""
     return service.timeline(conn, actor, project_id=project_id)
+
+
+@router.get("/changes", response_model=Changes)
+def changes(
+    actor: ManagerOrAdmin,
+    conn: DbConn,
+    since: Annotated[
+        AwareDatetime | None, Query(description="ISO 8601 with a time zone (UTC). Default: a week ago; never older than 30 days")
+    ] = None,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+) -> Changes:
+    """What other people changed since you last looked: admin sees everything, a manager their own projects."""
+    return service.changes(conn, actor, since, limit)
