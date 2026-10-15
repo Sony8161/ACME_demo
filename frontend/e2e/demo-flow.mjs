@@ -245,9 +245,10 @@ ok('changes card: the manager sees what others (the admin) changed in their proj
 await scan('dashboard with the changes card')
 await changesCard.getByRole('button', { name: 'Got it' }).click()
 ok('changes card: Got it hides it', (await changesCard.count()) === 0)
+const changesAnswered = page.waitForResponse((r) => r.url().includes('/reports/changes'))
 await page.reload()
 await homeReady()
-await page.waitForTimeout(600)
+await changesAnswered // the card draws nothing until this answers, so wait for it before counting
 ok('changes card: and it stays hidden after a reload', (await page.getByRole('region', { name: 'Since you last visited' }).count()) === 0)
 const mt = await projectNames()
 ok('manager: sees only own projects', mt.sort().join('|') === 'Brand Refresh|Customer Portal|Website Redesign', mt.join('|'))

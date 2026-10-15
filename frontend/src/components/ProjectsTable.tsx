@@ -31,14 +31,14 @@ const VALUE: Record<Key, (p: Project) => string | number | null> = {
 }
 
 /** The projects as a table: sortable columns, tick boxes and 25 rows a page. Budget is left out when the server sent no money. */
-export function ProjectsTable({ projects }: { projects: Project[] }) {
+export function ProjectsTable({ projects, filterKey = '' }: { projects: Project[]; filterKey?: string }) {
   const toast = useToast()
   const [exporting, setExporting] = useState(false)
   const sort = useSort<Key>('health')
   const showMoney = projects.some((p) => p.summary.totalCost !== null)
   const shown = useMemo(() => sortRows(projects, VALUE[sort.key], sort.dir), [projects, sort.key, sort.dir])
   const selection = useSelection(shown)
-  const paged = usePaged(shown, PAGE_SIZE, `${sort.key}|${sort.dir}`)
+  const paged = usePaged(shown, PAGE_SIZE, `${filterKey}|${sort.key}|${sort.dir}`)
   const chosen = selection.count > 0 ? shown.filter((p) => selection.has(p.id)) : shown
   const head = (key: Key, label: string) => <SortHead label={label} active={sort.key === key} dir={sort.dir} onSort={() => sort.toggle(key)} />
 

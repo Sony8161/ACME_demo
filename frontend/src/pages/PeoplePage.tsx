@@ -41,11 +41,13 @@ export function PeoplePage() {
   const [params, setParams] = useSearchParams()
   const asked = params.get('view')
   const view = asked === 'availability' || asked === 'workload' ? asked : 'people'
-  // The top-bar search sends people here as /people?q=Name; follow the address, also when this page is already open.
-  const fromAddress = params.get('q') ?? ''
-  const [text, setText] = useState(fromAddress)
-  const [seenAddress, setSeenAddress] = useState(fromAddress)
-  if (fromAddress !== seenAddress) { setSeenAddress(fromAddress); setText(fromAddress) }
+  // The search text lives in the address (/people?q=Name): the top-bar search can send people here, also when this page is already open.
+  const text = params.get('q') ?? ''
+  const setText = (value: string) => setParams((prev) => {
+    const next = new URLSearchParams(prev)
+    if (value) next.set('q', value); else next.delete('q')
+    return next
+  }, { replace: true })
   const q = useDebouncedValue(text.trim())
   const [creating, setCreating] = useState(false)
   const [menu, setMenu] = useState<{ person: User; anchor: HTMLElement } | null>(null)
@@ -65,7 +67,11 @@ export function PeoplePage() {
       />
       <ToggleButtonGroup
         size="small" exclusive value={view} aria-label="View" sx={{ mb: 2 }}
-        onChange={(_, v: 'people' | 'availability' | 'workload' | null) => v && setParams(v === 'people' ? {} : { view: v }, { replace: true })}
+        onChange={(_, v: 'people' | 'availability' | 'workload' | null) => v && setParams((prev) => {
+          const next = new URLSearchParams(prev)
+          if (v === 'people') next.delete('view'); else next.set('view', v)
+          return next
+        }, { replace: true })}
       >
         <ToggleButton value="people">People</ToggleButton>
         <ToggleButton value="availability">Availability</ToggleButton>
@@ -77,7 +83,7 @@ export function PeoplePage() {
       {view === 'people' && <Async state={state}>
         {(list) => (
           <PeopleTable
-            people={list.items} isAdmin={isAdmin} meId={user?.id} searching={text !== ''} onClearSearch={() => setText('')}
+            people={list.items} searchKey={q} isAdmin={isAdmin} meId={user?.id} searching={text !== ''} onClearSearch={() => setText('')}
             nameOf={(id) => list.items.find((u) => u.id === id)?.name ?? managers.data?.items.find((m) => m.id === id)?.name}
             onMenu={(person, anchor) => setMenu({ person, anchor })} onChanged={state.reload}
           />
@@ -123,6 +129,8 @@ const ROLES: { value: Role; label: string }[] = [{ value: 'admin', label: 'Admin
 
 interface TableProps {
   people: User[]
+  /** The search text the list was chosen with; a new one sends the table back to page 1. */
+  searchKey: string
   isAdmin: boolean
   meId: string | undefined
   searching: boolean
@@ -133,7 +141,7 @@ interface TableProps {
 }
 
 /** Everyone the server returned, with filters, sortable columns, tick boxes and 25 rows a page. */
-function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, onMenu, onChanged }: TableProps) {
+function PeopleTable({ people, searchKey, isAdmin, meId, searching, onClearSearch, nameOf, onMenu, onChanged }: TableProps) {
   const toast = useToast()
   const [exporting, setExporting] = useState(false)
   const [archiving, setArchiving] = useState(false)
@@ -155,7 +163,7 @@ function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, 
     return sortRows(people.filter((p) => (!role || p.role === role) && (!boss || p.managerId === boss)), value, sort.dir)
   }, [people, role, boss, sort.key, sort.dir, nameOf])
   const selection = useSelection(shown)
-  const paged = usePaged(shown, PAGE_SIZE, `${role}|${boss}|${sort.key}|${sort.dir}`)
+  const paged = usePaged(shown, PAGE_SIZE, `${searchKey}|${role}|${boss}|${sort.key}|${sort.dir}`)
   const chosen = selection.count > 0 ? shown.filter((p) => selection.has(p.id)) : shown
   const head = (key: PeopleKey, label: string, align?: 'right') => (
     <SortHead label={label} active={sort.key === key} dir={sort.dir} onSort={() => sort.toggle(key)} align={align} />

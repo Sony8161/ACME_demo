@@ -48,7 +48,7 @@ function Picker({ project, milestones, money, manages, onClose }: Props) {
     const wanted = offered.filter((k) => ticked.has(k))
     const remote = wanted.filter((k) => asks[k])
     const answers = await Promise.allSettled(remote.map((k) => asks[k]!()))
-    const data: ReportData = { project, milestones: wanted.includes('milestones') ? milestones : undefined, money }
+    const data: ReportData = { project, milestones: wanted.includes('milestones') ? milestones.filter((m) => m.archivedAt === null) : undefined, money }
     const leftOut: string[] = []
     answers.forEach((answer, i) => {
       const key = remote[i]
@@ -56,7 +56,7 @@ function Picker({ project, milestones, money, manages, onClose }: Props) {
       if (key === 'tasks') data.tasks = (answer.value as TaskList).items
       if (key === 'team') data.team = answer.value as AssigneeList
       if (key === 'costs') data.costs = answer.value as CostList
-      if (key === 'history') data.history = (answer.value as AuditList).items
+      if (key === 'history') { data.history = (answer.value as AuditList).items; data.historyTotal = (answer.value as AuditList).total }
     })
     const included = wanted.filter((k) => !leftOut.some((l) => l.startsWith(LABEL[k])))
     try {

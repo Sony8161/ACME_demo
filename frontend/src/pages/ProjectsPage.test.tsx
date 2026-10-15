@@ -414,6 +414,19 @@ describe('Projects table view', () => {
     expect(rows()).toHaveLength(5)
   })
 
+  it('goes back to page 1 when a filter changes', async () => {
+    signIn('manager')
+    const many = Array.from({ length: 30 }, (_, i) => project({ id: `p${i}`, name: `Project ${String(i + 1).padStart(2, '0')}` }, { risk_level: i < 28 ? 'on_track' : 'overdue' }))
+    mockRoutes({ 'GET /projects': list(many) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await screen.findByText('Page 1 of 2 · 30 entries')
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByText('Page 2 of 2 · 30 entries')
+    await userEvent.click(screen.getByRole('combobox', { name: 'Health' }))
+    await userEvent.click(screen.getByRole('option', { name: 'On track' }))
+    expect(await screen.findByText('Page 1 of 2 · 28 entries')).toBeInTheDocument()
+  })
+
   it('gives an employee no table, and ignores ?view=table', async () => {
     signIn('employee')
     mockRoutes({ 'GET /projects': list([project({ name: 'Alpha' })]) })

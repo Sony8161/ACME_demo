@@ -4,6 +4,7 @@ import CommentIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import MoreIcon from '@mui/icons-material/MoreHoriz'
 import type { Task, TaskStatus } from '../api/types'
 import { dueIn, formatDate } from '../format'
+import { visuallyHidden } from '@mui/utils'
 import { tint } from '../theme'
 import { COLUMNS, PRIORITY_LABEL, canMove, initials, type Actor } from '../tasks'
 
@@ -77,7 +78,7 @@ export function TaskCard({ task, who, showProject, onMove, onEdit, onOpen }: Pro
           />
         )}
         {task.commentCount > 0 && (
-          <Chip size="small" variant="outlined" icon={<CommentIcon />} label={task.commentCount} aria-label={`${task.commentCount} ${task.commentCount === 1 ? 'comment' : 'comments'}`} />
+          <Chip size="small" variant="outlined" icon={<CommentIcon />} label={<>{task.commentCount}<span style={visuallyHidden}> {task.commentCount === 1 ? 'comment' : 'comments'}</span></>} />
         )}
         <Box sx={{ flexGrow: 1 }} />
         {task.assigneeName ? (

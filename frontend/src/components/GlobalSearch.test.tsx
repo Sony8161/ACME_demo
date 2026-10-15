@@ -126,4 +126,16 @@ describe('GlobalSearch', () => {
     await userEvent.type(box(), 'al')
     expect(await screen.findByRole('listbox')).toBeInTheDocument()
   })
+
+  it('on a phone, closing the box or picking a result gives focus back to the Search button', async () => {
+    mockRoutes({ 'GET /search': answer() })
+    show({ compact: true })
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Close search' }))
+    expect(screen.getByRole('button', { name: 'Search' })).toHaveFocus()
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }))
+    await userEvent.type(box(), 'al')
+    await userEvent.click((await screen.findAllByRole('option'))[0])
+    expect(screen.getByRole('button', { name: 'Search' })).toHaveFocus()
+  })
 })

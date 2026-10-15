@@ -166,10 +166,32 @@ costs, and whether it is late."**
    without one the built-in engine answers and nothing leaves the machine.
 3. Optional: sign in as `alex01` and ask the same question: only Alex's own work, no money.
 
+### Act 11. Find anything, and see what changed (admin1, 1.5 min)
+
+1. Click the search box in the top bar and type `login` (on a phone, tap the magnifier). **Say:** "One box finds projects, people and tasks. Each result is a link, and you only ever find what you may already see: a manager finds their own projects and their people, an employee finds only their own tasks and no people."
+   Pick a person: People opens with that name already typed in the search box, and the text is in the address, so the link can be shared.
+2. Sign in as `maria1` (or open the Dashboard as a manager). A **Since you last visited** card lists what other people changed in her projects. **Say:** "It never shows your own changes. **Got it** remembers the moment the list was loaded, in this browser."
+
+### Act 12. Tables you can sort, tick and export (admin1, 2.5 min)
+
+1. Open **People**. Press a column header to sort; filter by **Role** or **Reports to**; tick two people. **Say:** "Thirty people, 25 to a page; ticking works across pages with Select all."
+2. Press **Export 2 selected**. Choose **PDF**, untick a column, press **Download PDF**. **Say:** "Only the columns you may see are offered: salary is for admins only. The PDF is built in your browser, so nothing is sent anywhere, and a CSV neutralises cells that start with = + - or @ so a spreadsheet cannot run them."
+3. Open **Projects** and switch to **Table**. Tick several projects and export. Open **Website Redesign**, open the **...** menu and choose **Project report (PDF)**: tick the sections you want (Costs only if you may see money) and download it.
+4. On the **Tasks** tab switch to **List**, tick three tasks, choose **Move to** or **Set owner**. **Say:** "Each task goes through the same endpoint and permission rule as a single click, one after the other, and a result box lists any that the server refused, with its reason."
+
+### Act 13. Who is busy, and talking about a task (admin1, 1.5 min)
+
+1. **People** then **Workload**. **Say:** "Hours per person per week, Monday to Friday at eight a day, darker is fuller; over 40 is flagged. Each cell also has text for screen readers."
+2. Open a task by clicking its name (board card, list row or My tasks). Add a comment and press **Post comment**; **Remove** hides one. **Say:** "Comments are plain text, up to 2,000 characters, and the card shows a count. They are kept out of the history on purpose."
+
+### Act 14. Dark mode and sample data (admin1, 1 min)
+
+1. Open the initials menu, **Appearance**, **Dark**. **Say:** "System, Light or Dark, remembered in this browser. Both themes pass the same colour-contrast checks."
+2. **More** then **Sample data** (admin only). **Say:** "On a site that already has the first eight people it adds the larger company (12 projects, 30 people) without touching anything, and shows each one-time login once, with a CSV download."
+
 ### Close (30 seconds)
 
-"The API behind this passes 198 tests and a 161-request Postman run with no failures, both locally and on LocalStack.
-What is left: the AWS deployment, and growing this demo UI into the full app."
+"The API behind this passes 325 tests and a 231-request, 960-assertion Postman run with no failures; the web app has 700+ unit tests and a browser test with 126 checks including accessibility scans in light and dark. It is also deployed to AWS. What is left: moving the secrets to Secrets Manager and redeploying the newest branch."
 
 ### 5-minute cut
 
@@ -191,7 +213,7 @@ Act 1 (steps 1 to 4), Act 3 steps 3, 5 and 6 only, then Act 5 steps 3 and 4 and 
 | The site does not load at all | `./bin/start-dev.sh` restarts the proxy and website |
 | LocalStack was restarted or the machine rebooted | `./bin/demo-postgres.sh`, `./bin/start-dev.sh`, then `./bin/demo-ready.sh` |
 | The browser offers to save a password | Dismiss it |
-| Everything fails on stage | Walk through `docs/demo-screenshots/` (46 pictures, one folder per MVP item and one for the history; see `docs/MVP.md`), then show the saved responses in the Postman collection and `docs/postman/results/` |
+| Everything fails on stage | Walk through `docs/demo-screenshots/` (57 pictures, one folder per MVP item and one for the history; see `docs/MVP.md`), then show the saved responses in the Postman collection and `docs/postman/results/` |
 
 ## 6. Other commands
 

@@ -59,6 +59,19 @@ describe('task columns', () => {
   })
 })
 
+describe('"Done on"', () => {
+  it('is the day the task was finished where the reader is, not the UTC day', () => {
+    const before = process.env.TZ
+    process.env.TZ = 'America/New_York'
+    try {
+      // 21:15 on Oct 14 in New York is already Oct 15 in UTC
+      expect(row(taskColumns(), { ...task, status: 'done', doneAt: '2026-10-15T01:15:00Z' })[8]).toBe('2026-10-14')
+    } finally {
+      if (before === undefined) delete process.env.TZ; else process.env.TZ = before
+    }
+  })
+})
+
 describe('exportFileName', () => {
   it('names the file after what it holds and the UTC day', () => {
     const now = new Date('2026-10-15T23:30:00Z')

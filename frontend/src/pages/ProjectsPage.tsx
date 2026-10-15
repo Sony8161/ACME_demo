@@ -76,7 +76,7 @@ export function ProjectsPage() {
                   ? <EmptyState text="No projects match." action={{ label: 'Clear filters', onClick: clear }} />
                   : <EmptyState text="There are no projects yet." action={user?.role === 'admin' ? { label: 'New project', onClick: () => setCreating(true) } : undefined} />
               )
-              if (view === 'table' && shown.length > 0) return <ProjectsTable projects={shown} />
+              if (view === 'table' && shown.length > 0) return <ProjectsTable projects={shown} filterKey={`${q}|${status}|${health}`} />
               return (
                 <Stack spacing={1.5}>
                   {none}

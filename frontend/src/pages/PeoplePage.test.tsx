@@ -524,6 +524,21 @@ describe('PeoplePage tables', () => {
     expect(screen.getByRole('checkbox', { name: 'Select all 5 on this page' })).toBeChecked()
   })
 
+  it('goes back to page 1 when the search text changes', async () => {
+    mockRoutes({ 'GET /users': (c: { params?: Record<string, unknown> }) => {
+      if (c.params?.role === 'manager') return { items: [maya], total: 1 }
+      const q = String(c.params?.q ?? '').toLowerCase()
+      const items = thirty.filter((p) => p.name.toLowerCase().includes(q))
+      return { items, total: items.length }
+    } })
+    renderPage()
+    await screen.findByText('Page 1 of 2 · 30 entries')
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByText('Page 2 of 2 · 30 entries')
+    await userEvent.type(screen.getByLabelText('Search by name, email or job title'), 'Person')
+    expect(await screen.findByText('Page 1 of 2 · 27 entries')).toBeInTheDocument()
+  })
+
   it('unticks a person a filter hides, so nobody unseen stays selected', async () => {
     mockRoutes({ 'GET /users': route([admin, maya, eli]) })
     renderPage()
@@ -652,6 +667,32 @@ describe('PeoplePage reads ?q= from the address', () => {
     await userEvent.click(screen.getByRole('link', { name: 'go to Maya' }))
     expect(await screen.findByLabelText('Search by name, email or job title')).toHaveValue('Maya Manager')
     await waitFor(() => expect(screen.queryByText('Eli Employee')).not.toBeInTheDocument())
+  })
+})
+
+describe('PeoplePage keeps the search text in the address', () => {
+  beforeEach(() => signIn('admin'))
+
+  it('fills the box again when the same person is picked in the top search after the box was cleared', async () => {
+    mockRoutes({ 'GET /users': usersRoute() })
+    renderPage('/people?q=Maya%20Manager')
+    const box = await screen.findByLabelText('Search by name, email or job title')
+    expect(box).toHaveValue('Maya Manager')
+    await userEvent.clear(box)
+    expect(screen.getByLabelText('location')).toHaveTextContent(/^\/people$/)
+    await userEvent.click(screen.getByRole('link', { name: 'go to Maya' }))
+    expect(await screen.findByLabelText('Search by name, email or job title')).toHaveValue('Maya Manager')
+  })
+
+  it('writes what is typed into the address, and keeps it when switching to Workload and back', async () => {
+    mockRoutes({ 'GET /users': usersRoute(), 'GET /reports/workload': { capacity_per_week: 40, weeks: ['2026-10-12'], people: [] } })
+    renderPage()
+    await userEvent.type(await screen.findByLabelText('Search by name, email or job title'), 'Eli')
+    expect(screen.getByLabelText('location')).toHaveTextContent('/people?q=Eli')
+    await userEvent.click(screen.getByRole('button', { name: 'Workload' }))
+    expect(screen.getByLabelText('location')).toHaveTextContent('/people?q=Eli&view=workload')
+    await userEvent.click(screen.getByRole('button', { name: 'People' }))
+    expect(await screen.findByLabelText('Search by name, email or job title')).toHaveValue('Eli')
   })
 })
 

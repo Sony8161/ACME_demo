@@ -24,8 +24,7 @@ working on what.** Every Monday to Friday on a milestone is an 8-hour shift, so 
 | Protection | bcrypt, 8-hour tokens that can be revoked, forced first password change, request limits per person and per address, a lock after five wrong passwords |
 | Web app | React + TypeScript + MUI, one app for all roles, works on a phone |
 
-Not built: real-time updates, background tasks, MongoDB, a progressive web app, AI features, and the **AWS deployment** (the Terraform validates
-but has never been applied; the demo runs on LocalStack).
+Not built: real-time updates, background tasks, MongoDB and a progressive web app. The assistant answers from built-in rules and can use an AI model when a key is set (no real AI request has been made yet). The Terraform was applied to the workshop AWS account on 2026-10-14; the demo also runs on LocalStack.
 
 ## 2. How it was tested
 

@@ -94,6 +94,20 @@ describe('ExportDialog', () => {
       expect(dialog).not.toHaveTextContent('.csv')
     })
 
+    it('cannot be cancelled while the PDF is being made, so a cancel never ends in a surprise download', async () => {
+      let finish!: (b: Blob) => void
+      vi.mocked(buildTablePdf).mockReturnValue(new Promise<Blob>((resolve) => { finish = resolve }))
+      const { onClose } = open()
+      const dialog = await chooseDialogPdf()
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Download PDF' }))
+      expect(await within(dialog).findByRole('button', { name: 'Preparing…' })).toBeDisabled()
+      expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled()
+      await userEvent.keyboard('{Escape}')
+      expect(onClose).not.toHaveBeenCalled()
+      finish(pdf)
+      await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled())
+    })
+
     it('builds the PDF from the ticked columns and saves it, then reports and closes', async () => {
       vi.mocked(buildTablePdf).mockResolvedValue(pdf)
       const { onExported, onClose } = open()

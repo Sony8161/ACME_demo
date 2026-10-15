@@ -57,7 +57,7 @@ export function taskColumns(): ExportColumn<Task>[] {
     { key: 'owner', label: 'Owner', get: (t) => t.assigneeName },
     { key: 'due', label: 'Due', get: (t) => day(t.dueDate) },
     { key: 'late', label: 'Late', get: (t) => (t.isOverdue ? 'Yes' : 'No') },
-    { key: 'doneOn', label: 'Done on', get: (t) => day(t.doneAt) },
+    { key: 'doneOn', label: 'Done on', get: (t) => (t.doneAt ? new Date(t.doneAt).toLocaleDateString('en-CA') : null) },
   ]
 }
 

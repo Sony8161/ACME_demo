@@ -23,6 +23,8 @@ import { useToast } from './toast'
 
 interface Props {
   tasks: Task[]
+  /** Changes whenever the filters that chose `tasks` change, so the table goes back to page 1. */
+  filterKey?: string
   who: Actor
   onMove: (task: Task, to: TaskStatus) => void
   onEdit?: (task: Task) => void
@@ -49,23 +51,29 @@ const VALUE: Record<Key, (t: Task) => string | number | null> = {
 /** The same tasks as the board, as rows: sortable columns, tick boxes and 25 rows a page. */
 const taskPath = (t: Task) => `/projects/${t.projectId}/milestones/${t.milestoneId}/deliverables/${t.id}`
 
-export function TaskTable({ tasks, who, onMove, onEdit, onOpen, people = [], onChanged }: Props) {
+export function TaskTable({ tasks, filterKey = '', who, onMove, onEdit, onOpen, people = [], onChanged }: Props) {
   const toast = useToast()
   const [exporting, setExporting] = useState(false)
+  const [running, setRunning] = useState(false)
   const [menu, setMenu] = useState<{ kind: 'move' | 'owner'; anchor: HTMLElement } | null>(null)
   const [result, setResult] = useState<{ title: string; verb: string; done: number; failed: { name: string; message: string }[] } | null>(null)
   const sort = useSort<Key>('none')
   const shown = useMemo(() => sortRows(tasks, VALUE[sort.key], sort.dir), [tasks, sort.key, sort.dir])
   const selection = useSelection(shown)
-  const paged = usePaged(shown, PAGE_SIZE, `${sort.key}|${sort.dir}`)
+  const paged = usePaged(shown, PAGE_SIZE, `${filterKey}|${sort.key}|${sort.dir}`)
   const chosen = selection.count > 0 ? shown.filter((t) => selection.has(t.id)) : shown
   const canBulk = who.canManage && onChanged !== undefined
   const bulk = async (title: string, verb: string, body: Record<string, unknown>) => {
     setMenu(null)
-    const outcome = await runBulk(chosen, (t) => api.patch(taskPath(t), body), (t) => t.name)
-    selection.toggleMany(outcome.done.map((t) => t.id), false)
-    setResult({ title, verb, done: outcome.done.length, failed: outcome.failed })
-    onChanged?.()
+    setRunning(true)
+    try {
+      const outcome = await runBulk(chosen, (t) => api.patch(taskPath(t), body), (t) => t.name)
+      selection.toggleMany(outcome.done.map((t) => t.id), false)
+      setResult({ title, verb, done: outcome.done.length, failed: outcome.failed })
+      onChanged?.()
+    } finally {
+      setRunning(false)
+    }
   }
   const head = (key: Key, label: string) => <SortHead label={label} active={sort.key === key} dir={sort.dir} onSort={() => sort.toggle(key)} />
   return (
@@ -74,8 +82,9 @@ export function TaskTable({ tasks, who, onMove, onEdit, onOpen, people = [], onC
       <ExportButton selected={selection.count} total={shown.length} onClick={() => setExporting(true)} />
     </Box>
     <SelectionBar count={selection.count} total={shown.length} onSelectAll={selection.selectAll} onClear={selection.clear}>
-      {canBulk && <Button size="small" aria-haspopup="menu" onClick={(e) => setMenu({ kind: 'move', anchor: e.currentTarget })}>Move to</Button>}
-      {canBulk && <Button size="small" aria-haspopup="menu" onClick={(e) => setMenu({ kind: 'owner', anchor: e.currentTarget })}>Set owner</Button>}
+      {canBulk && <Button size="small" aria-haspopup="menu" disabled={running} onClick={(e) => setMenu({ kind: 'move', anchor: e.currentTarget })}>Move to</Button>}
+      {canBulk && <Button size="small" aria-haspopup="menu" disabled={running} onClick={(e) => setMenu({ kind: 'owner', anchor: e.currentTarget })}>Set owner</Button>}
+      {running && <Typography role="status" variant="body2" color="text.secondary">Working…</Typography>}
     </SelectionBar>
     <TableContainer component={Paper}>
       <Table size="small" aria-label="Tasks">

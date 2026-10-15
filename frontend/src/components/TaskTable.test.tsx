@@ -1,5 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { InternalAxiosRequestConfig } from 'axios'
+import { http } from '../api/client'
 import type { Task } from '../api/types'
 import { downloadCsv } from '../export/csv'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
@@ -82,6 +84,15 @@ describe('TaskTable', () => {
     expect(names()).toHaveLength(5)
   })
 
+  it('goes back to page 1 when the filters change (filterKey), even if the next page still exists', async () => {
+    const many = Array.from({ length: 30 }, (_, i) => task({ name: `Task ${String(i + 1).padStart(2, '0')}` }))
+    const { rerender } = render(<TaskTable tasks={many} who={who} onMove={() => {}} filterKey="all" />)
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(screen.getByText('Page 2 of 2 · 30 entries')).toBeInTheDocument()
+    rerender(<TaskTable tasks={many.slice(0, 28)} who={who} onMove={() => {}} filterKey="owner-a" />)
+    expect(screen.getByText('Page 1 of 2 · 28 entries')).toBeInTheDocument()
+  })
+
   it('says so when no task matches, and still has its menu on each row', async () => {
     const { rerender } = show([task({ name: 'Task one' })])
     expect(screen.getByRole('button', { name: 'Task actions: Task one' })).toBeInTheDocument()
@@ -131,6 +142,25 @@ describe('TaskTable export and bulk actions', () => {
     expect(result).toHaveTextContent('Moved 2.')
     expect(calls).toEqual(['PATCH /projects/p1/milestones/m1/deliverables/t1', 'PATCH /projects/p1/milestones/m1/deliverables/t2'])
     expect(onChanged).toHaveBeenCalled()
+  })
+
+  it('shows that a bulk change is running and refuses a second one until it ends', async () => {
+    const calls = mockRoutes({ 'PATCH /projects/p1/milestones/m1/deliverables/:id': { ok: true } })
+    const inner = http.defaults.adapter as (c: InternalAxiosRequestConfig) => Promise<unknown>
+    let open!: () => void
+    const gate = new Promise<void>((resolve) => { open = resolve })
+    http.defaults.adapter = (async (c: InternalAxiosRequestConfig) => { await gate; return inner(c) }) as typeof http.defaults.adapter
+    manage(three())
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task one' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Move to' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'In progress' }))
+    expect(await screen.findByText('Working…')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Move to' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Set owner' })).toBeDisabled()
+    open()
+    expect(await screen.findByRole('dialog', { name: 'Move tasks' })).toHaveTextContent('Moved 1.')
+    expect(calls).toHaveLength(1)
+    expect(screen.queryByText('Working…')).not.toBeInTheDocument()
   })
 
   it('sets the owner of the ticked tasks, or clears it, and lists the ones the server refused', async () => {

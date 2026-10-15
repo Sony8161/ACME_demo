@@ -68,6 +68,8 @@ export interface ReportData {
   team?: AssigneeList
   costs?: CostList
   history?: AuditEntry[]
+  /** How many history entries exist in all; when it is more than `history` holds, the section says it shows only the latest. */
+  historyTotal?: number
   /** Whether this person may see money. Nothing about cost, budget or rates is written when it is false. */
   money: boolean
 }
@@ -151,7 +153,8 @@ export async function buildProjectReport(data: ReportData, sections: ReportSecti
     ])
   }
   if (sections.includes('history') && data.history) {
-    section('History', ['When (UTC)', 'Who', 'What'], data.history.map((h) => [when(h.occurredAt), h.actorName, h.summary]))
+    const cut = data.historyTotal !== undefined && data.historyTotal > data.history.length
+    section(cut ? `History (latest ${data.history.length} of ${data.historyTotal})` : 'History', ['When (UTC)', 'Who', 'What'], data.history.map((h) => [when(h.occurredAt), h.actorName, h.summary]))
   }
 
   footers(doc, (page, pages) => `ACME Projects · ${project.name} · page ${page} of ${pages}`)

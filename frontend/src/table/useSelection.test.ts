@@ -20,6 +20,12 @@ describe('useSelection', () => {
     expect([...result.current.ids]).toEqual(['b'])
   })
 
+  it('keeps every tick when several arrive before the screen redraws', () => {
+    const { result } = renderHook(() => useSelection(rows('a', 'b', 'c')))
+    act(() => { result.current.toggle('a'); result.current.toggle('b'); result.current.toggleMany(['c'], true) })
+    expect([...result.current.ids].sort()).toEqual(['a', 'b', 'c'])
+  })
+
   it('selects every row it was given, across pages, and clears them', () => {
     const { result } = renderHook(() => useSelection(rows('a', 'b', 'c')))
     act(() => result.current.selectAll())

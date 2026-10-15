@@ -5,7 +5,7 @@ import { api } from '../api/client'
 import type { Changes } from '../api/types'
 import { useApi } from '../api/useApi'
 import { useAuth } from '../auth/context'
-import { formatDate, formatDateTime } from '../format'
+import { formatDateTime } from '../format'
 import { markVisited, readLastVisit } from '../lastVisit'
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
@@ -15,6 +15,7 @@ export function ChangesCard() {
   const { user } = useAuth()
   const wanted = user !== null && user.role !== 'employee'
   const [since] = useState(() => (user ? readLastVisit(user.id) : new Date()))
+  const [loadedAt] = useState(() => new Date()) // "Got it" remembers when the list was fetched, not when the button was pressed
   const [hidden, setHidden] = useState(false)
   const state = useApi(wanted ? () => api.get<Changes>('/reports/changes', { since: since.toISOString(), limit: 5 }) : null, [wanted])
   const data = state.data
@@ -25,11 +26,11 @@ export function ChangesCard() {
       <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 2, flexWrap: 'wrap' }}>
         <Typography variant="h6" component="h2">
           {plural(data.total, 'change', 'changes')} in {plural(data.projects, 'project', 'projects')}
-          <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>since {formatDate(since.toISOString().slice(0, 10))}</Typography>
+          <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>since {new Date(data.since).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Typography>
         </Typography>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           {user?.role === 'admin' && <Link component={RouterLink} to="/history">See everything</Link>}
-          <Button size="small" onClick={() => { if (user) markVisited(user.id); setHidden(true) }}>Got it</Button>
+          <Button size="small" onClick={() => { if (user) markVisited(user.id, loadedAt); setHidden(true) }}>Got it</Button>
         </Stack>
       </Stack>
       <Box component="ul" sx={{ m: 0, mt: 1, p: 0, listStyle: 'none' }}>

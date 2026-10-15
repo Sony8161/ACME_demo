@@ -92,6 +92,13 @@ describe('buildProjectReport', () => {
     expect(pdf).toContain('Cut-over')
   })
 
+  it('says when the history holds only the latest entries of more', async () => {
+    const some = await raw(await buildProjectReport({ ...all, historyTotal: 250 }, ['history']))
+    expect(some).toContain('latest 1 of 250')
+    const whole = await raw(await buildProjectReport({ ...all, historyTotal: 1 }, ['history']))
+    expect(whole).not.toContain('latest')
+  })
+
   it('skips a section whose data was not given, instead of failing', async () => {
     const pdf = await raw(await buildProjectReport({ project, milestones, money: true }, ['tasks', 'history']))
     expect(pdf).not.toContain('(Tasks)')

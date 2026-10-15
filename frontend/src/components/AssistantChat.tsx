@@ -147,7 +147,7 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
         <div ref={end} />
       </Box>
 
-      <Box component="form" onSubmit={submit} sx={{ display: 'flex', gap: 1, p: 1.5, borderTop: 1, borderColor: 'divider', bgcolor: '#ffffff' }}>
+      <Box component="form" onSubmit={submit} sx={{ display: 'flex', gap: 1, p: 1.5, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
         <TextField
           inputRef={input} size="small" fullWidth placeholder="Ask a question" value={text} onChange={(e) => setText(e.target.value)}
           slotProps={{ htmlInput: { 'aria-label': 'Your question', maxLength: 2000 } }}

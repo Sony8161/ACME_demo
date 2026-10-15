@@ -66,6 +66,29 @@ describe('ChangesCard', () => {
     expect(Math.abs(Date.now() - Date.parse(localStorage.getItem('pm.lastVisit.adm') ?? ''))).toBeLessThan(60_000)
   })
 
+  it('remembers when the list was loaded, so a change made while the tab sat open is shown next time', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    try {
+      vi.setSystemTime(new Date('2026-10-15T09:00:00Z'))
+      mockRoutes({ 'GET /reports/changes': feed() })
+      show()
+      await screen.findByRole('region', { name: 'Since you last visited' })
+      vi.setSystemTime(new Date('2026-10-15T11:00:00Z')) // two hours later somebody finally presses the button
+      await userEvent.click(screen.getByRole('button', { name: 'Got it' }))
+      expect(localStorage.getItem('pm.lastVisit.adm')).toBe('2026-10-15T09:00:00.000Z')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('names the day the server really looked back to, as the viewer\'s local day', async () => {
+    localStorage.setItem('pm.lastVisit.adm', '2026-08-01T12:00:00.000Z') // far older than the 30 days the server will use
+    mockRoutes({ 'GET /reports/changes': feed({ since: '2026-09-15T12:00:00Z' }) })
+    show()
+    const card = await screen.findByRole('region', { name: 'Since you last visited' })
+    expect(card).toHaveTextContent('since Sep 15, 2026')
+  })
+
   it('stays hidden for the rest of the visit even if storage is unavailable', async () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked') })
     mockRoutes({ 'GET /reports/changes': feed() })

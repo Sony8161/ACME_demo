@@ -1,4 +1,4 @@
-import { useMemo, useState, type AnchorHTMLAttributes, type MouseEvent } from 'react'
+import { useMemo, useRef, useState, type AnchorHTMLAttributes, type MouseEvent } from 'react'
 import { Autocomplete, Box, IconButton, InputAdornment, TextField, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import SearchIcon from '@mui/icons-material/Search'
@@ -20,14 +20,16 @@ const NAME = 'Search projects, people, tasks'
 /** One box in the top bar that finds projects, people and tasks. Each result is a link; the list is an accessible combobox. */
 export function GlobalSearch({ compact = false }: { compact?: boolean }) {
   const [shown, setShown] = useState(false) // compact only: the box under the bar
+  const trigger = useRef<HTMLButtonElement>(null)
+  const close = () => { setShown(false); trigger.current?.focus() } // the box unmounts with focus inside it: hand focus back
   if (!compact) return <Field />
   return (
     <>
-      <IconButton aria-label="Search" onClick={() => setShown(true)} sx={{ width: 44, height: 44 }}><SearchIcon /></IconButton>
+      <IconButton ref={trigger} aria-label="Search" onClick={() => setShown(true)} sx={{ width: 44, height: 44 }}><SearchIcon /></IconButton>
       {shown && (
         <Box sx={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: (t) => t.zIndex.appBar + 1, p: 1, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', display: 'flex', gap: 1 }}>
-          <Box sx={{ flex: 1 }}><Field autoFocus onDone={() => setShown(false)} /></Box>
-          <IconButton aria-label="Close search" onClick={() => setShown(false)} sx={{ width: 44, height: 44 }}><CloseIcon /></IconButton>
+          <Box sx={{ flex: 1 }}><Field autoFocus onDone={close} /></Box>
+          <IconButton aria-label="Close search" onClick={close} sx={{ width: 44, height: 44 }}><CloseIcon /></IconButton>
         </Box>
       )}
     </>

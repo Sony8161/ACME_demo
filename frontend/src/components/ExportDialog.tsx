@@ -54,7 +54,7 @@ function Picker<T>({ noun, nounOne, rows, columns, filename, onClose, onExported
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog open onClose={busy ? undefined : onClose} fullWidth maxWidth="xs">
       <DialogTitle>Export {rows.length} {rows.length === 1 ? nounOne : noun}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Choose what goes in the file. A CSV opens in Excel, Numbers or Google Sheets; a PDF is ready to read or print.</Typography>
@@ -72,7 +72,7 @@ function Picker<T>({ noun, nounOne, rows, columns, filename, onClose, onExported
         {failed && <Alert severity="error" sx={{ mt: 1.5 }}>The PDF could not be made.</Alert>}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose} disabled={busy}>Cancel</Button>
         <Button variant="contained" onClick={download} disabled={chosen.length === 0 || busy}>{busy ? 'Preparing…' : `Download ${format.toUpperCase()}`}</Button>
       </DialogActions>
     </Dialog>

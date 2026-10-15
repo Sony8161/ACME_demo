@@ -142,13 +142,16 @@ describe('TaskBoard', () => {
 describe('TaskBoard comments', () => {
   it('shows how many comments a card has, and no badge when there are none', () => {
     render(<TaskBoard tasks={[task({ id: 'a', name: 'With notes', commentCount: 2 }), task({ id: 'b', name: 'Without' })]} who={{ canManage: true, userId: 'u' }} onMove={() => {}} />)
-    expect(screen.getByLabelText('2 comments')).toBeInTheDocument()
-    expect(screen.queryByLabelText(/comment/)).toBe(screen.getByLabelText('2 comments'))
+    // A chip is a plain element with no role, so an aria-label on it is ignored by screen readers: the words must be real (hidden) text.
+    const chip = screen.getByText('comments').closest('.MuiChip-root') as HTMLElement
+    expect(chip).toHaveTextContent('2 comments')
+    expect(chip).not.toHaveAttribute('aria-label')
+    expect(screen.queryAllByText(/comment/)).toHaveLength(1)
   })
 
   it('says "1 comment" for one', () => {
     render(<TaskBoard tasks={[task({ commentCount: 1 })]} who={{ canManage: true, userId: 'u' }} onMove={() => {}} />)
-    expect(screen.getByLabelText('1 comment')).toBeInTheDocument()
+    expect(screen.getByText('comment').closest('.MuiChip-root')).toHaveTextContent('1 comment')
   })
 
   it('opens a task when its name is pressed, for someone who cannot manage it too', async () => {

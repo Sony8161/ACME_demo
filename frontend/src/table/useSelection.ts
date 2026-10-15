@@ -13,8 +13,8 @@ export function useSelection<T extends { id: string }>(rows: T[]) {
     ids,
     count: ids.size,
     has: (id: string) => ids.has(id),
-    toggle: (id: string) => setTicked(() => { const next = new Set(ids); if (!next.delete(id)) next.add(id); return next }),
-    toggleMany: (many: string[], on: boolean) => setTicked(() => { const next = new Set(ids); many.forEach((id) => (on ? next.add(id) : next.delete(id))); return next }),
+    toggle: (id: string) => setTicked((prev) => { const next = new Set(prev); if (!next.delete(id)) next.add(id); return next }),
+    toggleMany: (many: string[], on: boolean) => setTicked((prev) => { const next = new Set(prev); many.forEach((id) => (on ? next.add(id) : next.delete(id))); return next }),
     selectAll: () => setTicked(new Set(present)),
     clear: () => setTicked(new Set()),
   }

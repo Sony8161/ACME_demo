@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import type { InternalAxiosRequestConfig } from 'axios'
 import { http } from '../api/client'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
+import { ThemeProvider } from '@mui/material'
+import { buildTheme } from '../theme'
 import { AssistantChat } from './AssistantChat'
 
 vi.setConfig({ testTimeout: 30_000 })
@@ -28,7 +30,21 @@ const ask = async (question: string) => {
 
 afterEach(restoreApi)
 
+const buildThemeBackground = () => {
+  const probe = document.createElement('div')
+  probe.style.backgroundColor = buildTheme('dark').palette.background.paper
+  return probe.style.backgroundColor
+}
+
 describe('AssistantChat', () => {
+  it('draws the question strip from the theme, so it is not a white band in dark mode', async () => {
+    mockRoutes({})
+    render(<ThemeProvider theme={buildTheme('dark')}><AssistantChat role="manager" compact={false} /></ThemeProvider>)
+    await open()
+    const strip = screen.getByRole('textbox', { name: 'Your question' }).closest('form') as HTMLElement
+    expect(getComputedStyle(strip).backgroundColor).toBe(buildThemeBackground())
+  })
+
   it('is a button until opened, then a panel that can be closed again, also with Escape', async () => {
     show()
     expect(screen.queryByRole('complementary', { name: 'Assistant' })).not.toBeInTheDocument()

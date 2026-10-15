@@ -11,7 +11,7 @@ vi.mock('../export/download', () => ({ saveBlob: vi.fn() }))
 vi.mock('../export/pdf', async (original) => ({ ...(await original<typeof import('../export/pdf')>()), buildProjectReport: vi.fn() }))
 
 const project = { id: 'p1', name: 'Website redesign' } as unknown as Project
-const milestones = [{ id: 'm1', name: 'Design' }] as unknown as Milestone[]
+const milestones = [{ id: 'm1', name: 'Design', archivedAt: null }] as unknown as Milestone[]
 const pdf = new Blob(['%PDF-'], { type: 'application/pdf' })
 const tasks = { items: [{ id: 't1', name: 'Wireframes', milestone_name: 'Design', status: 'todo', priority: 'medium', assignee_name: null, due_date: null }], total: 1 }
 const team = { items: [], total: 0, hours_worked: 0, labor_cost: 0, expected_hours: 0, expected_cost: 0 }
@@ -59,7 +59,7 @@ describe('ReportDialog', () => {
     const [data, sections] = vi.mocked(buildProjectReport).mock.calls[0]
     expect(sections).toEqual(['milestones', 'team', 'costs'])
     expect(data.project).toBe(project)
-    expect(data.milestones).toBe(milestones)
+    expect(data.milestones).toEqual(milestones)
     expect(data.tasks).toBeUndefined()
     expect(data.money).toBe(true)
     expect(vi.mocked(saveBlob).mock.calls[0][0]).toMatch(/^acme-report-website-redesign-\d{4}-\d{2}-\d{2}\.pdf$/)
@@ -73,6 +73,22 @@ describe('ReportDialog', () => {
     await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled())
     expect(calls).toContain('GET /projects/p1/history')
     expect(vi.mocked(buildProjectReport).mock.calls[0][0].history).toHaveLength(1)
+  })
+
+  it('passes on how many history entries there are in all, so the report can say it shows only the latest', async () => {
+    routes({ 'GET /projects/p1/history': { ...history, total: 250 } })
+    open()
+    await userEvent.click(await screen.findByRole('button', { name: 'Download PDF' }))
+    await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled())
+    expect(vi.mocked(buildProjectReport).mock.calls[0][0].historyTotal).toBe(250)
+  })
+
+  it('leaves archived milestones out, as the rest of the project does', async () => {
+    routes()
+    render(<ToastProvider><ReportDialog open project={project} milestones={[...milestones, { id: 'm2', name: 'Old plan', archivedAt: '2026-10-01T00:00:00Z' } as unknown as Milestone, { ...milestones[0], archivedAt: null }]} money manages onClose={vi.fn()} /></ToastProvider>)
+    await userEvent.click(await screen.findByRole('button', { name: 'Download PDF' }))
+    await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled())
+    expect(vi.mocked(buildProjectReport).mock.calls[0][0].milestones?.map((m) => m.name)).toEqual(['Design', 'Design'])
   })
 
   it('still saves the report when one section is refused, and says which one was left out and why', async () => {
