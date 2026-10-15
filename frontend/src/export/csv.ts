@@ -1,3 +1,5 @@
+import { saveBlob } from './download'
+
 export type Cell = string | number | null | undefined
 
 const BOM = '﻿' // lets Excel read accents as UTF-8
@@ -17,12 +19,5 @@ export function toCsv(rows: Cell[][]): string {
 
 /** Hand the browser a file to save. */
 export function downloadCsv(filename: string, rows: Cell[][]): void {
-  const url = URL.createObjectURL(new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
+  saveBlob(filename, new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }))
 }

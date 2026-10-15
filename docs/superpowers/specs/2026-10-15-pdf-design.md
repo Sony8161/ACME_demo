@@ -20,9 +20,9 @@ CSV and picking were slice 3. This slice adds **PDF** in two places, as agreed (
   does not get heavier for everyone. No server change, no new endpoint; the report reads the same endpoints as the page, for the
   ticked sections only, so a person can never get data the screen would not show them.
 - Both libraries were installed from npm at `jspdf@4.2.1`, `jspdf-autotable@5.0.8` (published months ago, `npm audit` clean).
-- Text is written with the PDF's built-in Helvetica, which covers Western European text (accents, dashes, curly quotes, bullets,
-  euro). Characters outside that set are replaced by `?` rather than printed as garbage; this is a documented limit (no CJK, Cyrillic,
-  Arabic until a font is embedded).
+- Text is written with the PDF's built-in Helvetica, which reliably covers Latin-1 (Western European accents). Typographic marks are
+  written as plain equivalents (dashes as `-`, curly quotes as straight quotes, `…` as `...`, `•` as `·`, `€` as `EUR`). Anything else
+  is replaced by `?` rather than printed as garbage; this is a documented limit (no CJK, Cyrillic or Arabic until a font is embedded).
 - Files: `acme-<people|projects|tasks>-<date>.pdf` for tables; `acme-report-<project-name-as-a-slug>-<date>.pdf` for the report.
 - The report's first page: project name, manager, dates, health with every reason, progress numbers, money only if visible. Each
   section then starts under its own heading; long tables continue on new pages with the heading row repeated; every page has
