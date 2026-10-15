@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 /** The ticked rows of a table, by id. Rows that leave the list (a filter, a search) are unticked for good, so nothing unseen stays ticked. */
 export function useSelection<T extends { id: string }>(rows: T[]) {
@@ -6,9 +6,8 @@ export function useSelection<T extends { id: string }>(rows: T[]) {
   const present = useMemo(() => new Set(rows.map((r) => r.id)), [rows])
   const ids = useMemo(() => new Set([...ticked].filter((id) => present.has(id))), [ticked, present])
 
-  useEffect(() => {
-    setTicked((current) => (ids.size === current.size ? current : ids))
-  }, [ids])
+  // Forget rows that left the list: adjusting state while rendering is how React syncs state with props (no effect, no flash).
+  if (ids.size !== ticked.size) setTicked(ids)
 
   return {
     ids,
