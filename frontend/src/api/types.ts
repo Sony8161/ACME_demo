@@ -289,3 +289,9 @@ export interface SearchProject { id: string; name: string; managerName: string; 
 export interface SearchPerson { id: string; name: string; jobTitle: string; role: Role }
 export interface SearchTask { id: string; name: string; projectId: string; projectName: string; milestoneName: string; status: TaskStatus; assigneeName: string | null }
 export interface SearchResults { query: string; projects: SearchProject[]; people: SearchPerson[]; tasks: SearchTask[] }
+
+export interface Changes { since: string; total: number; projects: number; items: AuditEntry[] }
+
+export interface WorkItem { projectName: string; milestoneName: string }
+export interface WorkloadPerson { userId: string; name: string; jobTitle: string; managerName: string | null; hours: number[]; work: WorkItem[][] }
+export interface Workload { capacityPerWeek: number; weeks: string[]; people: WorkloadPerson[] }

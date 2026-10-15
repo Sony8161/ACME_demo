@@ -7,6 +7,7 @@ import { errorText, useApi } from '../api/useApi'
 import { useAuth } from '../auth/context'
 import { Async } from '../components/Async'
 import { EmptyState } from '../components/EmptyState'
+import { ChangesCard } from '../components/ChangesCard'
 import { CredentialsDialog } from '../components/CredentialsDialog'
 import { PageHeader } from '../components/PageHeader'
 import { ProjectCard } from '../components/ProjectCard'
@@ -47,6 +48,8 @@ export function DashboardPage() {
                 title="Dashboard"
                 subtitle={`${formatDate(o.asOf)}${o.totals.budget > 0 ? ` · ${money(o.totals.spent)} spent of ${money(o.totals.budget)}` : ''}`}
               />
+
+              <ChangesCard />
 
               {o.counts.projects === 0 && (
                 <EmptyState

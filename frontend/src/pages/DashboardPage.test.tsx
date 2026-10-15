@@ -195,7 +195,7 @@ describe('Dashboard', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
     expect(screen.queryByText('The database is waking up')).not.toBeInTheDocument()
-    expect(calls).toEqual(['GET /reports/overview', 'GET /reports/overview'])
+    expect(calls.filter((c) => c === 'GET /reports/overview')).toHaveLength(2) // asked again by Try again
   })
 
   it('tells the person when the server cannot be reached', async () => {
@@ -270,5 +270,20 @@ describe('Dashboard', () => {
       expect(await screen.findByText('Only admins can do this')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Load sample data' })).toBeEnabled()
     })
+  })
+})
+
+describe('DashboardPage changes card', () => {
+  it('shows what changed since the last visit above the projects, for a manager', async () => {
+    signIn('manager')
+    mockRoutes({
+      'GET /reports/overview': overview(),
+      'GET /reports/changes': { since: '2026-10-08T09:00:00Z', total: 3, projects: 1, items: [{
+        id: 1, occurred_at: '2026-10-14T09:30:00Z', actor_id: 'a', actor_name: 'Maria Lopez', entity: 'deliverable', entity_id: 'e', project_id: 'p1',
+        project_name: 'Mobile app', label: 'x', action: 'update', summary: 'Moved a task', changes: [],
+      }] },
+    })
+    renderPage(<DashboardPage />)
+    expect(await screen.findByRole('region', { name: 'Since you last visited' })).toHaveTextContent('3 changes in 1 project')
   })
 })
