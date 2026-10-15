@@ -10,7 +10,7 @@ from pydantic import AwareDatetime
 
 from app.core.deps import ActiveUser, DbConn, ManagerOrAdmin
 from app.domains.reports import service
-from app.domains.reports.schemas import Changes, MyDashboard, Overview, Timeline
+from app.domains.reports.schemas import Changes, MyDashboard, Overview, Timeline, Workload
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -44,3 +44,9 @@ def changes(
 ) -> Changes:
     """What other people changed since you last looked: admin sees everything, a manager their own projects."""
     return service.changes(conn, actor, since, limit)
+
+
+@router.get("/workload", response_model=Workload)
+def workload(actor: ManagerOrAdmin, conn: DbConn, weeks: Annotated[int, Query(ge=1, le=12)] = 8) -> Workload:
+    """Hours booked per person per week from this week (admin: everyone; manager: their people and those on their projects)."""
+    return service.workload(conn, actor, weeks)

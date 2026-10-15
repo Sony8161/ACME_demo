@@ -30,6 +30,9 @@ from app.domains.reports.schemas import (
     Timeline,
     TimelineMilestone,
     TimelineProject,
+    WorkItem,
+    Workload,
+    WorkloadPerson,
     WorkRef,
 )
 
@@ -227,3 +230,28 @@ def changes(conn: psycopg.Connection[Any], actor: CurrentUser, since: dt.datetim
         conn, since=moment, manager_id=None if actor.is_admin else actor.id, exclude_actor=actor.id, limit=limit
     )
     return Changes(since=moment, total=total, projects=projects, items=audit_service.present_rows(conn, rows))
+
+
+WEEK_HOURS = 40
+
+
+def workload(conn: psycopg.Connection[Any], actor: CurrentUser, weeks: int) -> Workload:
+    """Booked hours per person per week for the people this admin or manager may see (the same people as the allocation view)."""
+    first = dates.week_start(dates.today())
+    starts = [first + dt.timedelta(days=7 * i) for i in range(weeks)]
+    people = _people_in_scope(conn, actor)
+    booked: dict[uuid.UUID, dict[dt.date, list[dict[str, Any]]]] = {}
+    for r in assignments_repo.weekly_hours(conn, [p["id"] for p in people], starts):
+        booked.setdefault(r["user_id"], {}).setdefault(r["week_start"], []).append(r)
+    out = []
+    for p in people:
+        by_week = booked.get(p["id"], {})
+        out.append(WorkloadPerson(
+            user_id=p["id"], name=p["name"], job_title=p["job_title"], manager_name=p["manager_name"],
+            hours=[float(sum(x["hours"] for x in by_week.get(w, []))) for w in starts],
+            work=[
+                [WorkItem(project_name=x["project_name"], milestone_name=x["milestone_name"]) for x in by_week.get(w, [])]
+                for w in starts
+            ],
+        ))
+    return Workload(capacity_per_week=WEEK_HOURS, weeks=starts, people=out)

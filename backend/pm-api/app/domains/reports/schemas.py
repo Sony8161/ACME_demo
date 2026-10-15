@@ -142,3 +142,29 @@ class Changes(BaseModel):
     total: int = Field(description="Every change since then, not just the ones listed")
     projects: int = Field(description="In how many different projects")
     items: list[AuditEntry]
+
+
+class WorkItem(BaseModel):
+    """One piece of someone's work in a week."""
+
+    project_name: str
+    milestone_name: str
+
+
+class WorkloadPerson(BaseModel):
+    """One employee's week-by-week booked hours."""
+
+    user_id: uuid.UUID
+    name: str
+    job_title: str
+    manager_name: str | None
+    hours: list[float] = Field(description="Booked hours per week, in the order of `weeks`")
+    work: list[list[WorkItem]] = Field(description="What the booked work was, per week")
+
+
+class Workload(BaseModel):
+    """Hours booked per person per week. A full week is 40 hours."""
+
+    capacity_per_week: int
+    weeks: list[dt.date] = Field(description="The Monday of each week, starting with this week")
+    people: list[WorkloadPerson]

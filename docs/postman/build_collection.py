@@ -576,6 +576,27 @@ SPEC: list[Folder] = [
           check=[ERR("validation_error")] + VALID_ENVELOPE),
     ]),
 
+    Folder("08c Changes and workload", "The dashboard's 'since you last visited' card and the People page's workload heatmap.", [
+        R("Admin sees what others changed", "GET", "/reports/changes",
+          check=[("total", "gte", 1), ("projects", "gte", 1), ("items", "type", "array"), ("items.0.summary", "type", "string"), ("items.0.occurred_at", "type", "string")],
+          desc="Other people's history entries after `since` (default a week ago, never older than 30 days), newest first. Your own changes are left out."),
+        R("A manager sees their own projects only", "GET", "/reports/changes", auth="manager_token", query={"limit": "5"},
+          check=[("total", "gte", 1), ("items", "type", "array"), ("items.0.project_id", "eq", "{{project_id}}")]),
+        R("An employee is refused", "GET", "/reports/changes", auth="employee_token", status=403, check=[ERR("forbidden")]),
+        R("A time without a zone is refused", "GET", "/reports/changes", query={"since": "2026-10-01T00:00:00"}, status=400,
+          check=[ERR("validation_error")] + VALID_ENVELOPE),
+        R("A time in the future gives nothing", "GET", "/reports/changes", query={"since": "2999-01-01T00:00:00Z"},
+          check=[("total", "eq", 0), ("items", "len_eq", 0)]),
+        R("Admin sees the workload by week", "GET", "/reports/workload",
+          check=[("capacity_per_week", "eq", 40), ("weeks", "len_eq", 8), ("people", "type", "array"), ("people.0.hours", "len_eq", 8)],
+          desc="Booked hours per person for the next eight weeks, Monday to Friday at 8 hours a day: a full week is 40."),
+        R("A shorter window", "GET", "/reports/workload", auth="manager_token", query={"weeks": "4"},
+          check=[("weeks", "len_eq", 4), ("people", "type", "array")]),
+        R("Too many weeks is refused", "GET", "/reports/workload", query={"weeks": "13"}, status=400,
+          check=[ERR("validation_error")] + VALID_ENVELOPE),
+        R("An employee cannot read the workload", "GET", "/reports/workload", auth="employee_token", status=403, check=[ERR("forbidden")]),
+    ]),
+
     Folder("09 Completion and archive", "Managers complete milestones after review; completed work moves to the admin-only archive.", [
         R("Employees cannot complete a milestone", "POST", "/projects/{{project_id}}/milestones/{{milestone_id}}/complete",
           auth="employee_token", status=403, body={}, check=[ERR("forbidden")]),

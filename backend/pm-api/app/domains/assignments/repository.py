@@ -244,3 +244,23 @@ def reprice_future(conn: psycopg.Connection[Any], user_id: uuid.UUID, hourly_rat
         "UPDATE milestone_assignments SET hourly_rate = %s WHERE user_id = %s AND archived_at IS NULL AND start_date > %s",
         (hourly_rate, user_id, today),
     )
+
+
+def weekly_hours(conn: psycopg.Connection[Any], user_ids: list[uuid.UUID], week_starts: list[dt.date]) -> list[dict[str, Any]]:
+    """Per person, week (Monday to Friday) and milestone: the scheduled hours (working days x 8), only where there are any."""
+    if not user_ids or not week_starts:
+        return []
+    return conn.execute(
+        """
+        SELECT a.user_id, w.week_start, p.name AS project_name, m.name AS milestone_name,
+               working_days(GREATEST(a.start_date, w.week_start), LEAST(a.end_date, w.week_start + 4)) * 8 AS hours
+        FROM milestone_assignments a
+        JOIN milestones m ON m.id = a.milestone_id
+        JOIN projects p ON p.id = m.project_id
+        CROSS JOIN unnest(%(weeks)s::date[]) AS w(week_start)
+        WHERE a.user_id = ANY(%(users)s) AND a.archived_at IS NULL
+          AND a.start_date <= w.week_start + 4 AND a.end_date >= w.week_start
+        ORDER BY a.user_id, w.week_start, p.name, m.name
+        """,
+        {"users": user_ids, "weeks": week_starts},
+    ).fetchall()
