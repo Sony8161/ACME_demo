@@ -19,7 +19,7 @@ npm run dev          # http://localhost:3000
 ```
 
 First sign-in: `admin1` / `ChangeMe123!` (you must choose a new password), then **Load sample data** on the
-dashboard. It creates two managers, six employees and four projects and shows their one-time passwords once.
+dashboard. It creates four managers, 26 employees, twelve projects and about a hundred tasks, and shows their one-time passwords once (with a Download CSV button). An admin can add the larger company to a site that already has the original one from **More > Sample data**.
 
 `VITE_API_URL` (empty by default) is the address of the API when it is not on the same host as the site.
 `VITE_PROXY_TARGET` changes where `npm run dev` forwards API calls (default `http://127.0.0.1:8000`).

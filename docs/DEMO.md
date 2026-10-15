@@ -41,9 +41,13 @@ Window at 1280 px wide and 100% zoom. Close chat and mail notifications. Have th
 | `james1` | `Demo1234!` | James Carter (manager) | The overdue and at-risk projects |
 | `alex01` | `Demo1234!` | Alex Kim (employee) | "My work", no money shown |
 | `nina01` | `Welcome123!` | Nina Park (new hire) | First sign-in forces a new password (works once) |
+| `hann01` | `Demo1234!` | Hannah Weiss (manager) | Payments, the chatbot (at risk), the partner kit: a second manager's view |
+| `dieg01` | `Demo1234!` | Diego Alvarez (manager) | Warehouse, the overdue security audit, analytics |
 | `priya1` `sofia1` `tom001` `lena01` `omar01` | `Demo1234!` | More employees | Not needed in the script |
+| `noor01` `kenj01` `mei01` ... | `Demo1234!` | The other 20 employees | Every new person is the first four letters of the first name + `01` (`02` on a clash) |
 
-The company: two managers, seven employees, four projects.
+The company: four managers, 27 employees (26 plus Nina) and twelve projects, dated relative to today. The script below uses the
+first four projects; the other eight make the lists, the timeline, availability and exports look like a real company.
 
 | Project | Manager | State | Why |
 |---|---|---|---|
@@ -51,6 +55,16 @@ The company: two managers, seven employees, four projects.
 | Data Platform Migration | James | **At risk** | Spending is far ahead of the calendar, and the planned staffing costs more than the budget |
 | Website Redesign | Maria | On track | About two thirds of the time used, a bit over a third of the budget |
 | Customer Portal | Maria | On track (planned) | Starts in two weeks |
+
+The other eight, for the lists and the timeline:
+
+| Project | Manager | State |
+|---|---|---|
+| Security Compliance Audit | Diego | **Overdue** (ended five days ago, remediation late) |
+| Customer Support Chatbot | Hannah | **At risk** (staffing will cost more than the budget) |
+| Payments Gateway Upgrade, Warehouse Automation, Analytics Dashboard | Hannah, Diego, Diego | On track |
+| HR Self-Service Portal, Partner Onboarding Kit | James, Hannah | Planned |
+| Brand Refresh | Maria | Completed |
 
 ## 3. The script
 
@@ -60,7 +74,7 @@ costs, and whether it is late."**
 ### Act 1. The company at a glance (admin, 2 min)
 
 1. Sign in as `admin1` / `Demo1234!`. You land on the **Dashboard**.
-2. Read the heading (*2 of 4 projects need attention*), then the project list. **Say:** "Ranked by urgency: overdue first, then at risk. Each project
+2. Read the heading (*4 of 12 projects need attention*), then the project list. **Say:** "Ranked by urgency: overdue first, then at risk. Each project
    says why, in one line."
 3. Point at one pulse bar. **Say:** "The fill is work done, the dark marker is today. Fill behind the marker means behind schedule."
 4. Click **Data Platform Migration**, then **Why?** under the progress bar: spending is ahead of the calendar, and the planned

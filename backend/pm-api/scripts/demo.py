@@ -27,6 +27,7 @@ from app.core import security  # noqa: E402
 from app.domains.users import repository as users_repo  # noqa: E402
 from app.seed import ensure_bootstrap_admin, seed_demo  # noqa: E402
 
+READABLE_USERNAMES = Path(__file__).with_name("readable_usernames.sql")
 DEMO_PASSWORD = "Demo1234!"  # noqa: S105  # nosec B105 - a public, local-only demo password
 NEW_HIRE_PASSWORD = "Welcome123!"  # noqa: S105  # nosec B105 - a public, local-only demo password
 # Readable six-character usernames, keyed by the sample accounts' email (seed_demo builds name.surname@demo.acme.example).
@@ -45,7 +46,10 @@ Ready.
   james1     Demo1234!     James Carter (manager)   the overdue and at-risk projects
   alex01     Demo1234!     Alex Kim (employee)      "My work": no money, only my milestone
   nina01     Welcome123!   Nina Park (new hire)     first sign-in forces a new password (once)
+  hann01     Demo1234!     Hannah Weiss (manager)   Payments, the chatbot (at risk), Partner Kit
+  dieg01     Demo1234!     Diego Alvarez (manager)  Warehouse, the overdue audit, Analytics
   priya1 sofia1 tom001 lena01 omar01: more employees, all Demo1234!
+  every other sample person is the first four letters of their first name + 01 (noor01, kenj01, mei01 ...), all Demo1234!
 """
 
 
@@ -96,6 +100,7 @@ def ready(conn: psycopg.Connection) -> None:
 def _rename_and_set_passwords(conn: psycopg.Connection) -> None:
     for prefix, username in USERNAMES.items():
         conn.execute("UPDATE users SET username = %s WHERE email LIKE %s", (username, f"{prefix}@%"))
+    conn.execute(READABLE_USERNAMES.read_text())  # everyone else in the larger company: hann01, noor01, ...
     demo_hash = security.hash_password(DEMO_PASSWORD)
     conn.execute("UPDATE users SET password_hash = %s, must_change_password = false WHERE username <> 'nina01'", (demo_hash,))
     conn.execute("UPDATE users SET must_change_password = true WHERE username = 'nina01'")

@@ -607,8 +607,8 @@ SPEC: list[Folder] = [
     Folder("10 Admin", "Admin-only operations.", [
         R("Seeding demo data is admin only", "POST", "/admin/seed-demo", auth="manager_token", status=403, check=[ERR("forbidden")]),
         R("Seed demo data", "POST", "/admin/seed-demo",
-          check=[("created", "eq", True), ("accounts", "type", "array"), ("accounts.0.temporary_password", "type", "string")],
-          desc="Creates 2 managers, 6 employees and 4 projects in different health states, with milestones, deliverables and "
+          check=[("created", "eq", True), ("accounts", "len_eq", 30), ("accounts.0.temporary_password", "type", "string")],
+          desc="Creates 4 managers, 26 employees and 12 projects in different health states, with milestones, tasks and "
                "completed (archived) milestones. The one-time passwords are shown once."),
         R("Seeding twice does nothing", "POST", "/admin/seed-demo", check=[("created", "eq", False), ("accounts", "len_eq", 0)]),
         R("Overview shows every health state", "GET", "/reports/overview",

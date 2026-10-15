@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Script: Get the LocalStack demo ready to present
-# Purpose: Empty the demo database, load the sample company through the real API (two managers, six employees,
-#          four projects dated relative to today), and give every account a short, memorable username and password,
+# Purpose: Empty the demo database, load the sample company through the real API (four managers, 26 employees,
+#          twelve projects dated relative to today), and give every account a short, memorable username and password,
 #          so nothing has to be copied from a one-time dialog. Also adds one "new hire" whose first sign-in forces
 #          a password change. Run it right before you present, and again after every practice run.
 # Usage: ./bin/demo-ready.sh        (needs ./bin/demo-postgres.sh and ./bin/start-dev.sh to be running)
@@ -41,6 +41,7 @@ FROM (VALUES
   ('tom.becker@%', 'tom001'), ('lena.fischer@%', 'lena01'), ('omar.haddad@%', 'omar01'), ('sofia.rossi@%', 'sofia1'),
   ('nina.park@%', 'nina01')
 ) AS v(pattern, username) WHERE u.email LIKE v.pattern;
+$(cat "$SCRIPT_DIR/../backend/pm-api/scripts/readable_usernames.sql")
 UPDATE users SET password_hash = '$HASH_DEMO', must_change_password = false WHERE username <> 'nina01';
 UPDATE users SET password_hash = '$HASH_WELCOME', must_change_password = true WHERE username = 'nina01';
 SQL
@@ -63,7 +64,10 @@ Ready. Open http://localhost:3000
   james1     Demo1234!     James Carter (manager)   the overdue and at-risk projects
   alex01     Demo1234!     Alex Kim (employee)      "My work": no money, only my milestone
   nina01     Welcome123!   Nina Park (new hire)     first sign-in forces a new password (once)
+  hann01     Demo1234!     Hannah Weiss (manager)   Payments, the chatbot (at risk), Partner Kit
+  dieg01     Demo1234!     Diego Alvarez (manager)  Warehouse, the overdue audit, Analytics
   priya1 sofia1 tom001 lena01 omar01: more employees, all Demo1234!
+  every other sample person is the first four letters of their first name + 01 (noor01, kenj01, mei01 ...), all Demo1234!
 
 Run this script again to put everything back (it also undoes Nina's password change).
 TXT
