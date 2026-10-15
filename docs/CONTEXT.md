@@ -50,19 +50,19 @@ and their status, dependency between deliverables (milestones), and budget consu
 ## What exists
 | Area | State |
 |---|---|
-| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 278 tests, 97.5% coverage, no DELETE endpoints |
+| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 289 tests, 97.5% coverage, no DELETE endpoints |
 | `docs/postman` | Done: 203-request collection with saved example JSON, verified with Newman (839 assertions, all 55 operations) and a saved results file in `docs/postman/results/` |
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; not applied to AWS |
 | LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (161 requests, 654 assertions) |
 | AWS deploy | **Not done** (`./bin/deploy-backend.sh` and `./bin/deploy-frontend.sh`) |
-| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 636 tests at 98.3% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
+| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 660 tests at 98.1% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
 | Demo | `docs/DEMO.md`: rehearsed script; `./bin/demo-ready.sh` loads the sample company with memorable logins |
 | CI workflow (`.github/workflows/ci.yml`), READMEs, testing guide | Written; the workflow has not run on GitHub yet |
 
 ## Run it
 The whole demo without LocalStack (Linux or macOS; only Linux has been tested): `./bin/demo-local.sh`, see `docs/DEMO.md`.
 ```sh
-./bin/test-backend.sh                       # lint + security scan + 278 tests (needs local Postgres)
+./bin/test-backend.sh                       # lint + security scan + 289 tests (needs local Postgres)
 cd backend/pm-api && source .venv/bin/activate
 POSTGRES_NAME=pm_dev uvicorn app.main:app --port 8000   # then open http://localhost:8000/docs
 # first login: admin1 / ChangeMe123!  (you must change it); POST /admin/seed-demo loads sample data

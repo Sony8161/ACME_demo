@@ -31,6 +31,7 @@ const MVPS = {
   15: 'extra-tables',
   16: 'extra-export',
   17: 'extra-pdf',
+  18: 'extra-search',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -367,6 +368,13 @@ await page.getByRole('dialog', { name: 'Project report' }).waitFor()
 await shot(17, 'r1-a-project-report-pick-the-sections')
 await page.getByRole('button', { name: 'Cancel' }).click()
 await page.getByRole('dialog').waitFor({ state: 'detached' })
+
+// Extra: the search box
+await page.getByRole('combobox', { name: 'Search projects, people, tasks' }).fill('ma')
+await page.getByRole('listbox').waitFor()
+await shot(18, 's1-search-finds-projects-people-and-tasks')
+await page.keyboard.press('Escape')
+await page.keyboard.press('Escape')
 
 // Extra: the assistant
 await page.getByRole('button', { name: 'Ask the assistant' }).click()

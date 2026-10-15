@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent } from 'react'
+import { useMemo, useState, type AnchorHTMLAttributes, type MouseEvent } from 'react'
 import { Autocomplete, Box, IconButton, InputAdornment, TextField, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import SearchIcon from '@mui/icons-material/Search'
@@ -61,18 +61,25 @@ function Field({ autoFocus, onDone }: { autoFocus?: boolean; onDone?: () => void
         if (reason === 'input') { setText(value); setOpen(value.trim().length >= 2) } else { setText(''); setOpen(false) }
       }}
       onChange={(_, option) => { if (option) { navigate(option.to); onDone?.() } }}
+      // A listbox may only hold options and groups, so each group is a labelled role="group" list (MUI's default is not valid ARIA).
+      renderGroup={(params) => (
+        <li key={params.key} role="presentation" style={{ listStyle: 'none' }}>
+          <Typography aria-hidden variant="overline" color="text.secondary" sx={{ display: 'block', px: 2, pt: 1, fontWeight: 700 }}>{params.group}</Typography>
+          <div role="group" aria-label={params.group}>{params.children}</div>
+        </li>
+      )}
+      // The option is itself the link (role="option" on an <a href>), so it opens in a new tab with a middle-click and nothing is nested.
       renderOption={(props, option) => {
-        const { key, ...rest } = props as typeof props & { key: string }
+        const { key, onClick, ...rest } = props as typeof props & { key: string; onClick?: (e: MouseEvent) => void }
         return (
-          <li key={key} {...rest}>
-            <a
-              href={option.to} tabIndex={-1} style={{ color: 'inherit', textDecoration: 'none', display: 'block', width: '100%' }}
-              onClick={(e: MouseEvent) => { if (e.metaKey || e.ctrlKey || e.shiftKey) e.stopPropagation(); else e.preventDefault() }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>{option.label}</Typography>
-              <Typography variant="caption" color="text.secondary">{option.detail}</Typography>
-            </a>
-          </li>
+          <a
+            key={key} {...(rest as unknown as AnchorHTMLAttributes<HTMLAnchorElement>)} href={option.to}
+            style={{ color: 'inherit', textDecoration: 'none', display: 'block' }}
+            onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); onClick?.(e) }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>{option.label}</Typography>
+            <Typography variant="caption" color="text.secondary">{option.detail}</Typography>
+          </a>
         )
       }}
       renderInput={(params) => (

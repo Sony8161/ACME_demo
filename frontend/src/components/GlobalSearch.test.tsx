@@ -38,6 +38,17 @@ describe('GlobalSearch', () => {
     ])
   })
 
+  it('is a valid listbox: options sit in labelled groups, so a screen reader hears "Projects" before its results', async () => {
+    mockRoutes({ 'GET /search': answer() })
+    show()
+    await userEvent.type(box(), 'al')
+    const list = await screen.findByRole('listbox')
+    const groups = within(list).getAllByRole('group')
+    expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Projects', 'People', 'Tasks'])
+    expect(within(groups[0]).getAllByRole('option')).toHaveLength(1)
+    expect(list.querySelectorAll(':scope > li:not([role="presentation"])')).toHaveLength(0)
+  })
+
   it('leaves out a group with nothing in it', async () => {
     mockRoutes({ 'GET /search': answer({ people: [], tasks: [] }) })
     show()
@@ -71,12 +82,14 @@ describe('GlobalSearch', () => {
     expect(here()).toBe('/people?q=Alex%20Kim')
   })
 
-  it('every result is a real link, so it can be opened in a new tab', async () => {
+  it('every result is a real link (an anchor with an address), so it can be opened in a new tab, and nothing is nested inside it', async () => {
     mockRoutes({ 'GET /search': answer() })
     show()
     await userEvent.type(box(), 'al')
-    const list = await screen.findByRole('listbox')
-    expect(within(list).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['/projects/p1', '/people?q=Alex%20Kim', '/projects/p1?tab=tasks'])
+    const options = within(await screen.findByRole('listbox')).getAllByRole('option')
+    expect(options.map((o) => o.tagName)).toEqual(['A', 'A', 'A'])
+    expect(options.map((o) => o.getAttribute('href'))).toEqual(['/projects/p1', '/people?q=Alex%20Kim', '/projects/p1?tab=tasks'])
+    for (const o of options) expect(o.querySelector('a, button, input')).toBeNull()
   })
 
   it('says so when nothing matches', async () => {
