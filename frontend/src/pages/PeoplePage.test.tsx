@@ -654,3 +654,27 @@ describe('PeoplePage reads ?q= from the address', () => {
     await waitFor(() => expect(screen.queryByText('Eli Employee')).not.toBeInTheDocument())
   })
 })
+
+describe('PeoplePage workload view', () => {
+  beforeEach(() => signIn('admin'))
+  const heat = { capacity_per_week: 40, weeks: ['2026-10-12', '2026-10-19'], people: [{ user_id: 'e1', name: 'Eli Employee', job_title: '', manager_name: null, hours: [40, 0], work: [[], []] }] }
+
+  it('is a third view next to People and Availability, and keeps the choice in the address', async () => {
+    mockRoutes({ 'GET /users': usersRoute(), 'GET /reports/workload': heat })
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'Workload' }))
+    expect(await screen.findByRole('table', { name: 'Workload by week' })).toBeInTheDocument()
+    expect(screen.getByLabelText('location')).toHaveTextContent('/people?view=workload')
+    expect(screen.getByRole('button', { name: 'Workload' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(screen.getByRole('button', { name: 'People' }))
+    expect(await screen.findByRole('checkbox', { name: 'Select Maya Manager' })).toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: 'Workload by week' })).not.toBeInTheDocument()
+  })
+
+  it('opens straight on the workload from a ?view=workload link, without the people search box', async () => {
+    mockRoutes({ 'GET /users': usersRoute(), 'GET /reports/workload': heat })
+    renderPage('/people?view=workload')
+    expect(await screen.findByRole('table', { name: 'Workload by week' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Search by name, email or job title')).not.toBeInTheDocument()
+  })
+})

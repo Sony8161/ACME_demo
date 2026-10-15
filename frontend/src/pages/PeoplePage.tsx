@@ -17,6 +17,7 @@ import { useToast } from '../components/toast'
 import { exportFileName, peopleColumns } from '../export/columns'
 import { runBulk } from '../table/bulk'
 import { AvailabilityTable } from '../components/AvailabilityTable'
+import { WorkloadHeatmap } from '../components/WorkloadHeatmap'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EmptyState } from '../components/EmptyState'
 import { CredentialsDialog, type Credential } from '../components/CredentialsDialog'
@@ -38,7 +39,8 @@ export function PeoplePage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
   const [params, setParams] = useSearchParams()
-  const view = params.get('view') === 'availability' ? 'availability' : 'people'
+  const asked = params.get('view')
+  const view = asked === 'availability' || asked === 'workload' ? asked : 'people'
   // The top-bar search sends people here as /people?q=Name; follow the address, also when this page is already open.
   const fromAddress = params.get('q') ?? ''
   const [text, setText] = useState(fromAddress)
@@ -63,12 +65,14 @@ export function PeoplePage() {
       />
       <ToggleButtonGroup
         size="small" exclusive value={view} aria-label="View" sx={{ mb: 2 }}
-        onChange={(_, v: 'people' | 'availability' | null) => v && setParams(v === 'availability' ? { view: 'availability' } : {}, { replace: true })}
+        onChange={(_, v: 'people' | 'availability' | 'workload' | null) => v && setParams(v === 'people' ? {} : { view: v }, { replace: true })}
       >
         <ToggleButton value="people">People</ToggleButton>
         <ToggleButton value="availability">Availability</ToggleButton>
+        <ToggleButton value="workload">Workload</ToggleButton>
       </ToggleButtonGroup>
       {view === 'availability' && <Async state={overview}>{(o) => <AvailabilityTable allocation={o.allocation} />}</Async>}
+      {view === 'workload' && <WorkloadHeatmap />}
       {view === 'people' && <TextField size="small" label="Search by name, email or job title" value={text} onChange={(e) => setText(e.target.value)} fullWidth sx={{ mb: 2.5 }} />}
       {view === 'people' && <Async state={state}>
         {(list) => (
