@@ -11,16 +11,10 @@ import psycopg
 from app.config import get_settings
 from app.core import dates, security
 from app.db import MIGRATION_LOCK_ID
-from app.domains.assignments import repository as assignments_repo
-from app.domains.deliverables import repository as deliverables_repo
-from app.domains.dependencies import repository as dependencies_repo
-from app.domains.milestones import repository as milestones_repo
-from app.domains.projects import repository as projects_repo
 from app.domains.users import repository as users_repo
+from app.seed_kit import DEMO_DOMAIN, SeedKit
 
 logger = logging.getLogger(__name__)
-
-DEMO_DOMAIN = "@demo.acme.example"
 
 
 def ensure_bootstrap_admin(conn: psycopg.Connection[Any]) -> None:
@@ -57,23 +51,10 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
     if existing:
         return {"created": False, "message": "Demo data already exists", "accounts": []}
 
-    today = dates.today()
-    d = dt.timedelta
-    accounts: list[dict[str, str]] = []
-
-    def make_user(name: str, role: str, title: str, salary: float, manager_id: Any = None) -> dict[str, Any]:
-        password = security.generate_password()
-        for _ in range(20):
-            username = security.generate_username(name)
-            if not users_repo.username_exists(conn, username):
-                break
-        email = name.lower().replace(" ", ".") + DEMO_DOMAIN
-        row = users_repo.insert(
-            conn, username=username, password_hash=security.hash_password(password), name=name, email=email,
-            job_title=title, role=role, manager_id=manager_id, salary=salary,
-        )
-        accounts.append({"name": name, "role": role, "username": username, "temporary_password": password})
-        return row
+    kit = SeedKit(conn, admin_id, dates.today())
+    today, d = kit.today, dt.timedelta
+    make_user, make_project = kit.make_user, kit.make_project
+    make_milestone, link, add_cost = kit.make_milestone, kit.link, kit.add_cost
 
     maria = make_user("Maria Lopez", "manager", "Engineering Manager", 70)
     james = make_user("James Carter", "manager", "Delivery Manager", 75)
@@ -83,52 +64,6 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
     lena = make_user("Lena Fischer", "employee", "QA Engineer", 40, james["id"])
     omar = make_user("Omar Haddad", "employee", "Data Engineer", 60, james["id"])
     sofia = make_user("Sofia Rossi", "employee", "Business Analyst", 50, maria["id"])
-
-    def make_project(name: str, manager: dict[str, Any], start: dt.date, end: dt.date, hours: float, budget: float) -> Any:
-        return projects_repo.insert(
-            conn, name=name, description=f"Demo project: {name}", manager_id=manager["id"], start_date=start,
-            end_date=end, allocated_hours=hours, budget_amount=budget, created_by=admin_id,
-        )
-
-    def make_milestone(
-        project_id: Any, manager: dict[str, Any], name: str, start: dt.date, due: dt.date, hours: float, budget: float,
-        people: list[dict[str, Any]], deliverables: list[tuple[Any, ...]], *, status: str = "pending", complete: bool = False,
-    ) -> Any:
-        mid = milestones_repo.insert(
-            conn, project_id=project_id, name=name, description="", start_date=start, due_date=due,
-            allocated_hours=hours, budget_amount=budget,
-        )
-        if status != "pending":
-            milestones_repo.update(conn, mid, {"status": status})
-        for person in people:
-            assignments_repo.insert(
-                conn, milestone_id=mid, user_id=person["id"], start_date=start, end_date=due, assigned_by=admin_id
-            )
-        for item, done, *rest in deliverables:
-            # Optional third element: what makes it a task on the board (priority, days until due, owner, status).
-            task: dict[str, Any] = rest[0] if rest else {}
-            owner = task.get("owner")
-            did = deliverables_repo.insert(
-                conn, milestone_id=mid, name=item, description="", priority=task.get("priority", "medium"),
-                due_date=today + d(days=task["due"]) if "due" in task else None, assignee_id=owner["id"] if owner else None,
-            )
-            if done:
-                deliverables_repo.set_done(conn, did, done=True, user_id=manager["id"])
-            elif task.get("status"):
-                deliverables_repo.set_status(conn, did, status=task["status"], user_id=manager["id"])
-        if complete:
-            milestones_repo.complete(conn, mid, reviewer_id=manager["id"], note="Reviewed and signed off")
-        return mid
-
-    def link(kind: str, earlier: Any, later: Any) -> None:
-        dependencies_repo.insert(conn, kind, earlier, later, admin_id)  # type: ignore[arg-type]
-
-    def add_cost(project_id: Any, category: str, description: str, amount: float, when: dt.date) -> None:
-        conn.execute(
-            "INSERT INTO project_costs (project_id, category, description, amount, incurred_on, created_by) "
-            "VALUES (%s, %s, %s, %s, %s, %s)",
-            (project_id, category, description, amount, when, admin_id),
-        )
 
     # On track: two thirds of the time has passed, a bit over a third of the budget is used.
     p1 = make_project("Website Redesign", maria, today - d(days=60), today + d(days=30), 1200, 60000)
@@ -175,4 +110,4 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
     link("milestone", inventory, cutover)
     link("project", p1, p4)
 
-    return {"created": True, "message": "Demo data created", "accounts": accounts}
+    return {"created": True, "message": "Demo data created", "accounts": kit.accounts}
