@@ -47,6 +47,7 @@ response saved as an example on every request.
 | 06 Team | several people per milestone, one milestone per person per day (overlap is refused), archived rows are admin-only |
 | 06b Tasks | a deliverable as a task: owner, priority, due date, status; the board and my tasks; an owner starts or pauses, only a manager finishes |
 | 06c Dependencies | a milestone or project that waits for another: blocked from starting or completing, loops refused, who may link what, what a manager cannot see is named generically |
+| 06d Comments | a thread under each task: write, read, size limits, who can see it, who can remove a comment, the count on the task lists |
 | 07 Costs | non-labor costs, the budget maths, archiving instead of deleting |
 | 08 Reports | overview, allocation, personal dashboard and the timeline |
 | 08b Search | the top-bar search: projects, people and tasks in one call, scoped by role (an employee finds no people), limits and the length check |

@@ -11,7 +11,8 @@ from psycopg import sql
 
 _SELECT = """
     SELECT d.*, m.project_id, p.name AS project_name, m.name AS milestone_name, a.name AS assignee_name,
-           (d.due_date IS NOT NULL AND d.due_date < %(today)s AND d.status <> 'done') AS is_overdue
+           (d.due_date IS NOT NULL AND d.due_date < %(today)s AND d.status <> 'done') AS is_overdue,
+           (SELECT count(*) FROM task_comments c WHERE c.deliverable_id = d.id AND c.archived_at IS NULL)::int AS comment_count
     FROM deliverables d
     JOIN milestones m ON m.id = d.milestone_id AND m.archived_at IS NULL
     JOIN projects p ON p.id = m.project_id

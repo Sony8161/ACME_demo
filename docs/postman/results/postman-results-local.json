@@ -1,17 +1,17 @@
 {
-  "generated_at": "2026-10-15T05:22:43+00:00",
+  "generated_at": "2026-10-15T05:38:22+00:00",
   "environment": "local",
   "base_url": "http://127.0.0.1:8001",
   "summary": {
-    "requests": 220,
+    "requests": 231,
     "requests_failed": 0,
-    "assertions": 917,
+    "assertions": 960,
     "assertions_failed": 0,
-    "operations_in_api": 58,
-    "operations_exercised": 58,
+    "operations_in_api": 61,
+    "operations_exercised": 61,
     "operations_not_exercised": [],
     "all_passed": true,
-    "slowest_request_ms": 259
+    "slowest_request_ms": 176
   },
   "operations": [
     {
@@ -541,6 +541,52 @@
     },
     {
       "method": "GET",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/deliverables/{deliverable_id}/comments",
+      "requests": 3,
+      "statuses_seen": [
+        200,
+        404
+      ],
+      "all_passed": true,
+      "request_names": [
+        "Read the thread, oldest first",
+        "Another manager gets 404, not 403",
+        "Removed comments are gone from the thread"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/deliverables/{deliverable_id}/comments",
+      "requests": 4,
+      "statuses_seen": [
+        201,
+        400
+      ],
+      "all_passed": true,
+      "request_names": [
+        "The manager writes a comment",
+        "The employee on the project replies",
+        "A blank comment is refused",
+        "A comment over 2000 characters is refused"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/milestones/{milestone_id}/deliverables/{deliverable_id}/comments/{comment_id}/archive",
+      "requests": 3,
+      "statuses_seen": [
+        200,
+        403
+      ],
+      "all_passed": true,
+      "request_names": [
+        "A colleague cannot remove someone else's comment",
+        "The author removes their own comment",
+        "The manager removes a comment too"
+      ]
+    },
+    {
+      "method": "GET",
       "path": "/projects/{project_id}/milestones/{milestone_id}/dependencies",
       "requests": 4,
       "statuses_seen": [
@@ -794,14 +840,15 @@
     {
       "method": "GET",
       "path": "/tasks/mine",
-      "requests": 2,
+      "requests": 3,
       "statuses_seen": [
         200
       ],
       "all_passed": true,
       "request_names": [
         "My tasks gathers what is mine",
-        "Only an admin or the manager sees nothing under another person"
+        "Only an admin or the manager sees nothing under another person",
+        "The task lists carry the number of comments"
       ]
     },
     {
@@ -939,7 +986,7 @@
       "path": "/health",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 23,
+      "response_ms": 18,
       "passed": true,
       "assertions": [
         {
@@ -971,7 +1018,7 @@
       "path": "/auth/login",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 84,
+      "response_ms": 51,
       "passed": true,
       "assertions": [
         {
@@ -1003,7 +1050,7 @@
       "path": "/auth/login",
       "status": 401,
       "expected_status": 401,
-      "response_ms": 9,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -1035,7 +1082,7 @@
       "path": "/auth/login",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 4,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -1063,7 +1110,7 @@
       "path": "/projects",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 36,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -1087,7 +1134,7 @@
       "path": "/auth/me",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 6,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -1115,7 +1162,7 @@
       "path": "/auth/change-password",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 7,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -1143,7 +1190,7 @@
       "path": "/auth/change-password",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 13,
+      "response_ms": 9,
       "passed": true,
       "assertions": [
         {
@@ -1171,7 +1218,7 @@
       "path": "/auth/me",
       "status": 401,
       "expected_status": 401,
-      "response_ms": 4,
+      "response_ms": 24,
       "passed": true,
       "assertions": [
         {
@@ -1195,7 +1242,7 @@
       "path": "/auth/refresh",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 11,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -1255,7 +1302,7 @@
       "path": "/users",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 19,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -1295,7 +1342,7 @@
       "path": "/users",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 11,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -1335,7 +1382,7 @@
       "path": "/users",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -1383,7 +1430,7 @@
       "path": "/users",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 17,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -1423,7 +1470,7 @@
       "path": "/users",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 8,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -1451,7 +1498,7 @@
       "path": "/users",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 7,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -1479,7 +1526,7 @@
       "path": "/auth/login",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -1515,7 +1562,7 @@
       "path": "/auth/change-password",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 13,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -1575,7 +1622,7 @@
       "path": "/auth/change-password",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -1599,7 +1646,7 @@
       "path": "/auth/login",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -1635,7 +1682,7 @@
       "path": "/auth/change-password",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 20,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -1659,7 +1706,7 @@
       "path": "/auth/login",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 13,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -1695,7 +1742,7 @@
       "path": "/auth/change-password",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -1719,7 +1766,7 @@
       "path": "/users",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 6,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -1743,7 +1790,7 @@
       "path": "/users",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -1771,7 +1818,7 @@
       "path": "/users",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -1823,7 +1870,7 @@
       "path": "/users",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -1851,7 +1898,7 @@
       "path": "/users",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 11,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -1875,7 +1922,7 @@
       "path": "/users/{{employee_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 14,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -1903,7 +1950,7 @@
       "path": "/users/{{employee_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -1931,7 +1978,7 @@
       "path": "/users/{{employee_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -1959,7 +2006,7 @@
       "path": "/users/{{employee_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 11,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -1983,7 +2030,7 @@
       "path": "/users/{{employee_id}}",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 5,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -2007,7 +2054,7 @@
       "path": "/users/{{employee_id}}",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 5,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -2031,7 +2078,7 @@
       "path": "/users/me",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -2059,7 +2106,7 @@
       "path": "/users/me",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 8,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -2083,7 +2130,7 @@
       "path": "/users/00000000-0000-0000-0000-000000000000",
       "status": 404,
       "expected_status": 404,
-      "response_ms": 5,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -2131,7 +2178,7 @@
       "path": "/users",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 16,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -2171,7 +2218,7 @@
       "path": "/users/{{throwaway_id}}/reset-password",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -2195,7 +2242,7 @@
       "path": "/users/{{throwaway_id}}/archive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -2219,7 +2266,7 @@
       "path": "/users",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 4,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -2243,7 +2290,7 @@
       "path": "/users",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 8,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -2267,7 +2314,7 @@
       "path": "/users/{{throwaway_id}}/unarchive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -2291,7 +2338,7 @@
       "path": "/users/{{admin_id}}/archive",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 8,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -2315,7 +2362,7 @@
       "path": "/projects",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 11,
+      "response_ms": 9,
       "passed": true,
       "assertions": [
         {
@@ -2363,7 +2410,7 @@
       "path": "/projects",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 8,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -2387,7 +2434,7 @@
       "path": "/projects",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 5,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -2411,7 +2458,7 @@
       "path": "/projects",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 7,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -2463,7 +2510,7 @@
       "path": "/projects",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 8,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -2487,7 +2534,7 @@
       "path": "/projects",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -2523,7 +2570,7 @@
       "path": "/projects",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 6,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -2551,7 +2598,7 @@
       "path": "/projects",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -2575,7 +2622,7 @@
       "path": "/projects",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 15,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -2599,7 +2646,7 @@
       "path": "/projects/{{project_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 6,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -2635,7 +2682,7 @@
       "path": "/projects/{{project_id}}",
       "status": 404,
       "expected_status": 404,
-      "response_ms": 5,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -2659,7 +2706,7 @@
       "path": "/projects/{{project_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 22,
+      "response_ms": 9,
       "passed": true,
       "assertions": [
         {
@@ -2683,7 +2730,7 @@
       "path": "/projects/{{project_id}}",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 18,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -2707,7 +2754,7 @@
       "path": "/projects/{{project_id}}",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 15,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -2731,7 +2778,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 10,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -2775,7 +2822,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 20,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -2791,7 +2838,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 8,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -2843,7 +2890,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 10,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -2871,7 +2918,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 13,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -2895,7 +2942,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 5,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -2931,7 +2978,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -2955,7 +3002,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 7,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -2979,7 +3026,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -3007,7 +3054,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 9,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -3035,7 +3082,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 17,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -3051,7 +3098,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 8,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -3107,7 +3154,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{deliverable_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -3167,7 +3214,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{deliverable2_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 16,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -3191,7 +3238,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 13,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -3219,7 +3266,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 14,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -3243,7 +3290,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{deliverable3_id}}/archive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 12,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -3267,7 +3314,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 8,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -3295,7 +3342,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 18,
+      "response_ms": 9,
       "passed": true,
       "assertions": [
         {
@@ -3351,7 +3398,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 8,
+      "response_ms": 9,
       "passed": true,
       "assertions": [
         {
@@ -3375,7 +3422,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -3403,7 +3450,7 @@
       "path": "/projects/{{project2_id}}/milestones",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 8,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -3419,7 +3466,7 @@
       "path": "/projects/{{project2_id}}/milestones/{{b_milestone_id}}/team",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 8,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -3447,7 +3494,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/team",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 8,
+      "response_ms": 9,
       "passed": true,
       "assertions": [
         {
@@ -3547,7 +3594,7 @@
       "path": "/projects/{{project2_id}}/milestones/{{b_milestone_id}}/team",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 18,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -3571,7 +3618,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 14,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -3603,7 +3650,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 15,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -3651,7 +3698,7 @@
       "path": "/projects/{{project_id}}/team",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 18,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -3679,7 +3726,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/team/{{employee_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 22,
+      "response_ms": 9,
       "passed": true,
       "assertions": [
         {
@@ -3727,7 +3774,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -3759,7 +3806,7 @@
       "path": "/projects/{{project_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -3867,7 +3914,7 @@
       "path": "/projects/{{project_id}}/tasks",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 18,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -3899,7 +3946,7 @@
       "path": "/projects/{{project_id}}/tasks",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -3923,7 +3970,7 @@
       "path": "/projects/{{project_id}}/tasks",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 4,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -3955,7 +4002,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 16,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -3983,7 +4030,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 11,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -4015,7 +4062,7 @@
       "path": "/tasks/mine",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 4,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4047,7 +4094,7 @@
       "path": "/tasks/mine",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 6,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -4071,7 +4118,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -4103,7 +4150,7 @@
       "path": "/projects/{{project_id}}/tasks",
       "status": 404,
       "expected_status": 404,
-      "response_ms": 6,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -4167,7 +4214,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/dependencies",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 14,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4199,7 +4246,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/dependencies",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 12,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4227,7 +4274,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/complete",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 6,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -4263,7 +4310,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/dependencies",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 12,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -4295,7 +4342,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/dependencies",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 10,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4387,7 +4434,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/dependencies",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 4,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -4411,7 +4458,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/dependencies",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 9,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -4471,7 +4518,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/dependencies/{{dep2_id}}/archive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4495,7 +4542,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/dependencies/{{dep_id}}/archive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 15,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -4519,7 +4566,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/dependencies/{{dep_id}}/archive",
       "status": 404,
       "expected_status": 404,
-      "response_ms": 13,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -4543,7 +4590,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone2_id}}/dependencies",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 6,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4571,7 +4618,7 @@
       "path": "/projects/{{project_id}}/dependencies",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 9,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -4599,7 +4646,7 @@
       "path": "/projects/{{project_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 11,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -4655,7 +4702,7 @@
       "path": "/projects/{{project_id}}/complete",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 6,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4691,7 +4738,7 @@
       "path": "/projects/{{project_id}}/dependencies/{{dep3_id}}/archive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 14,
+      "response_ms": 9,
       "passed": true,
       "assertions": [
         {
@@ -4709,13 +4756,317 @@
       ]
     },
     {
+      "folder": "06d Comments",
+      "name": "The manager writes a comment",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "body eq Waiting on the logo",
+          "passed": true
+        },
+        {
+          "name": "can_remove eq True",
+          "passed": true
+        },
+        {
+          "name": "author_name type string",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "The employee on the project replies",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments",
+      "status": 201,
+      "expected_status": 201,
+      "response_ms": 8,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 201",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "can_remove eq True",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "Read the thread, oldest first",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 2",
+          "passed": true
+        },
+        {
+          "name": "items.0.body eq Waiting on the logo",
+          "passed": true
+        },
+        {
+          "name": "items.0.can_remove eq False",
+          "passed": true
+        },
+        {
+          "name": "items.1.can_remove eq True",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "A blank comment is refused",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 3,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "A comment over 2000 characters is refused",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments",
+      "status": 400,
+      "expected_status": 400,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 400",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq validation_error",
+          "passed": true
+        },
+        {
+          "name": "error.message type string",
+          "passed": true
+        },
+        {
+          "name": "error.details type array",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "Another manager gets 404, not 403",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments",
+      "status": 404,
+      "expected_status": 404,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 404",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq not_found",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "The task lists carry the number of comments",
+      "method": "GET",
+      "path": "/tasks/mine",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 4,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "items.0.comment_count gte 1",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "A colleague cannot remove someone else's comment",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments/{{comment_id}}/archive",
+      "status": 403,
+      "expected_status": 403,
+      "response_ms": 6,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 403",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "error.code eq forbidden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "The author removes their own comment",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments/{{comment2_id}}/archive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "id eq {{comment2_id}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "The manager removes a comment too",
+      "method": "POST",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments/{{comment_id}}/archive",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 7,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "id eq {{comment_id}}",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "folder": "06d Comments",
+      "name": "Removed comments are gone from the thread",
+      "method": "GET",
+      "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/deliverables/{{task_id}}/comments",
+      "status": 200,
+      "expected_status": 200,
+      "response_ms": 5,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "Status code is 200",
+          "passed": true
+        },
+        {
+          "name": "Response is JSON",
+          "passed": true
+        },
+        {
+          "name": "total eq 0",
+          "passed": true
+        },
+        {
+          "name": "items len_eq 0",
+          "passed": true
+        }
+      ]
+    },
+    {
       "folder": "07 Costs",
       "name": "Add a license cost",
       "method": "POST",
       "path": "/projects/{{project_id}}/costs",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 13,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4747,7 +5098,7 @@
       "path": "/projects/{{project_id}}/costs",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 23,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -4763,7 +5114,7 @@
       "path": "/projects/{{project_id}}/costs",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 4,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -4835,7 +5186,7 @@
       "path": "/projects/{{project_id}}/costs/{{cost2_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 13,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -4859,7 +5210,7 @@
       "path": "/projects/{{project_id}}/costs/{{cost_id}}/archive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 6,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -4883,7 +5234,7 @@
       "path": "/projects/{{project_id}}/costs",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 8,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -4911,7 +5262,7 @@
       "path": "/projects/{{project_id}}/costs",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -4939,7 +5290,7 @@
       "path": "/projects/{{project_id}}/costs",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 12,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -4963,7 +5314,7 @@
       "path": "/projects/{{project_id}}/costs",
       "status": 404,
       "expected_status": 404,
-      "response_ms": 5,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -4987,7 +5338,7 @@
       "path": "/reports/overview",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -5043,7 +5394,7 @@
       "path": "/reports/overview",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 14,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -5075,7 +5426,7 @@
       "path": "/reports/timeline",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 12,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -5143,7 +5494,7 @@
       "path": "/reports/timeline",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -5167,7 +5518,7 @@
       "path": "/reports/timeline",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 10,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -5191,7 +5542,7 @@
       "path": "/reports/overview",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 10,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -5263,7 +5614,7 @@
       "path": "/reports/my-dashboard",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 11,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -5331,7 +5682,7 @@
       "path": "/search",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -5363,7 +5714,7 @@
       "path": "/search",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 14,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -5439,7 +5790,7 @@
       "path": "/search",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 17,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -5467,7 +5818,7 @@
       "path": "/search",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 9,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -5499,7 +5850,7 @@
       "path": "/search",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 4,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -5531,7 +5882,7 @@
       "path": "/reports/changes",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 17,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -5571,7 +5922,7 @@
       "path": "/reports/changes",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -5603,7 +5954,7 @@
       "path": "/reports/changes",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 4,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -5659,7 +6010,7 @@
       "path": "/reports/changes",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -5687,7 +6038,7 @@
       "path": "/reports/workload",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 13,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -5723,7 +6074,7 @@
       "path": "/reports/workload",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 6,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -5783,7 +6134,7 @@
       "path": "/reports/workload",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 10,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -5807,7 +6158,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}/complete",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 5,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -5867,7 +6218,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -5895,7 +6246,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}",
       "status": 404,
       "expected_status": 404,
-      "response_ms": 10,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -5947,7 +6298,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone_id}}",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 7,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -5971,7 +6322,7 @@
       "path": "/projects/{{project_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 13,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -6003,7 +6354,7 @@
       "path": "/projects/{{project2_id}}/milestones/{{b_milestone_id}}/team",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 16,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -6027,7 +6378,7 @@
       "path": "/projects/{{project_id}}/milestones",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 8,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -6043,7 +6394,7 @@
       "path": "/projects/{{project_id}}/milestones/{{milestone3_id}}/archive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 13,
+      "response_ms": 8,
       "passed": true,
       "assertions": [
         {
@@ -6071,7 +6422,7 @@
       "path": "/projects/{{project_id}}",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -6119,7 +6470,7 @@
       "path": "/projects/{{project_id}}/complete",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 8,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -6151,7 +6502,7 @@
       "path": "/projects/{{project_id}}/complete",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 10,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -6175,7 +6526,7 @@
       "path": "/projects/{{project_id}}",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 8,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -6251,7 +6602,7 @@
       "path": "/projects",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 12,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -6275,7 +6626,7 @@
       "path": "/projects",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 8,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -6299,7 +6650,7 @@
       "path": "/projects/{{project_id}}",
       "status": 404,
       "expected_status": 404,
-      "response_ms": 7,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -6323,7 +6674,7 @@
       "path": "/projects/{{project_id}}/unarchive",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 14,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -6351,7 +6702,7 @@
       "path": "/admin/seed-demo",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 5,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -6375,7 +6726,7 @@
       "path": "/admin/seed-demo",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 259,
+      "response_ms": 176,
       "passed": true,
       "assertions": [
         {
@@ -6407,7 +6758,7 @@
       "path": "/admin/seed-demo",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 10,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -6435,7 +6786,7 @@
       "path": "/reports/overview",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 12,
+      "response_ms": 10,
       "passed": true,
       "assertions": [
         {
@@ -6495,7 +6846,7 @@
       "path": "/assistant/chat",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 27,
+      "response_ms": 13,
       "passed": true,
       "assertions": [
         {
@@ -6531,7 +6882,7 @@
       "path": "/assistant/chat",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 6,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -6555,7 +6906,7 @@
       "path": "/assistant/chat",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -6611,7 +6962,7 @@
       "path": "/assistant/chat",
       "status": 400,
       "expected_status": 400,
-      "response_ms": 5,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -6643,7 +6994,7 @@
       "path": "/assistant/chat",
       "status": 401,
       "expected_status": 401,
-      "response_ms": 4,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -6675,7 +7026,7 @@
       "path": "/users",
       "status": 201,
       "expected_status": 201,
-      "response_ms": 8,
+      "response_ms": 7,
       "passed": true,
       "assertions": [
         {
@@ -6739,7 +7090,7 @@
       "path": "/auth/login",
       "status": 401,
       "expected_status": 401,
-      "response_ms": 12,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -6763,7 +7114,7 @@
       "path": "/auth/login",
       "status": 401,
       "expected_status": 401,
-      "response_ms": 8,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -6787,7 +7138,7 @@
       "path": "/auth/login",
       "status": 401,
       "expected_status": 401,
-      "response_ms": 10,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -6835,7 +7186,7 @@
       "path": "/auth/login",
       "status": 429,
       "expected_status": 429,
-      "response_ms": 2,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -6871,7 +7222,7 @@
       "path": "/users/{{locktest_id}}/reset-password",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -6895,7 +7246,7 @@
       "path": "/auth/login",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 9,
+      "response_ms": 5,
       "passed": true,
       "assertions": [
         {
@@ -6923,7 +7274,7 @@
       "path": "/users/{{admin_id}}/reset-password",
       "status": 409,
       "expected_status": 409,
-      "response_ms": 10,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -6955,7 +7306,7 @@
       "path": "/audit",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -7003,7 +7354,7 @@
       "path": "/audit",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -7031,7 +7382,7 @@
       "path": "/audit",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 7,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -7063,7 +7414,7 @@
       "path": "/audit",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 8,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -7123,7 +7474,7 @@
       "path": "/audit",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 3,
+      "response_ms": 2,
       "passed": true,
       "assertions": [
         {
@@ -7147,7 +7498,7 @@
       "path": "/audit",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 5,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {
@@ -7171,7 +7522,7 @@
       "path": "/projects/{{project_id}}/history",
       "status": 200,
       "expected_status": 200,
-      "response_ms": 8,
+      "response_ms": 6,
       "passed": true,
       "assertions": [
         {
@@ -7199,7 +7550,7 @@
       "path": "/projects/{{project_id}}/history",
       "status": 404,
       "expected_status": 404,
-      "response_ms": 16,
+      "response_ms": 4,
       "passed": true,
       "assertions": [
         {
@@ -7223,7 +7574,7 @@
       "path": "/projects/{{project_id}}/history",
       "status": 403,
       "expected_status": 403,
-      "response_ms": 13,
+      "response_ms": 3,
       "passed": true,
       "assertions": [
         {

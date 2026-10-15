@@ -17,6 +17,7 @@ class TaskOut(DeliverableOut):
     milestone_name: str
     assignee_name: str | None
     is_overdue: bool = Field(description="Past its due date and not done")
+    comment_count: int = Field(default=0, description="Live comments on the task")
 
 
 class TaskList(BaseModel):

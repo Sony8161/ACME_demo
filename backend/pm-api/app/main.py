@@ -20,6 +20,7 @@ from app.domains.assignments.router import router as team_router
 from app.domains.assistant.router import router as assistant_router
 from app.domains.audit.router import audit_router, project_history_router
 from app.domains.auth.router import router as auth_router
+from app.domains.comments.router import router as comments_router
 from app.domains.costs.router import router as costs_router
 from app.domains.deliverables.router import router as deliverables_router
 from app.domains.dependencies.router import milestone_router as milestone_dependencies_router
@@ -73,7 +74,7 @@ def create_app() -> FastAPI:
         auth_router, users_router, projects_router, milestones_router, deliverables_router, team_router,
         costs_router, reports_router, admin_router, audit_router, project_history_router,
         project_tasks_router, my_tasks_router, milestone_dependencies_router, project_dependencies_router,
-        assistant_router, search_router,
+        assistant_router, search_router, comments_router,
     ):
         app.include_router(router)
 
