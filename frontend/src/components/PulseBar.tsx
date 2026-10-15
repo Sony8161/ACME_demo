@@ -1,6 +1,6 @@
 import { Box, Tooltip, Typography } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import type { RiskLevel } from '../api/types'
-import { tint } from '../theme'
 
 export interface PulseTick {
   id: string
@@ -40,7 +40,7 @@ export function PulseBar({ schedulePct, workPct, risk, ticks = [], showLabels = 
 
   return (
     <Box role="img" aria-label={label} sx={{ width: '100%' }}>
-      <Box sx={{ position: 'relative', height: 12, borderRadius: 6, bgcolor: tint.rule, overflow: 'visible' }}>
+      <Box sx={{ position: 'relative', height: 12, borderRadius: 6, bgcolor: (t) => alpha(t.palette.primary.main, 0.14), overflow: 'visible' }}>
         <Box sx={{ height: '100%', width: `${work}%`, borderRadius: 6, bgcolor: FILL[risk], transition: 'width .3s' }} />
         {ticks.map((tick) => (
           <Tooltip key={tick.id} title={tick.name} arrow describeChild>

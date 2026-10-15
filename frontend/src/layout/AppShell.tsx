@@ -19,6 +19,7 @@ import { AssistantChat } from '../components/AssistantChat'
 import { GlobalSearch } from '../components/GlobalSearch'
 import { SampleDataFlow } from '../components/SampleDataFlow'
 import { ToastProvider } from '../components/ToastProvider'
+import { tint } from '../theme'
 import { moreFor, navFor, type NavItem } from './nav'
 
 const ICONS: Record<NavItem['icon'], ReactElement> = {
@@ -67,7 +68,7 @@ export function AppShell() {
   return (
     <ToastProvider>
       <Box sx={{ minHeight: '100vh' }}>
-        <AppBar position="fixed" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', backgroundImage: 'none', bgcolor: '#ffffff', color: 'text.primary' }}>
+        <AppBar position="fixed" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', backgroundImage: 'none', bgcolor: 'background.paper', color: 'text.primary' }}>
           <Toolbar sx={{ gap: 2, minHeight: { xs: 56, md: 60 } }}>
             <Box aria-hidden sx={{ width: 24, height: 24, borderRadius: '3px', bgcolor: 'primary.light', border: '1px solid', borderColor: 'primary.main', flexShrink: 0 }} />
             <Typography variant="h6" noWrap sx={{ mr: isDesktop ? 2 : 0, flexGrow: isDesktop ? 0 : 1 }}>ACME Projects</Typography>
@@ -78,8 +79,8 @@ export function AppShell() {
                     key={item.to} component={NavLink} to={item.to} selected={current === item.to}
                     sx={{
                       flexGrow: 0, px: 1.75, borderRadius: 0, borderBottom: '3px solid transparent', mt: '3px', fontWeight: 600,
-                      '&.Mui-selected': { bgcolor: 'rgba(94,234,212,.22)', borderBottomColor: 'primary.main', color: 'primary.dark', fontWeight: 800 },
-                      '&.Mui-selected:hover': { bgcolor: 'rgba(94,234,212,.34)' },
+                      '&.Mui-selected': { bgcolor: tint.selected, borderBottomColor: 'primary.main', color: 'primary.dark', fontWeight: 800 },
+                      '&.Mui-selected:hover': { bgcolor: tint.strong },
                     }}
                   >
                     <ListItemIcon sx={{ minWidth: 28, color: 'inherit' }}>{ICONS[item.icon]}</ListItemIcon>
@@ -91,7 +92,7 @@ export function AppShell() {
                     aria-haspopup="menu" selected={current === 'more'} onClick={(e) => setMoreAnchor(e.currentTarget)}
                     sx={{
                       flexGrow: 0, px: 1.75, borderRadius: 0, borderBottom: '3px solid transparent', mt: '3px', fontWeight: 600,
-                      '&.Mui-selected': { bgcolor: 'rgba(94,234,212,.22)', borderBottomColor: 'primary.main', color: 'primary.dark', fontWeight: 800 },
+                      '&.Mui-selected': { bgcolor: tint.selected, borderBottomColor: 'primary.main', color: 'primary.dark', fontWeight: 800 },
                     }}
                   >
                     <ListItemText primary="More" slotProps={{ primary: { sx: { fontWeight: 'inherit', fontSize: '0.875rem' } } }} />

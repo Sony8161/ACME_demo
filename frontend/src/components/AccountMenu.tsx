@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Tooltip, Typography } from '@mui/material'
+import CheckIcon from '@mui/icons-material/Check'
 import LogoutIcon from '@mui/icons-material/LogoutOutlined'
 import type { User } from '../api/types'
 import { initials } from '../tasks'
+import { useThemeMode, type ThemeChoice } from '../themeMode'
 
 /** One place for who you are signed in as and for signing out, instead of a name, a role tag and an icon along the top bar. */
 export function AccountMenu({ user, onSignOut }: { user: User; onSignOut: () => void }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
+  const { choice, setChoice } = useThemeMode()
   return (
     <>
       <Tooltip title={user.name}>
@@ -25,6 +28,14 @@ export function AccountMenu({ user, onSignOut }: { user: User; onSignOut: () => 
           <Typography sx={{ fontWeight: 700 }}>{user.name}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>{user.role}</Typography>
         </Box>
+        <Divider />
+        <Typography variant="overline" component="div" sx={{ px: 2, pt: 1 }}>Appearance</Typography>
+        {(['system', 'light', 'dark'] as ThemeChoice[]).map((c) => (
+          <MenuItem key={c} role="menuitemradio" aria-checked={choice === c} onClick={() => { setChoice(c); setAnchor(null) }}>
+            <ListItemIcon>{choice === c ? <CheckIcon fontSize="small" /> : null}</ListItemIcon>
+            {c.charAt(0).toUpperCase() + c.slice(1)}
+          </MenuItem>
+        ))}
         <Divider />
         <MenuItem onClick={() => { setAnchor(null); onSignOut() }}>
           <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>

@@ -1,21 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Box, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material'
+import { Box, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from '@mui/material'
 import { visuallyHidden } from '@mui/utils'
 import { api } from '../api/client'
 import type { Workload } from '../api/types'
 import { useApi } from '../api/useApi'
 import { Async } from './Async'
+import { heatColors, type Level } from './heatColors'
 import { EmptyState } from './EmptyState'
-
-type Level = 'free' | 'light' | 'medium' | 'full'
-
-// Teal steps; each pair of colours is checked for contrast by the accessibility scan. The hours are always written in the cell too.
-const LEVEL: Record<Level, { bg: string; fg: string; label: string }> = {
-  free: { bg: 'transparent', fg: 'text.secondary', label: 'Free' },
-  light: { bg: '#ccfbf1', fg: '#134e4a', label: 'Up to half booked' },
-  medium: { bg: '#5eead4', fg: '#134e4a', label: 'Mostly booked' },
-  full: { bg: '#0f766e', fg: '#ffffff', label: 'Full week (40 h)' },
-}
 
 function levelOf(hours: number, capacity: number): Level {
   if (hours <= 0) return 'free'
@@ -32,6 +23,7 @@ export function WorkloadHeatmap() {
 }
 
 function Map({ workload }: { workload: Workload }) {
+  const LEVEL = heatColors(useTheme().palette.mode)
   const [filter, setFilter] = useState('')
   const { capacityPerWeek: capacity, weeks, people } = workload
   const shown = useMemo(() => people.filter((p) => p.name.toLowerCase().includes(filter.trim().toLowerCase())), [people, filter])

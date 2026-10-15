@@ -7,6 +7,7 @@ import SendIcon from '@mui/icons-material/SendOutlined'
 import { api } from '../api/client'
 import type { ChatMessage, ChatReply, Role } from '../api/types'
 import { errorText } from '../api/useApi'
+import { tint } from '../theme'
 
 const SUGGESTIONS: Record<Role, string[]> = {
   employee: ['What am I working on?', 'Show my tasks', 'What is late?'],
@@ -103,7 +104,7 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
         boxShadow: '0 12px 32px -12px rgba(8,112,105,.45)',
       }}
     >
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', px: 2, py: 1, bgcolor: 'rgba(94,234,212,.22)', borderBottom: 1, borderColor: 'divider' }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', px: 2, py: 1, bgcolor: tint.selected, borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h6" component="h2" sx={{ flexGrow: 1 }}>Assistant</Typography>
         <Tooltip title="Clear the conversation">
           <span><IconButton size="small" aria-label="Clear the conversation" disabled={turns.length === 0 || busy} onClick={() => { setTurns([]); setError(null) }}><ClearIcon fontSize="small" /></IconButton></span>
@@ -128,7 +129,7 @@ export function AssistantChat({ role, compact }: { role: Role; compact: boolean 
             <Box
               sx={{
                 p: 1.25, borderRadius: '3px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.875rem', border: 1, borderColor: 'divider',
-                bgcolor: t.role === 'user' ? 'rgba(94,234,212,.3)' : '#ffffff',
+                bgcolor: t.role === 'user' ? tint.strong : 'background.paper',
               }}
             >
               {t.content}

@@ -38,7 +38,7 @@ function Diamond({ left, tone, title }: { left: number; tone: Tone; title: strin
       aria-hidden title={title}
       sx={{
         position: 'absolute', top: '50%', left: `${left}%`, width: 14, height: 14, ml: '-7px', mt: '-7px', transform: 'rotate(45deg)',
-        bgcolor: COLOR[tone], border: '2px solid #fff', borderRadius: '3px', boxShadow: '0 2px 6px rgba(11,79,74,.35)',
+        bgcolor: COLOR[tone], border: '2px solid', borderColor: 'background.paper', borderRadius: '3px', boxShadow: '0 2px 6px rgba(11,79,74,.35)',
       }}
     />
   )
@@ -80,7 +80,7 @@ export function TimelineChart({ rows, today, label, footer }: { rows: TimelineRo
                 variant="caption"
                 sx={{
                   position: 'absolute', top: 26, left: `${scale.today}%`, transform: 'translateX(-50%)', px: 0.75, lineHeight: '16px', fontSize: 11, fontWeight: 700,
-                  bgcolor: 'primary.dark', color: '#fff', borderRadius: '2px', whiteSpace: 'nowrap',
+                  bgcolor: 'primary.dark', color: 'primary.contrastText', borderRadius: '2px', whiteSpace: 'nowrap',
                 }}
               >
                 Today
