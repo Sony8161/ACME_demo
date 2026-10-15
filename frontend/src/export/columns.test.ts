@@ -14,7 +14,7 @@ const project = {
 } as unknown as Project
 const task: Task = {
   id: 't1', milestoneId: 'ms1', name: 'Login page', description: '', done: false, status: 'in_progress', priority: 'high', dueDate: '2026-10-20',
-  assigneeId: 'u1', doneAt: null, projectId: 'p1', projectName: 'Website', milestoneName: 'Build', assigneeName: 'Alex Kim', isOverdue: true,
+  assigneeId: 'u1', doneAt: null, projectId: 'p1', projectName: 'Website', milestoneName: 'Build', assigneeName: 'Alex Kim', isOverdue: true, commentCount: 0,
 }
 const labels = (cols: { label: string }[]) => cols.map((c) => c.label)
 const row = <T,>(cols: { get: (r: T) => unknown }[], r: T) => cols.map((c) => c.get(r))

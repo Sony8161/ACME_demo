@@ -5,6 +5,7 @@ import { api } from '../api/client'
 import type { Task, TaskList, TaskStatus } from '../api/types'
 import { errorText, useApi } from '../api/useApi'
 import { Async } from '../components/Async'
+import { TaskDetailDialog } from '../components/TaskDetailDialog'
 import { formatDate } from '../format'
 import { PRIORITY_LABEL, STATUS_LABEL } from '../tasks'
 
@@ -12,6 +13,7 @@ import { PRIORITY_LABEL, STATUS_LABEL } from '../tasks'
 export function MyTasks() {
   const state = useApi(() => api.get<TaskList>('/tasks/mine'), [])
   const [message, setMessage] = useState<string | null>(null)
+  const [detail, setDetail] = useState<Task | null>(null)
 
   const move = async (task: Task, to: TaskStatus) => {
     setMessage(null)
@@ -41,8 +43,10 @@ export function MyTasks() {
                 {list.items.map((t) => (
                   <TableRow key={t.id} hover>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 700 }}>{t.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">{t.milestoneName}</Typography>
+                      <Link component="button" type="button" variant="body2" underline="hover" onClick={() => setDetail(t)} sx={{ fontWeight: 700, textAlign: 'left', color: 'text.primary' }}>{t.name}</Link>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        {t.milestoneName}{t.commentCount > 0 ? ` · ${t.commentCount} ${t.commentCount === 1 ? 'comment' : 'comments'}` : ''}
+                      </Typography>
                     </TableCell>
                     <TableCell><Link component={RouterLink} to={`/projects/${t.projectId}`}>{t.projectName}</Link></TableCell>
                     <TableCell>{PRIORITY_LABEL[t.priority]}</TableCell>
@@ -63,6 +67,7 @@ export function MyTasks() {
           </TableContainer>
         )}
       </Async>
+      <TaskDetailDialog task={detail} onClose={() => setDetail(null)} onChanged={state.reload} />
     </>
   )
 }

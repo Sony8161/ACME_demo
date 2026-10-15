@@ -114,6 +114,7 @@ export interface Task extends Deliverable {
   milestoneName: string
   assigneeName: string | null
   isOverdue: boolean
+  commentCount: number
 }
 export interface TaskList { items: Task[]; total: number }
 
@@ -295,3 +296,6 @@ export interface Changes { since: string; total: number; projects: number; items
 export interface WorkItem { projectName: string; milestoneName: string }
 export interface WorkloadPerson { userId: string; name: string; jobTitle: string; managerName: string | null; hours: number[]; work: WorkItem[][] }
 export interface Workload { capacityPerWeek: number; weeks: string[]; people: WorkloadPerson[] }
+
+export interface TaskComment { id: string; authorId: string; authorName: string; body: string; createdAt: string; canRemove: boolean }
+export interface CommentList { items: TaskComment[]; total: number }

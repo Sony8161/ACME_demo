@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Avatar, Box, Chip, IconButton, ListItemText, Menu, MenuItem, Paper, Tooltip, Typography } from '@mui/material'
+import { Avatar, Box, Chip, IconButton, Link, ListItemText, Menu, MenuItem, Paper, Tooltip, Typography } from '@mui/material'
+import CommentIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import MoreIcon from '@mui/icons-material/MoreHoriz'
 import type { Task, TaskStatus } from '../api/types'
 import { dueIn, formatDate } from '../format'
@@ -12,10 +13,12 @@ interface Props {
   showProject?: boolean
   onMove: (task: Task, to: TaskStatus) => void
   onEdit?: (task: Task) => void
+  /** Open the task (its details and comments). When given, the task's name is a button. */
+  onOpen?: (task: Task) => void
 }
 
 /** The actions menu is also the keyboard and screen-reader way to move a card, because dragging needs a mouse. */
-export function TaskMenu({ task, who, onMove, onEdit }: Omit<Props, 'showProject'>) {
+export function TaskMenu({ task, who, onMove, onEdit }: Omit<Props, 'showProject' | 'onOpen'>) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
   const close = () => setAnchor(null)
   return (
@@ -40,7 +43,7 @@ export function TaskMenu({ task, who, onMove, onEdit }: Omit<Props, 'showProject
 }
 
 /** One task on the board: what it is, which milestone, how urgent, when it is due and who owns it. */
-export function TaskCard({ task, who, showProject, onMove, onEdit }: Props) {
+export function TaskCard({ task, who, showProject, onMove, onEdit, onOpen }: Props) {
   const draggable = COLUMNS.some((c) => canMove(task, c.value, who))
   return (
     <Paper
@@ -50,7 +53,13 @@ export function TaskCard({ task, who, showProject, onMove, onEdit }: Props) {
     >
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          <Typography variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>{task.name}</Typography>
+          {onOpen ? (
+            <Link component="button" type="button" variant="body2" underline="hover" onClick={() => onOpen(task)} sx={{ fontWeight: 700, overflowWrap: 'anywhere', textAlign: 'left', color: 'text.primary' }}>
+              {task.name}
+            </Link>
+          ) : (
+            <Typography variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>{task.name}</Typography>
+          )}
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
             {showProject ? `${task.projectName} · ` : ''}{task.milestoneName}
           </Typography>
@@ -66,6 +75,9 @@ export function TaskCard({ task, who, showProject, onMove, onEdit }: Props) {
             size="small" variant={task.isOverdue ? 'filled' : 'outlined'} color={task.isOverdue ? 'error' : 'default'}
             label={dueIn(task.dueDate) ?? `Due ${formatDate(task.dueDate)}`}
           />
+        )}
+        {task.commentCount > 0 && (
+          <Chip size="small" variant="outlined" icon={<CommentIcon />} label={task.commentCount} aria-label={`${task.commentCount} ${task.commentCount === 1 ? 'comment' : 'comments'}`} />
         )}
         <Box sx={{ flexGrow: 1 }} />
         {task.assigneeName ? (

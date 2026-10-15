@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Avatar, Box, Button, Chip, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
+import { Avatar, Box, Button, Chip, Link, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import { api } from '../api/client'
 import type { Task, TaskStatus } from '../api/types'
 import { exportFileName, taskColumns } from '../export/columns'
@@ -26,6 +26,8 @@ interface Props {
   who: Actor
   onMove: (task: Task, to: TaskStatus) => void
   onEdit?: (task: Task) => void
+  /** Open the task (details and comments). When given, the task's name is a button. */
+  onOpen?: (task: Task) => void
   /** Who a task can be given to. With `onChanged`, and the right to manage, this turns on Move to and Set owner for ticked tasks. */
   people?: { id: string; name: string }[]
   onChanged?: () => void
@@ -47,7 +49,7 @@ const VALUE: Record<Key, (t: Task) => string | number | null> = {
 /** The same tasks as the board, as rows: sortable columns, tick boxes and 25 rows a page. */
 const taskPath = (t: Task) => `/projects/${t.projectId}/milestones/${t.milestoneId}/deliverables/${t.id}`
 
-export function TaskTable({ tasks, who, onMove, onEdit, people = [], onChanged }: Props) {
+export function TaskTable({ tasks, who, onMove, onEdit, onOpen, people = [], onChanged }: Props) {
   const toast = useToast()
   const [exporting, setExporting] = useState(false)
   const [menu, setMenu] = useState<{ kind: 'move' | 'owner'; anchor: HTMLElement } | null>(null)
@@ -89,8 +91,14 @@ export function TaskTable({ tasks, who, onMove, onEdit, people = [], onChanged }
             <TableRow key={t.id} hover selected={selection.has(t.id)}>
               <SelectCell label={`Select ${t.name}`} checked={selection.has(t.id)} onChange={() => selection.toggle(t.id)} />
               <TableCell>
-                <Typography variant="body2" sx={{ fontWeight: 700 }}>{t.name}</Typography>
-                <Typography variant="caption" color="text.secondary">{t.milestoneName}</Typography>
+                {onOpen ? (
+                  <Link component="button" type="button" variant="body2" underline="hover" onClick={() => onOpen(t)} sx={{ fontWeight: 700, textAlign: 'left', color: 'text.primary' }}>{t.name}</Link>
+                ) : (
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>{t.name}</Typography>
+                )}
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                  {t.milestoneName}{t.commentCount > 0 ? ` · ${t.commentCount} ${t.commentCount === 1 ? 'comment' : 'comments'}` : ''}
+                </Typography>
               </TableCell>
               <TableCell><Chip size="small" variant="outlined" label={STATUS_LABEL[t.status]} /></TableCell>
               <TableCell>{PRIORITY_LABEL[t.priority]}</TableCell>

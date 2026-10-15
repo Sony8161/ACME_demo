@@ -10,12 +10,13 @@ interface Props {
   who: Actor
   onMove: (task: Task, to: TaskStatus) => void
   onEdit?: (task: Task) => void
+  onOpen?: (task: Task) => void
   /** When given, the To do column ends with a one-line "Add a task" box. It resolves once the task is saved. */
   onQuickAdd?: (name: string) => Promise<unknown>
 }
 
 /** Three columns, To do, In progress and Done. Drag a card to move it, or use its menu. */
-export function TaskBoard({ tasks, who, onMove, onEdit, onQuickAdd }: Props) {
+export function TaskBoard({ tasks, who, onMove, onEdit, onOpen, onQuickAdd }: Props) {
   const [over, setOver] = useState<TaskStatus | null>(null)
   const [draft, setDraft] = useState('')
   const [adding, setAdding] = useState(false)
@@ -56,7 +57,7 @@ export function TaskBoard({ tasks, who, onMove, onEdit, onQuickAdd }: Props) {
           >
             <Typography variant="overline" component="h3" sx={{ display: 'block', mb: 1, px: 0.5 }}>{col.label} · {items.length}</Typography>
             <Stack spacing={1.25}>
-              {items.map((t) => <TaskCard key={t.id} task={t} who={who} onMove={onMove} onEdit={onEdit} />)}
+              {items.map((t) => <TaskCard key={t.id} task={t} who={who} onMove={onMove} onEdit={onEdit} onOpen={onOpen} />)}
               {col.value === 'todo' && onQuickAdd && (
                 <Stack
                   component="form" direction="row" spacing={1}

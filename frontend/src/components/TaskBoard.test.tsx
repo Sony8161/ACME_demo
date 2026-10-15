@@ -6,7 +6,7 @@ import { TaskBoard } from './TaskBoard'
 
 const task = (over: Partial<Task> = {}): Task => ({
   id: 't1', milestoneId: 'm1', name: 'Wireframes', description: '', done: false, status: 'todo', priority: 'medium', dueDate: null,
-  assigneeId: null, doneAt: null, projectId: 'p1', projectName: 'Website', milestoneName: 'Design', assigneeName: null, isOverdue: false, ...over,
+  assigneeId: null, doneAt: null, projectId: 'p1', projectName: 'Website', milestoneName: 'Design', assigneeName: null, isOverdue: false, commentCount: 0, ...over,
 })
 const tasks = [
   task(),
@@ -136,5 +136,26 @@ describe('TaskBoard', () => {
     expect(screen.getByRole('menuitem', { name: 'Move to In progress' })).not.toHaveAttribute('aria-disabled')
     expect(screen.getByRole('menuitem', { name: 'Move to Done' })).toHaveAttribute('aria-disabled', 'true')
     expect(screen.queryByRole('menuitem', { name: 'Edit task' })).not.toBeInTheDocument()
+  })
+})
+
+describe('TaskBoard comments', () => {
+  it('shows how many comments a card has, and no badge when there are none', () => {
+    render(<TaskBoard tasks={[task({ id: 'a', name: 'With notes', commentCount: 2 }), task({ id: 'b', name: 'Without' })]} who={{ canManage: true, userId: 'u' }} onMove={() => {}} />)
+    expect(screen.getByLabelText('2 comments')).toBeInTheDocument()
+    expect(screen.queryByLabelText(/comment/)).toBe(screen.getByLabelText('2 comments'))
+  })
+
+  it('says "1 comment" for one', () => {
+    render(<TaskBoard tasks={[task({ commentCount: 1 })]} who={{ canManage: true, userId: 'u' }} onMove={() => {}} />)
+    expect(screen.getByLabelText('1 comment')).toBeInTheDocument()
+  })
+
+  it('opens a task when its name is pressed, for someone who cannot manage it too', async () => {
+    const onOpen = vi.fn()
+    const one = task({ name: 'Open me' })
+    render(<TaskBoard tasks={[one]} who={{ canManage: false, userId: 'u' }} onMove={() => {}} onOpen={onOpen} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Open me' }))
+    expect(onOpen).toHaveBeenCalledWith(one)
   })
 })

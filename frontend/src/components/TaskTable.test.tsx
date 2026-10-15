@@ -13,7 +13,7 @@ const task = (over: Partial<Task> = {}): Task => {
   return {
     id: `t${counter}`, milestoneId: 'm1', name: `Task ${counter}`, description: '', done: false, status: 'todo', priority: 'medium',
     dueDate: null, assigneeId: null, doneAt: null, projectId: 'p1', projectName: 'Website', milestoneName: 'Build',
-    assigneeName: null, isOverdue: false, ...over,
+    assigneeName: null, isOverdue: false, commentCount: 0, ...over,
   }
 }
 const who = { canManage: true, userId: 'u1' }
@@ -171,5 +171,24 @@ describe('TaskTable export and bulk actions', () => {
     expect(screen.queryByRole('button', { name: 'Move to' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Set owner' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Export 1 selected' })).toBeInTheDocument() // exporting is still fine
+  })
+})
+
+describe('TaskTable comments', () => {
+  beforeEach(() => { counter = 0 })
+
+  it('shows how many comments a task has, and nothing when there are none', () => {
+    show([task({ name: 'Task one', commentCount: 3 }), task({ name: 'Task two', commentCount: 1 }), task({ name: 'Task three' })])
+    expect(screen.getByText(/3 comments/)).toBeInTheDocument()
+    expect(screen.getByText(/1 comment(?!s)/)).toBeInTheDocument()
+    expect(screen.queryByText(/0 comments/)).not.toBeInTheDocument()
+  })
+
+  it('opens the task when its name is pressed', async () => {
+    const onOpen = vi.fn()
+    const one = task({ name: 'Task one' })
+    render(<TaskTable tasks={[one]} who={who} onMove={() => {}} onOpen={onOpen} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Task one' }))
+    expect(onOpen).toHaveBeenCalledWith(one)
   })
 })

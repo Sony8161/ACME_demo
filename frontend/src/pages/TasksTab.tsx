@@ -7,6 +7,7 @@ import { errorText, useApi } from '../api/useApi'
 import { useAuth } from '../auth/context'
 import { Async } from '../components/Async'
 import { TaskBoard } from '../components/TaskBoard'
+import { TaskDetailDialog } from '../components/TaskDetailDialog'
 import { TaskTable } from '../components/TaskTable'
 import { useToast } from '../components/toast'
 import { STATUS_LABEL } from '../tasks'
@@ -29,6 +30,7 @@ export function TasksTab({ projectId, canManage, milestones, onChanged }: Props)
   const [milestone, setMilestone] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [dialog, setDialog] = useState<{ task: Task | null } | null>(null)
+  const [detail, setDetail] = useState<Task | null>(null)
   const tasks = useApi(
     () => api.get<TaskList>(`/projects/${projectId}/tasks`, { assignee_id: owner || undefined, milestone_id: milestone || undefined }),
     [projectId, owner, milestone],
@@ -96,13 +98,14 @@ export function TasksTab({ projectId, canManage, milestones, onChanged }: Props)
       <Async state={tasks}>
         {(list) => (
           view === 'board'
-            ? <TaskBoard tasks={list.items} who={who} onMove={move} onEdit={(task) => setDialog({ task })} onQuickAdd={canManage && target ? quickAdd : undefined} />
+            ? <TaskBoard tasks={list.items} who={who} onMove={move} onEdit={(task) => setDialog({ task })} onOpen={setDetail} onQuickAdd={canManage && target ? quickAdd : undefined} />
             : <TaskTable
-              tasks={list.items} who={who} onMove={move} onEdit={(task) => setDialog({ task })}
+              tasks={list.items} who={who} onMove={move} onEdit={(task) => setDialog({ task })} onOpen={setDetail}
               people={people.map(([id, name]) => ({ id, name }))} onChanged={canManage ? changed : undefined}
             />
         )}
       </Async>
+      <TaskDetailDialog task={detail} onClose={() => setDetail(null)} onChanged={tasks.reload} />
       {dialog && (
         <TaskDialog
           key={dialog.task?.id ?? 'new'} open projectId={projectId} task={dialog.task} milestones={live}

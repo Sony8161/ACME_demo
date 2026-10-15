@@ -14,7 +14,7 @@ vi.setConfig({ testTimeout: 30_000 })
 const body = (c: InternalAxiosRequestConfig) => JSON.parse(c.data as string)
 const task = (over: Record<string, unknown> = {}) => ({
   id: 't1', milestone_id: 'm1', name: 'Wireframes', description: '', done: false, status: 'todo', priority: 'medium', due_date: null,
-  assignee_id: null, done_at: null, project_id: 'p1', project_name: 'Website', milestone_name: 'Design', assignee_name: null, is_overdue: false, ...over,
+  assignee_id: null, done_at: null, project_id: 'p1', project_name: 'Website', milestone_name: 'Design', assignee_name: null, is_overdue: false, comment_count: 0, ...over,
 })
 const list = (items: unknown[]) => ({ items, total: items.length })
 const team = { items: [
@@ -229,5 +229,30 @@ describe('TasksTab: an employee', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Task actions: Spec' }))
     expect(screen.getByRole('menuitem', { name: 'Move to To do' })).not.toHaveAttribute('aria-disabled') // Spec is theirs
     expect(screen.getByRole('menuitem', { name: 'Move to Done' })).toHaveAttribute('aria-disabled', 'true')
+  })
+})
+
+describe('TasksTab comments', () => {
+  const thread = { items: [{ id: 'c1', author_id: 'u9', author_name: 'Maria Lopez', body: 'Waiting on the logo', created_at: '2026-10-14T09:30:00Z', can_remove: false }], total: 1 }
+  const comments = { 'GET /projects/p1/milestones/m1/deliverables/t1/comments': thread }
+
+  it.each([['a manager', true], ['an employee', false]])('lets %s open a task from the board and read its comments', async (_, canManage) => {
+    signIn(canManage ? 'manager' : 'employee', { id: 'manager-1' })
+    open(canManage, comments)
+    await userEvent.click(await screen.findByRole('button', { name: 'Wireframes' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Wireframes' })
+    expect(await within(dialog).findByText('Waiting on the logo')).toBeInTheDocument()
+  })
+
+  it('opens a task from the list view too, and refreshes the tasks after a comment is posted', async () => {
+    signIn('manager', { id: 'manager-1' })
+    const calls = open(true, { ...comments, 'POST /projects/p1/milestones/m1/deliverables/t1/comments': thread.items[0] })
+    await userEvent.click(await screen.findByRole('button', { name: 'List' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Wireframes' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Wireframes' })
+    const before = calls.filter((c) => c === 'GET /projects/:id/tasks'.replace(':id', 'p1') + '/tasks'.slice(0, 0)).length
+    await userEvent.type(await within(dialog).findByRole('textbox', { name: 'Add a comment' }), 'Hello')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Post' }))
+    await waitFor(() => expect(calls.filter((c) => c === 'GET /projects/p1/tasks').length).toBeGreaterThan(before))
   })
 })

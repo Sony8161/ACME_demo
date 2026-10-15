@@ -9,7 +9,7 @@ vi.setConfig({ testTimeout: 30_000 })
 
 const task = (over: Record<string, unknown> = {}) => ({
   id: 't1', milestone_id: 'm1', name: 'Wireframes', description: '', done: false, status: 'todo', priority: 'high', due_date: '2026-10-20',
-  assignee_id: 'employee-1', done_at: null, project_id: 'p1', project_name: 'Website redesign', milestone_name: 'Design', assignee_name: 'Alex Kim', is_overdue: false, ...over,
+  assignee_id: 'employee-1', done_at: null, project_id: 'p1', project_name: 'Website redesign', milestone_name: 'Design', assignee_name: 'Alex Kim', is_overdue: false, comment_count: 0, ...over,
 })
 const list = (items: unknown[]) => ({ items, total: items.length })
 const page = () => renderPage(<MyTasks />, '/my-work', '/my-work')
@@ -46,7 +46,7 @@ describe('MyTasks section', () => {
     // a finished task has no action, only the word Done (in its status chip and in the action column)
     const doneRow = screen.getByText('Press kit').closest('tr') as HTMLElement
     expect(within(doneRow).getAllByText('Done')).toHaveLength(2)
-    expect(within(doneRow).queryByRole('button')).not.toBeInTheDocument()
+    expect(within(doneRow).queryByRole('button', { name: /^(Start|Pause)/ })).not.toBeInTheDocument() // only its name, which opens it
   })
 
   it('shows the server\'s own sentence when a move fails', async () => {
@@ -60,5 +60,20 @@ describe('MyTasks section', () => {
     mockRoutes({ 'GET /tasks/mine': list([]) })
     page()
     expect(await screen.findByText('Nothing is assigned to you.')).toBeInTheDocument()
+  })
+})
+
+describe('MyTasks comments', () => {
+  it('opens a task to read and write comments, and shows how many there are', async () => {
+    mockRoutes({
+      'GET /tasks/mine': list([task({ comment_count: 2 })]),
+      'GET /projects/p1/milestones/m1/deliverables/t1/comments': { items: [{ id: 'c1', author_id: 'x', author_name: 'Maria Lopez', body: 'Please start with the home page', created_at: '2026-10-14T09:30:00Z', can_remove: false }], total: 1 },
+    })
+    page()
+    const row = (await screen.findByRole('button', { name: 'Wireframes' })).closest('tr') as HTMLElement
+    expect(row).toHaveTextContent('2 comments')
+    await userEvent.click(within(row).getByRole('button', { name: 'Wireframes' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Wireframes' })
+    expect(await within(dialog).findByText('Please start with the home page')).toBeInTheDocument()
   })
 })
