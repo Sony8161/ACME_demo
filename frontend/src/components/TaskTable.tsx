@@ -1,6 +1,9 @@
-import { useMemo } from 'react'
-import { Avatar, Box, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
+import { useMemo, useState } from 'react'
+import { Avatar, Box, Button, Chip, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
+import { api } from '../api/client'
 import type { Task, TaskStatus } from '../api/types'
+import { exportFileName, taskColumns } from '../export/columns'
+import { runBulk } from '../table/bulk'
 import { formatDate } from '../format'
 import { tint } from '../theme'
 import { COLUMNS, PRIORITIES, PRIORITY_LABEL, STATUS_LABEL, initials, type Actor } from '../tasks'
@@ -11,14 +14,21 @@ import { sortRows } from '../table/sort'
 import { usePaged } from '../table/usePaged'
 import { useSelection } from '../table/useSelection'
 import { useSort } from '../table/useSort'
+import { BulkResultDialog } from './BulkResultDialog'
+import { ExportButton } from './ExportButton'
+import { ExportDialog } from './ExportDialog'
 import { Pager } from './Pager'
 import { TaskMenu } from './TaskCard'
+import { useToast } from './toast'
 
 interface Props {
   tasks: Task[]
   who: Actor
   onMove: (task: Task, to: TaskStatus) => void
   onEdit?: (task: Task) => void
+  /** Who a task can be given to. With `onChanged`, and the right to manage, this turns on Move to and Set owner for ticked tasks. */
+  people?: { id: string; name: string }[]
+  onChanged?: () => void
 }
 
 type Key = 'none' | 'name' | 'status' | 'priority' | 'owner' | 'due'
@@ -35,15 +45,36 @@ const VALUE: Record<Key, (t: Task) => string | number | null> = {
 }
 
 /** The same tasks as the board, as rows: sortable columns, tick boxes and 25 rows a page. */
-export function TaskTable({ tasks, who, onMove, onEdit }: Props) {
+const taskPath = (t: Task) => `/projects/${t.projectId}/milestones/${t.milestoneId}/deliverables/${t.id}`
+
+export function TaskTable({ tasks, who, onMove, onEdit, people = [], onChanged }: Props) {
+  const toast = useToast()
+  const [exporting, setExporting] = useState(false)
+  const [menu, setMenu] = useState<{ kind: 'move' | 'owner'; anchor: HTMLElement } | null>(null)
+  const [result, setResult] = useState<{ title: string; verb: string; done: number; failed: { name: string; message: string }[] } | null>(null)
   const sort = useSort<Key>('none')
   const shown = useMemo(() => sortRows(tasks, VALUE[sort.key], sort.dir), [tasks, sort.key, sort.dir])
   const selection = useSelection(shown)
   const paged = usePaged(shown, PAGE_SIZE, `${sort.key}|${sort.dir}`)
+  const chosen = selection.count > 0 ? shown.filter((t) => selection.has(t.id)) : shown
+  const canBulk = who.canManage && onChanged !== undefined
+  const bulk = async (title: string, verb: string, body: Record<string, unknown>) => {
+    setMenu(null)
+    const outcome = await runBulk(chosen, (t) => api.patch(taskPath(t), body), (t) => t.name)
+    selection.toggleMany(outcome.done.map((t) => t.id), false)
+    setResult({ title, verb, done: outcome.done.length, failed: outcome.failed })
+    onChanged?.()
+  }
   const head = (key: Key, label: string) => <SortHead label={label} active={sort.key === key} dir={sort.dir} onSort={() => sort.toggle(key)} />
   return (
     <>
-    <SelectionBar count={selection.count} total={shown.length} onSelectAll={selection.selectAll} onClear={selection.clear} />
+    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
+      <ExportButton selected={selection.count} total={shown.length} onClick={() => setExporting(true)} />
+    </Box>
+    <SelectionBar count={selection.count} total={shown.length} onSelectAll={selection.selectAll} onClear={selection.clear}>
+      {canBulk && <Button size="small" aria-haspopup="menu" onClick={(e) => setMenu({ kind: 'move', anchor: e.currentTarget })}>Move to</Button>}
+      {canBulk && <Button size="small" aria-haspopup="menu" onClick={(e) => setMenu({ kind: 'owner', anchor: e.currentTarget })}>Set owner</Button>}
+    </SelectionBar>
     <TableContainer component={Paper}>
       <Table size="small" aria-label="Tasks">
         <TableHead>
@@ -82,6 +113,21 @@ export function TaskTable({ tasks, who, onMove, onEdit }: Props) {
       </Table>
     </TableContainer>
     <Pager page={paged.page} pageSize={PAGE_SIZE} total={shown.length} onPage={paged.setPage} />
+    <Menu anchorEl={menu?.anchor} open={menu?.kind === 'move'} onClose={() => setMenu(null)}>
+      {COLUMNS.map((c) => <MenuItem key={c.value} onClick={() => bulk('Move tasks', 'Moved', { status: c.value })}>{c.label}</MenuItem>)}
+    </Menu>
+    <Menu anchorEl={menu?.anchor} open={menu?.kind === 'owner'} onClose={() => setMenu(null)}>
+      {people.map((p) => <MenuItem key={p.id} onClick={() => bulk('Set owner', 'Updated', { assigneeId: p.id })}>{p.name}</MenuItem>)}
+      <MenuItem onClick={() => bulk('Set owner', 'Updated', { assigneeId: null })}>Unassigned</MenuItem>
+    </Menu>
+    <BulkResultDialog
+      open={result !== null} title={result?.title ?? ''} verb={result?.verb ?? ''} done={result?.done ?? 0} failed={result?.failed ?? []}
+      onClose={() => setResult(null)}
+    />
+    <ExportDialog
+      open={exporting} noun="tasks" nounOne="task" rows={chosen} columns={taskColumns()} filename={exportFileName('tasks')}
+      onClose={() => setExporting(false)} onExported={(n) => toast({ message: `Exported ${n} ${n === 1 ? 'task' : 'tasks'}` })}
+    />
     </>
   )
 }

@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { Chip, Link, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
+import { useMemo, useState } from 'react'
+import { Box, Chip, Link, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
 import type { Project, RiskLevel } from '../api/types'
 import { formatDate, percent } from '../format'
@@ -10,7 +10,11 @@ import { sortRows } from '../table/sort'
 import { usePaged } from '../table/usePaged'
 import { useSelection } from '../table/useSelection'
 import { useSort } from '../table/useSort'
+import { exportFileName, projectColumns } from '../export/columns'
+import { ExportButton } from './ExportButton'
+import { ExportDialog } from './ExportDialog'
 import { Pager } from './Pager'
+import { useToast } from './toast'
 import { RiskChip } from './RiskChip'
 
 type Key = 'name' | 'manager' | 'health' | 'milestones' | 'budget' | 'ends'
@@ -28,15 +32,21 @@ const VALUE: Record<Key, (p: Project) => string | number | null> = {
 
 /** The projects as a table: sortable columns, tick boxes and 25 rows a page. Budget is left out when the server sent no money. */
 export function ProjectsTable({ projects }: { projects: Project[] }) {
+  const toast = useToast()
+  const [exporting, setExporting] = useState(false)
   const sort = useSort<Key>('health')
   const showMoney = projects.some((p) => p.summary.totalCost !== null)
   const shown = useMemo(() => sortRows(projects, VALUE[sort.key], sort.dir), [projects, sort.key, sort.dir])
   const selection = useSelection(shown)
   const paged = usePaged(shown, PAGE_SIZE, `${sort.key}|${sort.dir}`)
+  const chosen = selection.count > 0 ? shown.filter((p) => selection.has(p.id)) : shown
   const head = (key: Key, label: string) => <SortHead label={label} active={sort.key === key} dir={sort.dir} onSort={() => sort.toggle(key)} />
 
   return (
     <>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
+        <ExportButton selected={selection.count} total={shown.length} onClick={() => setExporting(true)} />
+      </Box>
       <SelectionBar count={selection.count} total={shown.length} onSelectAll={selection.selectAll} onClear={selection.clear} />
       <TableContainer component={Paper}>
         <Table size="small" aria-label="Projects">
@@ -70,6 +80,10 @@ export function ProjectsTable({ projects }: { projects: Project[] }) {
         </Table>
       </TableContainer>
       <Pager page={paged.page} pageSize={PAGE_SIZE} total={shown.length} onPage={paged.setPage} />
+      <ExportDialog
+        open={exporting} noun="projects" nounOne="project" rows={chosen} columns={projectColumns({ money: showMoney })} filename={exportFileName('projects')}
+        onClose={() => setExporting(false)} onExported={(n) => toast({ message: `Exported ${n} ${n === 1 ? 'project' : 'projects'}` })}
+      />
     </>
   )
 }

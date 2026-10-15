@@ -3,7 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { AuthProvider } from '../auth/AuthProvider'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
+import { downloadCsv } from '../export/csv'
 import { PeoplePage } from './PeoplePage'
+
+vi.mock('../export/csv', () => ({ downloadCsv: vi.fn() }))
 
 vi.setConfig({ testTimeout: 30_000 })
 
@@ -542,5 +545,86 @@ describe('PeoplePage tables', () => {
     await screen.findByText('Page 2 of 2 · 30 entries')
     await userEvent.click(screen.getByRole('button', { name: 'Username' }))
     expect(screen.getByText('Page 1 of 2 · 30 entries')).toBeInTheDocument()
+  })
+})
+
+describe('PeoplePage export and bulk actions', () => {
+  const route = (items: ReturnType<typeof person>[]) => (config: { params?: Record<string, unknown> }) =>
+    config.params?.role === 'manager' ? { items: [maya], total: 1 } : { items, total: items.length }
+  beforeEach(() => vi.mocked(downloadCsv).mockClear())
+
+  it('exports everyone matching when nothing is ticked, with the hourly cost an admin may see', async () => {
+    signIn('admin')
+    mockRoutes({ 'GET /users': route([admin, maya, eli]) })
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'Export all 3' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Export 3 people' })
+    expect(within(dialog).getByRole('checkbox', { name: 'Hourly cost' })).toBeChecked()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Download CSV' }))
+    const [file, table] = vi.mocked(downloadCsv).mock.calls[0]
+    expect(file).toMatch(/^acme-people-\d{4}-\d{2}-\d{2}\.csv$/)
+    expect(table[0]).toEqual(['Name', 'Email', 'Job title', 'Role', 'Username', 'Reports to', 'Hourly cost'])
+    expect(table.slice(1).map((r) => r[0])).toEqual(['Ada Admin', 'Eli Employee', 'Maya Manager']) // in the order shown
+    expect(table[2]).toEqual(['Eli Employee', 'e1@x.test', '', 'employee', 'usere1', 'Maya Manager', 35.5])
+  })
+
+  it('exports only the ticked people, and never offers a manager the hourly cost', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /users': route([maya, eli]) })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Eli Employee' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Export 1 selected' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Export 1 person' })
+    expect(within(dialog).queryByRole('checkbox', { name: 'Hourly cost' })).not.toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Download CSV' }))
+    expect(vi.mocked(downloadCsv).mock.calls[0][1]).toHaveLength(2) // the header and Eli
+  })
+
+  it('archives the ticked people after asking, one request each, and says how it went', async () => {
+    signIn('admin')
+    const calls = mockRoutes({ 'GET /users': route([admin, maya, eli]), 'POST /users/:id/archive': { ok: true } })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Eli Employee' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Maya Manager' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Archive' }))
+    const ask = await screen.findByRole('dialog', { name: 'Archive 2 people?' })
+    expect(ask).toHaveTextContent(/can no longer sign in/)
+    expect(calls.filter((c) => c.startsWith('POST'))).toEqual([])
+    await userEvent.click(within(ask).getByRole('button', { name: 'Archive' }))
+    const result = await screen.findByRole('dialog', { name: 'Archive people' })
+    expect(result).toHaveTextContent('Archived 2.')
+    expect(calls.filter((c) => c.startsWith('POST'))).toEqual(['POST /users/e1/archive', 'POST /users/m1/archive']) // in the order the table shows them
+    expect(calls.filter((c) => c === 'GET /users').length).toBeGreaterThanOrEqual(2) // the list was reloaded
+  })
+
+  it('lists the person who could not be archived, with the server reason, and still archives the others', async () => {
+    signIn('admin')
+    mockRoutes({
+      'GET /users': route([admin, maya, eli]),
+      'POST /users/:id/archive': (config: { url?: string }) => (config.url === '/users/m1/archive' ? apiError(409, 'conflict', 'Maya still manages 2 open projects') : { ok: true }),
+    })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Eli Employee' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Maya Manager' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Archive' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Archive 2 people?' })).getByRole('button', { name: 'Archive' }))
+    const result = await screen.findByRole('dialog', { name: 'Archive people' })
+    expect(result).toHaveTextContent('Archived 1.')
+    expect(result).toHaveTextContent('1 could not be done')
+    expect(result).toHaveTextContent('Maya Manager')
+    expect(result).toHaveTextContent('Maya still manages 2 open projects')
+  })
+
+  it('offers a manager no Archive button', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /users': route([maya, eli]) })
+    renderPage()
+    await screen.findByText('Eli Employee')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Eli Employee' }))
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
 })

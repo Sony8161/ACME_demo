@@ -97,7 +97,10 @@ export function TasksTab({ projectId, canManage, milestones, onChanged }: Props)
         {(list) => (
           view === 'board'
             ? <TaskBoard tasks={list.items} who={who} onMove={move} onEdit={(task) => setDialog({ task })} onQuickAdd={canManage && target ? quickAdd : undefined} />
-            : <TaskTable tasks={list.items} who={who} onMove={move} onEdit={(task) => setDialog({ task })} />
+            : <TaskTable
+              tasks={list.items} who={who} onMove={move} onEdit={(task) => setDialog({ task })}
+              people={people.map(([id, name]) => ({ id, name }))} onChanged={canManage ? changed : undefined}
+            />
         )}
       </Async>
       {dialog && (

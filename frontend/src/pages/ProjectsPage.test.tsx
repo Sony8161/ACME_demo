@@ -3,7 +3,10 @@ import userEvent from '@testing-library/user-event'
 import type { InternalAxiosRequestConfig } from 'axios'
 import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
 import { employeeProject, project, renderPage, signIn } from '../test/pmFixtures'
+import { downloadCsv } from '../export/csv'
 import { ProjectsPage } from './ProjectsPage'
+
+vi.mock('../export/csv', () => ({ downloadCsv: vi.fn() }))
 
 // MUI dialogs are slow to open in jsdom on a busy machine.
 vi.setConfig({ testTimeout: 30_000 })
@@ -418,5 +421,44 @@ describe('Projects table view', () => {
     expect(await screen.findByText('Alpha')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Table' })).not.toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+})
+
+describe('Projects table export', () => {
+  beforeEach(() => vi.mocked(downloadCsv).mockClear())
+  const two = [project({ id: 'a', name: 'Alpha' }, { risk_level: 'on_track' }), project({ id: 'b', name: 'Beta' }, { risk_level: 'overdue', risk_reasons: ['3 day(s) past the end date'] })]
+
+  it('exports every project that matches, health in words and the first reason', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list(two) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await userEvent.click(await screen.findByRole('button', { name: 'Export all 2' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Export 2 projects' })).getByRole('button', { name: 'Download CSV' }))
+    const [file, table] = vi.mocked(downloadCsv).mock.calls[0]
+    expect(file).toMatch(/^acme-projects-/)
+    expect(table[0]).toContain('Budget')
+    const beta = table.find((r) => r[0] === 'Beta')!
+    expect(beta[table[0].indexOf('Health')]).toBe('Overdue')
+    expect(beta[table[0].indexOf('Why')]).toBe('3 day(s) past the end date')
+  })
+
+  it('exports only the ticked projects', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list(two) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await screen.findByRole('table')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Alpha' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Export 1 selected' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Export 1 project' })).getByRole('button', { name: 'Download CSV' }))
+    expect(vi.mocked(downloadCsv).mock.calls[0][1].map((r) => r[0])).toEqual(['Project', 'Alpha'])
+  })
+
+  it('leaves the money columns out when the server sent none', async () => {
+    signIn('manager')
+    mockRoutes({ 'GET /projects': list([employeeProject({ id: 'e', name: 'Epsilon' })]) })
+    renderPage(<ProjectsPage />, '/projects?view=table', '/projects')
+    await userEvent.click(await screen.findByRole('button', { name: 'Export all 1' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Export 1 project' })
+    for (const money of ['Budget', 'Spent', 'Budget used %']) expect(within(dialog).queryByRole('checkbox', { name: money })).not.toBeInTheDocument()
   })
 })

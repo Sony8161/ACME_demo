@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  Button, Chip, IconButton, Menu, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, ToggleButton,
+  Box, Button, Chip, IconButton, Menu, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, ToggleButton,
   ToggleButtonGroup, Tooltip, Typography,
 } from '@mui/material'
 import MoreIcon from '@mui/icons-material/MoreHoriz'
@@ -10,6 +10,12 @@ import type { Overview, PasswordReset, Role, User, UserCreated, UserList } from 
 import { useApi } from '../api/useApi'
 import { useAuth } from '../auth/context'
 import { Async } from '../components/Async'
+import { BulkResultDialog } from '../components/BulkResultDialog'
+import { ExportButton } from '../components/ExportButton'
+import { ExportDialog } from '../components/ExportDialog'
+import { useToast } from '../components/toast'
+import { exportFileName, peopleColumns } from '../export/columns'
+import { runBulk } from '../table/bulk'
 import { AvailabilityTable } from '../components/AvailabilityTable'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EmptyState } from '../components/EmptyState'
@@ -65,7 +71,7 @@ export function PeoplePage() {
           <PeopleTable
             people={list.items} isAdmin={isAdmin} meId={user?.id} searching={text !== ''} onClearSearch={() => setText('')}
             nameOf={(id) => list.items.find((u) => u.id === id)?.name ?? managers.data?.items.find((m) => m.id === id)?.name}
-            onMenu={(person, anchor) => setMenu({ person, anchor })}
+            onMenu={(person, anchor) => setMenu({ person, anchor })} onChanged={state.reload}
           />
         )}
       </Async>}
@@ -115,10 +121,15 @@ interface TableProps {
   onClearSearch: () => void
   nameOf: (id: string | null) => string | undefined
   onMenu: (person: User, anchor: HTMLElement) => void
+  onChanged: () => void
 }
 
 /** Everyone the server returned, with filters, sortable columns, tick boxes and 25 rows a page. */
-function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, onMenu }: TableProps) {
+function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, onMenu, onChanged }: TableProps) {
+  const toast = useToast()
+  const [exporting, setExporting] = useState(false)
+  const [archiving, setArchiving] = useState(false)
+  const [result, setResult] = useState<{ done: number; failed: { name: string; message: string }[] } | null>(null)
   const [role, setRole] = useState('')
   const [boss, setBoss] = useState('')
   const sort = useSort<PeopleKey>('name')
@@ -137,6 +148,7 @@ function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, 
   }, [people, role, boss, sort.key, sort.dir, nameOf])
   const selection = useSelection(shown)
   const paged = usePaged(shown, PAGE_SIZE, `${role}|${boss}|${sort.key}|${sort.dir}`)
+  const chosen = selection.count > 0 ? shown.filter((p) => selection.has(p.id)) : shown
   const head = (key: PeopleKey, label: string, align?: 'right') => (
     <SortHead label={label} active={sort.key === key} dir={sort.dir} onSort={() => sort.toggle(key)} align={align} />
   )
@@ -152,8 +164,12 @@ function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, 
           <MenuItem value="">Anyone</MenuItem>
           {bosses.map((b) => <MenuItem key={b.id} value={b.id}>{b.name}</MenuItem>)}
         </TextField>
+        <Box sx={{ flexGrow: 1 }} />
+        <ExportButton selected={selection.count} total={shown.length} onClick={() => setExporting(true)} />
       </Stack>
-      <SelectionBar count={selection.count} total={shown.length} onSelectAll={selection.selectAll} onClear={selection.clear} />
+      <SelectionBar count={selection.count} total={shown.length} onSelectAll={selection.selectAll} onClear={selection.clear}>
+        {isAdmin && <Button size="small" color="error" onClick={() => setArchiving(true)}>Archive</Button>}
+      </SelectionBar>
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
@@ -203,6 +219,23 @@ function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, 
         )}
       </TableContainer>
       <Pager page={paged.page} pageSize={PAGE_SIZE} total={shown.length} onPage={paged.setPage} />
+      <ExportDialog
+        open={exporting} noun="people" nounOne="person" rows={chosen} columns={peopleColumns({ admin: isAdmin, nameOf })} filename={exportFileName('people')}
+        onClose={() => setExporting(false)} onExported={(n) => toast({ message: `Exported ${n} ${n === 1 ? 'person' : 'people'}` })}
+      />
+      <ConfirmDialog
+        open={archiving} title={`Archive ${chosen.length} ${chosen.length === 1 ? 'person' : 'people'}?`} confirmLabel="Archive" cancelLabel="Keep" danger
+        onClose={() => setArchiving(false)}
+        onConfirm={async () => {
+          const outcome = await runBulk(chosen, (u) => api.post(`/users/${u.id}/archive`), (u) => u.name)
+          selection.toggleMany(outcome.done.map((u) => u.id), false)
+          setResult({ done: outcome.done.length, failed: outcome.failed })
+          onChanged()
+        }}
+      >
+        <Typography>They can no longer sign in, and their future work on milestones ends. Nothing is deleted: you can restore them from the Archive page.</Typography>
+      </ConfirmDialog>
+      <BulkResultDialog open={result !== null} title="Archive people" verb="Archived" done={result?.done ?? 0} failed={result?.failed ?? []} onClose={() => setResult(null)} />
     </>
   )
 }

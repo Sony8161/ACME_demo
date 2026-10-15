@@ -1,7 +1,11 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { Task } from '../api/types'
+import { downloadCsv } from '../export/csv'
+import { apiError, mockRoutes, restoreApi } from '../test/mockApi'
 import { TaskTable } from './TaskTable'
+
+vi.mock('../export/csv', () => ({ downloadCsv: vi.fn() }))
 
 let counter = 0
 const task = (over: Partial<Task> = {}): Task => {
@@ -92,5 +96,80 @@ describe('TaskTable', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task two' }))
     rerender(<TaskTable tasks={[one]} who={who} onMove={() => {}} />)
     expect(screen.queryByText(/selected/)).not.toBeInTheDocument()
+  })
+})
+
+describe('TaskTable export and bulk actions', () => {
+  beforeEach(() => { counter = 0; vi.mocked(downloadCsv).mockClear() })
+  afterEach(restoreApi)
+  const three = () => [task({ name: 'Task one' }), task({ name: 'Task two', assigneeName: 'Alex Kim', assigneeId: 'u1' }), task({ name: 'Task three' })]
+  const people = [{ id: 'u1', name: 'Alex Kim' }, { id: 'u2', name: 'Priya Shah' }]
+  const manage = (tasks: Task[], onChanged = () => {}) => render(<TaskTable tasks={tasks} who={who} onMove={() => {}} people={people} onChanged={onChanged} />)
+
+  it('exports all the tasks, or only the ticked ones, in the order shown', async () => {
+    show(three())
+    await userEvent.click(screen.getByRole('button', { name: 'Export all 3' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Export 3 tasks' })).getByRole('button', { name: 'Download CSV' }))
+    expect(vi.mocked(downloadCsv).mock.calls[0][0]).toMatch(/^acme-tasks-/)
+    expect(vi.mocked(downloadCsv).mock.calls[0][1].map((r) => r[0])).toEqual(['Task', 'Task one', 'Task two', 'Task three'])
+
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task three' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Export 1 selected' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Export 1 task' })).getByRole('button', { name: 'Download CSV' }))
+    expect(vi.mocked(downloadCsv).mock.calls[1][1].map((r) => r[0])).toEqual(['Task', 'Task three'])
+  })
+
+  it('moves the ticked tasks to a status through the normal endpoint, one each, and reports', async () => {
+    const onChanged = vi.fn()
+    const calls = mockRoutes({ 'PATCH /projects/p1/milestones/m1/deliverables/:id': { ok: true } })
+    manage(three(), onChanged)
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task one' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task two' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Move to' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'In progress' }))
+    const result = await screen.findByRole('dialog', { name: 'Move tasks' })
+    expect(result).toHaveTextContent('Moved 2.')
+    expect(calls).toEqual(['PATCH /projects/p1/milestones/m1/deliverables/t1', 'PATCH /projects/p1/milestones/m1/deliverables/t2'])
+    expect(onChanged).toHaveBeenCalled()
+  })
+
+  it('sets the owner of the ticked tasks, or clears it, and lists the ones the server refused', async () => {
+    const sent: unknown[] = []
+    mockRoutes({
+      'PATCH /projects/p1/milestones/m1/deliverables/:id': (config: { url?: string; data?: string }) => {
+        sent.push(JSON.parse(config.data ?? '{}'))
+        return config.url?.endsWith('/t2') ? apiError(409, 'not_on_milestone', 'Priya Shah is not on milestone Build') : { ok: true }
+      },
+    })
+    manage(three())
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task one' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task two' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Set owner' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Priya Shah' }))
+    const result = await screen.findByRole('dialog', { name: 'Set owner' })
+    expect(result).toHaveTextContent('Updated 1.')
+    expect(result).toHaveTextContent('Task two')
+    expect(result).toHaveTextContent('Priya Shah is not on milestone Build')
+    expect(sent).toEqual([{ assignee_id: 'u2' }, { assignee_id: 'u2' }])
+  })
+
+  it('offers Unassigned as an owner', async () => {
+    const sent: unknown[] = []
+    mockRoutes({ 'PATCH /projects/p1/milestones/m1/deliverables/:id': (config: { data?: string }) => { sent.push(JSON.parse(config.data ?? '{}')); return { ok: true } } })
+    manage(three())
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task two' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Set owner' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Unassigned' }))
+    await screen.findByRole('dialog', { name: 'Set owner' })
+    expect(sent).toEqual([{ assignee_id: null }])
+  })
+
+  it('shows no bulk buttons to someone who may not manage the tasks', async () => {
+    render(<TaskTable tasks={three()} who={{ canManage: false, userId: 'u1' }} onMove={() => {}} people={people} onChanged={() => {}} />)
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select Task one' }))
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Move to' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Set owner' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Export 1 selected' })).toBeInTheDocument() // exporting is still fine
   })
 })
