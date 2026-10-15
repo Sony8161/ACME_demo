@@ -172,3 +172,22 @@ describe('ChangePasswordPage', () => {
     expect(localStorage.getItem('pm.auth')).toBeNull()
   })
 })
+
+describe('show password', () => {
+  it('offers a show button on each of the three fields', () => {
+    signIn('employee')
+    renderPage()
+    for (const name of ['Show current password', 'Show new password', 'Show repeat new password']) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+    }
+  })
+
+  it('reveals only the field whose button was pressed', async () => {
+    signIn('employee')
+    renderPage()
+    await userEvent.click(screen.getByRole('button', { name: 'Show new password' }))
+    expect(screen.getByLabelText(/^New password/)).toHaveAttribute('type', 'text')
+    expect(screen.getByLabelText(/Current password/)).toHaveAttribute('type', 'password')
+    expect(screen.getByLabelText(/Repeat new password/)).toHaveAttribute('type', 'password')
+  })
+})

@@ -3,6 +3,7 @@ import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/ma
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { errorText } from '../api/useApi'
 import { homeFor, useAuth } from '../auth/context'
+import { PasswordField } from '../components/PasswordField'
 
 export function LoginPage() {
   const { user, login } = useAuth()
@@ -40,7 +41,7 @@ export function LoginPage() {
         <form onSubmit={submit}>
           <Stack spacing={2}>
             <TextField label="Username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" autoFocus required />
-            <TextField label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+            <PasswordField label="Password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
             {error && <Alert severity="error">{error}</Alert>}
             <Button type="submit" variant="contained" size="large" disabled={busy || !username || !password}>
               {busy ? 'Signing in…' : 'Sign in'}

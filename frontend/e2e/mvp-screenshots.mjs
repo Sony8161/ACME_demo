@@ -81,7 +81,7 @@ const pick = async (label, option) => {
 async function signIn(user, pass = PASSWORD) {
   await page.goto(URL + '/login')
   await page.getByLabel('Username').fill(user)
-  await page.getByLabel('Password').fill(pass)
+  await page.getByLabel(/^Password/).fill(pass)
   await page.getByRole('button', { name: 'Sign in' }).click()
 }
 async function signOut() {
@@ -101,7 +101,7 @@ await page.goto(URL + '/login')
 await page.getByLabel('Username').waitFor()
 await shot(1, '1a-sign-in-page')
 await page.getByLabel('Username').fill('admin1')
-await page.getByLabel('Password').fill('not-the-password')
+await page.getByLabel(/^Password/).fill('not-the-password')
 await page.getByRole('button', { name: 'Sign in' }).click()
 await page.getByText('Invalid username or password').waitFor()
 await shot(1, '1b-wrong-password-is-refused')

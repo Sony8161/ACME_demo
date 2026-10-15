@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Paper, Stack, Typography } from '@mui/material'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import type { TokenResponse } from '../api/types'
 import { errorText } from '../api/useApi'
 import { homeFor, useAuth } from '../auth/context'
+import { PasswordField } from '../components/PasswordField'
 
 export function ChangePasswordPage() {
   const { user, accept, logout } = useAuth()
@@ -45,10 +46,10 @@ export function ChangePasswordPage() {
         </Typography>
         <form onSubmit={submit}>
           <Stack spacing={2}>
-            <TextField label="Current password" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required autoFocus />
-            <TextField label="New password" type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" required />
-            <TextField
-              label="Repeat new password" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
+            <PasswordField label="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required autoFocus />
+            <PasswordField label="New password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" required />
+            <PasswordField
+              label="Repeat new password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
               autoComplete="new-password" required error={mismatch} helperText={mismatch ? 'The two passwords do not match' : ' '}
             />
             {error && <Alert severity="error">{error}</Alert>}

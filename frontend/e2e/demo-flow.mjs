@@ -37,7 +37,7 @@ const card = (name) => page.locator('div.MuiPaper-root').filter({ has: page.getB
 
 async function signIn(u, p) {
   await page.goto(URL + '/login')
-  await page.getByLabel('Username').fill(u); await page.getByLabel('Password').fill(p)
+  await page.getByLabel('Username').fill(u); await page.getByLabel(/^Password/).fill(p)
   await page.getByRole('button', { name: 'Sign in' }).click()
 }
 async function signOut() { await page.getByRole('button', { name: 'Account menu' }).click(); await page.getByRole('menuitem', { name: 'Sign out' }).click(); await page.waitForURL('**/login') }
@@ -46,6 +46,13 @@ async function signOut() { await page.getByRole('button', { name: 'Account menu'
 await page.goto(URL + '/login')
 await page.getByLabel('Username').waitFor()
 await scan('sign-in page')
+await page.getByLabel(/^Password/).fill('Demo1234!')
+ok('sign-in: password is hidden by default', (await page.getByLabel(/^Password/).getAttribute('type')) === 'password')
+await page.getByRole('button', { name: 'Show password' }).click()
+ok('sign-in: Show password reveals the text', (await page.getByLabel(/^Password/).getAttribute('type')) === 'text')
+await scan('sign-in page with the password shown')
+await page.getByRole('button', { name: 'Hide password' }).click()
+ok('sign-in: Hide password covers it again', (await page.getByLabel(/^Password/).getAttribute('type')) === 'password')
 await signIn('admin1', 'Demo1234!')
 await homeReady()
 await page.getByRole('heading', { name: /need attention|Everything is on track/ }).waitFor()
@@ -123,8 +130,8 @@ await signOut()
 // ACT 4 new hire
 await signIn('nina01', 'Welcome123!')
 await page.waitForURL('**/change-password')
-await page.getByLabel('Current password').fill('Welcome123!')
-await page.getByLabel(/^New password/).fill('Welcome456!'); await page.getByLabel('Repeat new password').fill('Welcome456!')
+await page.getByLabel(/^Current password/).fill('Welcome123!')
+await page.getByLabel(/^New password/).fill('Welcome456!'); await page.getByLabel(/^Repeat new password/).fill('Welcome456!')
 await shot('d1-change-password')
 await page.getByRole('button', { name: 'Save new password' }).click()
 await page.waitForURL('**/my-work')
