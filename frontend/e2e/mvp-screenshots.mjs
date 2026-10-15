@@ -28,6 +28,7 @@ const MVPS = {
   12: 'extra-timeline',
   13: 'extra-dependencies',
   14: 'extra-assistant',
+  15: 'extra-tables',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -331,6 +332,25 @@ await page.getByRole('tab', { name: 'Plan' }).waitFor()
 await page.getByRole('button', { name: 'Timeline', exact: true }).click()
 await page.getByRole('list', { name: 'Project timeline' }).waitFor()
 await shot(12, 'l2-one-project-with-its-tasks-as-diamonds')
+
+// Extra: tables you can tick, sort and page
+await page.getByRole('link', { name: 'People', exact: true }).first().click()
+await page.getByRole('checkbox', { name: 'Select Alex Kim' }).waitFor()
+for (const who of ['Aisha Khan', 'Alex Kim', 'Chloe Dubois']) await page.getByRole('checkbox', { name: `Select ${who}` }).check()
+await page.getByText('3 selected').waitFor()
+await shot(15, 'p1-people-sorted-filtered-and-ticked')
+await page.getByRole('link', { name: 'Projects', exact: true }).first().click()
+await page.getByRole('button', { name: 'Table', exact: true }).click()
+await page.getByRole('table', { name: 'Projects' }).waitFor()
+for (const what of ['Security Compliance Audit', 'Mobile App Launch']) await page.getByRole('checkbox', { name: `Select ${what}` }).check()
+await page.getByRole('button', { name: 'Ends', exact: true }).click()
+await shot(15, 'p2-projects-as-a-table')
+await page.getByRole('link', { name: 'Payments Gateway Upgrade', exact: true }).click()
+await page.getByRole('tab', { name: 'Tasks' }).click()
+await page.getByRole('group', { name: 'Task view' }).getByRole('button', { name: 'List', exact: true }).click()
+await page.getByRole('table', { name: 'Tasks' }).waitFor()
+await page.getByRole('button', { name: 'Priority', exact: true }).click()
+await shot(15, 'p3-a-projects-tasks-sorted-by-priority')
 
 // Extra: the assistant
 await page.getByRole('button', { name: 'Ask the assistant' }).click()

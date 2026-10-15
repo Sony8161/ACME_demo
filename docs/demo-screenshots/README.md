@@ -14,5 +14,6 @@ endpoints behind it and the tests that cover it). Use them as the backup walkthr
 | **7. Archive instead of delete** | `7a` a completed milestone moves to the archive, with its review note. `7b` archive asks first and says nothing is deleted. `7c` the archive page, visible to admins only. `7d` restored: nothing was lost |
 | **8. A basic screen for each role** | `8a` admin, `8b` manager and `8c` employee, each on a phone (the desktop views are `1c`, `1d`, `1e`) |
 | **Extra: history (audit)** | `h1` who did what and when. `h2` an entry opened to show exactly which fields changed. `h3` filtered to one person. `h4` a project's own History tab (folder `extra-history-and-audit`) |
+| **Extra: tables** | `p1` People: sorted by name, three people ticked, role and reports-to filters, 25 a page. `p2` Projects as a table: two ticked, sorted by end date. `p3` one project's tasks as a list sorted by priority (folder `extra-tables`) |
 
-Deployment (item 9) is not pictured: the demo runs on LocalStack and has not been applied to AWS.
+Deployment (item 9) is not pictured: the same app runs in AWS (see `docs/DEPLOYMENT.md`).

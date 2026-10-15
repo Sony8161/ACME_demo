@@ -104,7 +104,7 @@ export function AppShell() {
         {moreMenu}
         <SampleDataFlow open={sampleOpen} onClose={() => setSampleOpen(false)} onDone={() => setReloads((n) => n + 1)} />
 
-        <Box component="main" sx={{ pt: { xs: 9.5, md: 11 }, pb: isDesktop ? 6 : 19, px: { xs: 2, md: 4 } }}>
+        <Box component="main" sx={{ pt: { xs: 9.5, md: 11 }, pb: isDesktop ? 11 : 19, px: { xs: 2, md: 4 } }}>
           <Box sx={{ maxWidth: 1180, mx: 'auto' }}>
             <Outlet key={reloads} />
           </Box>

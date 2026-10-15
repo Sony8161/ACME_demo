@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button, Paper, Stack, Typography } from '@mui/material'
+import { tint } from '../theme'
 
 interface Props {
   count: number
@@ -15,7 +16,7 @@ interface Props {
 export function SelectionBar({ count, total, onSelectAll, onClear, children }: Props) {
   if (count === 0) return null
   return (
-    <Paper variant="outlined" sx={{ p: 1, mb: 1.5, bgcolor: 'primary.light' }}>
+    <Paper variant="outlined" sx={{ p: 1, mb: 1.5, bgcolor: tint.selected, borderColor: 'primary.main' }}>
       <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
         <Typography role="status" sx={{ fontWeight: 700, px: 1 }}>{count} selected</Typography>
         {total > count && <Button size="small" onClick={onSelectAll}>Select all {total}</Button>}
