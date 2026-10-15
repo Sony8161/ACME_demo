@@ -31,7 +31,7 @@ dashboard. It creates four managers, 26 employees, twelve projects and about a h
 |---|---|
 | `npm run dev` | Dev server on port 3000 |
 | `npm run build` | Type check, then production build into `dist/` |
-| `npm test` | Vitest and React Testing Library: 660 tests across the API client, every page and dialog, role guards, session refresh |
+| `npm test` | Vitest and React Testing Library: 686 tests across the API client, every page and dialog, role guards, session refresh |
 | `npm run test:coverage` | The same with an 80% gate on statements, branches, functions and lines (currently 98% statements / 97% branches) |
 | `npm run screenshots` | Re-takes the 46 demo pictures in `docs/demo-screenshots/` (one folder per MVP item) from the running demo |
 | `npm run e2e` | Playwright through the real stack (see `docs/TESTING.md`): the demo journey for all three roles plus axe accessibility scans |

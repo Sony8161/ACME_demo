@@ -32,6 +32,7 @@ const MVPS = {
   16: 'extra-export',
   17: 'extra-pdf',
   18: 'extra-search',
+  19: 'extra-workload',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -368,6 +369,12 @@ await page.getByRole('dialog', { name: 'Project report' }).waitFor()
 await shot(17, 'r1-a-project-report-pick-the-sections')
 await page.getByRole('button', { name: 'Cancel' }).click()
 await page.getByRole('dialog').waitFor({ state: 'detached' })
+
+// Extra: the workload heatmap and the changes card
+await page.getByRole('link', { name: 'People', exact: true }).first().click()
+await page.getByRole('button', { name: 'Workload', exact: true }).click()
+await page.getByRole('table', { name: 'Workload by week' }).waitFor()
+await shot(19, 't1-who-is-booked-and-who-is-free-by-week')
 
 // Extra: the search box
 await page.getByRole('combobox', { name: 'Search projects, people, tasks' }).fill('ma')

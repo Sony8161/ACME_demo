@@ -18,5 +18,6 @@ endpoints behind it and the tests that cover it). Use them as the backup walkthr
 | **Extra: export and bulk actions** | `q1` the export dialog: choose the columns, see the file name. `q2` two tasks ticked, with Move to and Set owner (folder `extra-export`) |
 | **Extra: PDF** | `r1` the project report: tick the sections that go in the PDF (folder `extra-pdf`). The export dialog's CSV or PDF choice is in `extra-export` |
 | **Extra: search** | `s1` the search box in the top bar, open: results in groups (Projects, People, Tasks) (folder `extra-search`) |
+| **Extra: workload** | `t1` People > Workload: every person by week, shaded by hours booked, with a free-week summary and a legend (folder `extra-workload`). The manager's dashboard (`1d`) shows the "Since you last visited" card when others changed something |
 
 Deployment (item 9) is not pictured: the same app runs in AWS (see `docs/DEPLOYMENT.md`).
