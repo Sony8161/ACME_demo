@@ -55,7 +55,7 @@ npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/
 the time it took; and for each operation which requests exercised it. The raw Newman export is never committed because it holds tokens and
 one-time passwords; the saved file holds none.
 
-Result on 2026-10-14, LocalStack: **203 requests, 839 assertions, 0 failed, 55 of 55 operations exercised** (this run was against the API under uvicorn, saved as `postman-results-local.json`; the LocalStack run was not repeated for this branch). The one thing the collection does
+Result on 2026-10-15: **211 requests, 875 assertions, 0 failed, 56 of 56 operations exercised** (this run was against the API under uvicorn, saved as `postman-results-local.json`; the LocalStack run was not repeated for this branch). The one thing the collection does
 not do is exceed the 600-requests-a-minute limit (that needs hundreds of requests); `test_ratelimit.py` covers it.
 
 ## Frontend
