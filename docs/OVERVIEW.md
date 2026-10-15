@@ -32,9 +32,9 @@ but has never been applied; the demo runs on LocalStack).
 | Check | Result |
 |---|---|
 | Backend, on a real PostgreSQL (rules through HTTP, plus unit tests) | **278 pass**, 97.5% coverage (gate 80%); ruff and bandit clean |
-| Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **609 pass**, 98.3% statements, 97.4% branches (gate 80%); lint, types, build and `npm audit` clean |
+| Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **636 pass**, 98.3% statements, 96.5% branches (gate 80%); lint, types, build and `npm audit` clean |
 | API contract, every endpoint (Postman/Newman on LocalStack) | **203 requests, 839 assertions, 0 failed, 55 of 55 operations** (run against the API under uvicorn on this branch) |
-| End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **85 of 85 checks** (73 in the demo journey, 12 in the sample-data run), including 24 accessibility scans |
+| End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **92 of 92 checks** (80 in the demo journey, 12 in the sample-data run), including 26 accessibility scans |
 | Load, realistic (about 19 requests a second across three people) | 1,197 requests, **0 failed**, median 20 ms, 95th percentile 35 ms |
 
 How: **tests run on a real database, not a mock**, because most of the risk is in rules that cross layers (who may see a project, overlap

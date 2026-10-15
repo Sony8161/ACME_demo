@@ -16,5 +16,6 @@ endpoints behind it and the tests that cover it). Use them as the backup walkthr
 | **Extra: history (audit)** | `h1` who did what and when. `h2` an entry opened to show exactly which fields changed. `h3` filtered to one person. `h4` a project's own History tab (folder `extra-history-and-audit`) |
 | **Extra: tables** | `p1` People: sorted by name, three people ticked, role and reports-to filters, 25 a page. `p2` Projects as a table: two ticked, sorted by end date. `p3` one project's tasks as a list sorted by priority (folder `extra-tables`) |
 | **Extra: export and bulk actions** | `q1` the export dialog: choose the columns, see the file name. `q2` two tasks ticked, with Move to and Set owner (folder `extra-export`) |
+| **Extra: PDF** | `r1` the project report: tick the sections that go in the PDF (folder `extra-pdf`). The export dialog's CSV or PDF choice is in `extra-export` |
 
 Deployment (item 9) is not pictured: the same app runs in AWS (see `docs/DEPLOYMENT.md`).

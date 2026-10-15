@@ -30,6 +30,7 @@ const MVPS = {
   14: 'extra-assistant',
   15: 'extra-tables',
   16: 'extra-export',
+  17: 'extra-pdf',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -360,6 +361,12 @@ await shot(15, 'p3-a-projects-tasks-sorted-by-priority')
 for (const what of ['Regression suite', 'Retire the old gateway']) await page.getByRole('checkbox', { name: `Select ${what}` }).check()
 await page.getByRole('button', { name: 'Move to' }).waitFor()
 await shot(16, 'q2-act-on-ticked-tasks-move-or-set-owner')
+await page.getByRole('button', { name: 'Project actions' }).click()
+await page.getByRole('menuitem', { name: 'Project report (PDF)' }).click()
+await page.getByRole('dialog', { name: 'Project report' }).waitFor()
+await shot(17, 'r1-a-project-report-pick-the-sections')
+await page.getByRole('button', { name: 'Cancel' }).click()
+await page.getByRole('dialog').waitFor({ state: 'detached' })
 
 // Extra: the assistant
 await page.getByRole('button', { name: 'Ask the assistant' }).click()
