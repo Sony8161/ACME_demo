@@ -49,9 +49,10 @@ def validate_password_strength(password: str) -> None:
         )
 
 
-def hash_password(password: str) -> str:
-    """Return a bcrypt hash of ``password``."""
-    rounds = get_settings().bcrypt_rounds
+def hash_password(password: str, rounds: int | None = None) -> str:
+    """Return a bcrypt hash of ``password``. ``rounds`` may lower the cost, never raise it above the configured one."""
+    configured = get_settings().bcrypt_rounds
+    rounds = configured if rounds is None else min(rounds, configured)
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=rounds)).decode("ascii")
 
 

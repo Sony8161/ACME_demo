@@ -110,6 +110,12 @@ def test_the_query_and_the_limit_are_checked(world):
     assert find(world, "admin", "  ab  ").status_code == 200  # spaces around are ignored
 
 
+def test_a_query_of_only_spaces_is_refused_not_a_search_for_everything(world):
+    assert find(world, "admin", "   ").status_code == 400
+    assert find(world, "alex", "   ").status_code == 400
+    assert find(world, "maria", " x ").status_code == 400  # one letter once the spaces are gone
+
+
 def test_percent_and_underscore_in_a_task_search_match_themselves(world):
     api, maria = world["api"], world["maria"]
     for name in ["Fix 100% bug", "Fix 100x bug", "plan_a", "planxa"]:

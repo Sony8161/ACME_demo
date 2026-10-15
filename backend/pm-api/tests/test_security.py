@@ -78,3 +78,9 @@ def test_cloud_requires_a_jwt_secret():
         load_settings({"IS_LOCAL": "false"})
     assert load_settings({"IS_LOCAL": "false", "JWT_SECRET": "x" * 40}).bootstrap_admin_password == ""
     assert get_settings().bootstrap_admin_password == "ChangeMe123!"  # local default
+
+
+def test_a_hash_can_ask_for_fewer_rounds_but_never_more_than_configured():
+    assert security.hash_password("Abcdef12", rounds=4).startswith("$2b$04$")
+    configured = security.hash_password("Abcdef12")
+    assert security.hash_password("Abcdef12", rounds=14).startswith(configured[:7])  # capped at the configured cost

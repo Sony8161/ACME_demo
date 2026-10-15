@@ -99,3 +99,10 @@ def test_the_limit_caps_the_list_but_not_the_total(world):
 
 def test_it_needs_a_signed_in_person(world):
     assert world["api"].client.get("/reports/changes").status_code == 401
+
+
+def test_since_is_answered_in_utc_whatever_offset_it_was_sent_with(world):
+    sent = (dt.datetime.now(dt.UTC) - dt.timedelta(hours=1)).astimezone(dt.timezone(dt.timedelta(hours=7))).isoformat()
+    assert sent.endswith("+07:00")
+    since = get(world, "admin", since=sent).json()["since"]
+    assert since.endswith("Z") or since.endswith("+00:00")

@@ -225,14 +225,12 @@ def changes(conn: psycopg.Connection[Any], actor: CurrentUser, since: dt.datetim
     """What others changed since ``since`` (default a week ago, at most 30 days back). A manager sees only their own projects."""
     now = dates.now()
     moment = since if since is not None else now - dt.timedelta(days=7)
-    moment = min(max(moment, now - dt.timedelta(days=30)), now)
+    moment = min(max(moment, now - dt.timedelta(days=30)), now).astimezone(dt.UTC)
     rows, total, projects = audit_repo.changes_since(
         conn, since=moment, manager_id=None if actor.is_admin else actor.id, exclude_actor=actor.id, limit=limit
     )
     return Changes(since=moment, total=total, projects=projects, items=audit_service.present_rows(conn, rows))
 
-
-WEEK_HOURS = 40
 
 
 def workload(conn: psycopg.Connection[Any], actor: CurrentUser, weeks: int) -> Workload:
@@ -254,4 +252,4 @@ def workload(conn: psycopg.Connection[Any], actor: CurrentUser, weeks: int) -> W
                 for w in starts
             ],
         ))
-    return Workload(capacity_per_week=WEEK_HOURS, weeks=starts, people=out)
+    return Workload(capacity_per_week=dates.WORK_WEEK_HOURS, weeks=starts, people=out)

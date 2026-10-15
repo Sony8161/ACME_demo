@@ -16,6 +16,8 @@ from app.domains.projects import repository as projects_repo
 from app.domains.users import repository as users_repo
 
 DEMO_DOMAIN = "@demo.acme.example"
+# 30 sample accounts must hash within CloudFront's 60 s on a small Lambda; the cost is stored in each hash
+SEED_BCRYPT_ROUNDS = 10
 
 
 class SeedKit:
@@ -35,8 +37,8 @@ class SeedKit:
                 break
         email = name.lower().replace(" ", ".") + DEMO_DOMAIN
         row = users_repo.insert(
-            self.conn, username=username, password_hash=security.hash_password(password), name=name, email=email,
-            job_title=title, role=role, manager_id=manager_id, salary=salary,
+            self.conn, username=username, password_hash=security.hash_password(password, rounds=SEED_BCRYPT_ROUNDS), name=name,
+            email=email, job_title=title, role=role, manager_id=manager_id, salary=salary,
         )
         self.accounts.append({"name": name, "role": role, "username": username, "temporary_password": password})
         return row

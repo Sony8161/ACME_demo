@@ -20,7 +20,7 @@ history log (its record kinds are fixed); the thread is its own record, newest c
 
 **Screen**: clicking a task's name (board card, list row, My tasks row) opens a **task dialog** for everyone: name, status, priority, owner, due date, description, and below
 them the **comment thread** with a box to write ("Add a comment", up to 2000 characters, a counter near the limit) and **Post**. Your own comments, and any when you manage the
-project, have a **Remove** button (asks nothing: it is undone by an admin from the archive only, so the label says "Remove"). Cards and rows show a small "3 comments" count when there are
+project, have a **Remove** button (asks nothing: a removed comment is hidden, not erased: the row stays in the database (`archived_at`) but there is no screen to bring it back, so the label says "Remove"). Cards and rows show a small "3 comments" count when there are
 some. The manager's **Edit** (details dialog) stays in the task's ⋯ menu and still works as before.
 
 ## B. Dark mode
