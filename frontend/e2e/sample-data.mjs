@@ -20,6 +20,7 @@ const ok = (name, cond, extra = '') => { log.push(`${cond ? 'PASS' : 'FAIL'}  ${
 
 const AXE = require.resolve('axe-core/axe.min.js')
 async function scan(name) {
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'), null, { timeout: 5000 }).catch(() => {}) // dialogs fade in; scan the settled page
   await page.addScriptTag({ path: AXE })
   const result = await page.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }))
   const bad = result.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')

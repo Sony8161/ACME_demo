@@ -55,7 +55,7 @@ and their status, dependency between deliverables (milestones), and budget consu
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; not applied to AWS |
 | LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (161 requests, 654 assertions) |
 | AWS deploy | **Not done** (`./bin/deploy-backend.sh` and `./bin/deploy-frontend.sh`) |
-| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 576 tests at 98.4% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
+| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 609 tests at 98.3% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
 | Demo | `docs/DEMO.md`: rehearsed script; `./bin/demo-ready.sh` loads the sample company with memorable logins |
 | CI workflow (`.github/workflows/ci.yml`), READMEs, testing guide | Written; the workflow has not run on GitHub yet |
 

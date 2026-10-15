@@ -168,7 +168,7 @@ function PeopleTable({ people, isAdmin, meId, searching, onClearSearch, nameOf, 
         <ExportButton selected={selection.count} total={shown.length} onClick={() => setExporting(true)} />
       </Stack>
       <SelectionBar count={selection.count} total={shown.length} onSelectAll={selection.selectAll} onClear={selection.clear}>
-        {isAdmin && <Button size="small" color="error" onClick={() => setArchiving(true)}>Archive</Button>}
+        {isAdmin && <Button size="small" color="error" sx={{ color: 'error.dark' }} onClick={() => setArchiving(true)}>Archive</Button>}
       </SelectionBar>
       <TableContainer component={Paper}>
         <Table size="small">

@@ -29,6 +29,7 @@ const MVPS = {
   13: 'extra-dependencies',
   14: 'extra-assistant',
   15: 'extra-tables',
+  16: 'extra-export',
 }
 
 // Only the picture folders are cleared: the README beside them is written by hand.
@@ -337,8 +338,13 @@ await shot(12, 'l2-one-project-with-its-tasks-as-diamonds')
 await page.getByRole('link', { name: 'People', exact: true }).first().click()
 await page.getByRole('checkbox', { name: 'Select Alex Kim' }).waitFor()
 for (const who of ['Aisha Khan', 'Alex Kim', 'Chloe Dubois']) await page.getByRole('checkbox', { name: `Select ${who}` }).check()
-await page.getByText('3 selected').waitFor()
+await page.getByText('3 selected', { exact: true }).waitFor()
 await shot(15, 'p1-people-sorted-filtered-and-ticked')
+await page.getByRole('button', { name: 'Export 3 selected' }).click()
+await page.getByRole('dialog', { name: 'Export 3 people' }).waitFor()
+await shot(16, 'q1-choose-what-goes-in-the-file')
+await page.getByRole('button', { name: 'Cancel' }).click()
+await page.getByRole('dialog').waitFor({ state: 'detached' })
 await page.getByRole('link', { name: 'Projects', exact: true }).first().click()
 await page.getByRole('button', { name: 'Table', exact: true }).click()
 await page.getByRole('table', { name: 'Projects' }).waitFor()
@@ -351,6 +357,9 @@ await page.getByRole('group', { name: 'Task view' }).getByRole('button', { name:
 await page.getByRole('table', { name: 'Tasks' }).waitFor()
 await page.getByRole('button', { name: 'Priority', exact: true }).click()
 await shot(15, 'p3-a-projects-tasks-sorted-by-priority')
+for (const what of ['Regression suite', 'Retire the old gateway']) await page.getByRole('checkbox', { name: `Select ${what}` }).check()
+await page.getByRole('button', { name: 'Move to' }).waitFor()
+await shot(16, 'q2-act-on-ticked-tasks-move-or-set-owner')
 
 // Extra: the assistant
 await page.getByRole('button', { name: 'Ask the assistant' }).click()
