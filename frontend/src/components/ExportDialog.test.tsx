@@ -1,10 +1,14 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { downloadCsv } from '../export/csv'
+import { saveBlob } from '../export/download'
+import { buildTablePdf } from '../export/pdf'
 import type { ExportColumn } from '../export/columns'
 import { ExportDialog } from './ExportDialog'
 
 vi.mock('../export/csv', () => ({ downloadCsv: vi.fn() }))
+vi.mock('../export/download', () => ({ saveBlob: vi.fn() }))
+vi.mock('../export/pdf', () => ({ buildTablePdf: vi.fn() }))
 
 interface Row { name: string; email: string; pay: number | null }
 const columns: ExportColumn<Row>[] = [
@@ -21,7 +25,11 @@ function open(over: Partial<{ onClose: () => void; onExported: (n: number) => vo
   return { onClose, onExported }
 }
 
-beforeEach(() => vi.mocked(downloadCsv).mockClear())
+beforeEach(() => {
+  vi.mocked(downloadCsv).mockClear()
+  vi.mocked(saveBlob).mockClear()
+  vi.mocked(buildTablePdf).mockReset()
+})
 
 describe('ExportDialog', () => {
   it('says what is being exported and offers every column, all ticked', async () => {
@@ -65,5 +73,73 @@ describe('ExportDialog', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
     expect(onClose).toHaveBeenCalled()
     expect(downloadCsv).not.toHaveBeenCalled()
+  })
+
+  describe('as a PDF', () => {
+    const pdf = new Blob(['%PDF-'], { type: 'application/pdf' })
+    const chooseDialogPdf = async () => {
+      const dialog = await screen.findByRole('dialog', { name: 'Export 2 people' })
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'PDF' }))
+      return dialog
+    }
+
+    it('offers CSV and PDF, CSV first, and the button and file name follow the choice', async () => {
+      open()
+      const dialog = await screen.findByRole('dialog', { name: 'Export 2 people' })
+      expect(within(dialog).getByRole('radio', { name: 'CSV' })).toBeChecked()
+      expect(within(dialog).getByRole('button', { name: 'Download CSV' })).toBeInTheDocument()
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'PDF' }))
+      expect(within(dialog).getByRole('button', { name: 'Download PDF' })).toBeInTheDocument()
+      expect(dialog).toHaveTextContent('acme-people-2026-10-15.pdf')
+      expect(dialog).not.toHaveTextContent('.csv')
+    })
+
+    it('builds the PDF from the ticked columns and saves it, then reports and closes', async () => {
+      vi.mocked(buildTablePdf).mockResolvedValue(pdf)
+      const { onExported, onClose } = open()
+      const dialog = await chooseDialogPdf()
+      await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Email' }))
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Download PDF' }))
+      await vi.waitFor(() => expect(saveBlob).toHaveBeenCalledWith('acme-people-2026-10-15.pdf', pdf))
+      const opts = vi.mocked(buildTablePdf).mock.calls[0][0]
+      expect(opts.title).toBe('People')
+      expect(opts.subtitle).toMatch(/^2 people · \d{4}-\d{2}-\d{2} UTC$/)
+      expect(opts.head).toEqual(['Name', 'Pay'])
+      expect(opts.rows).toEqual([['Ann', 5], ['Bo', null]])
+      expect(downloadCsv).not.toHaveBeenCalled()
+      expect(onExported).toHaveBeenCalledWith(2)
+      expect(onClose).toHaveBeenCalled()
+    })
+
+    it('shows Preparing… and cannot be pressed twice while the PDF is being made', async () => {
+      let finish: (b: Blob) => void = () => {}
+      vi.mocked(buildTablePdf).mockReturnValue(new Promise<Blob>((resolve) => { finish = resolve }))
+      open()
+      const dialog = await chooseDialogPdf()
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Download PDF' }))
+      expect(await within(dialog).findByRole('button', { name: 'Preparing…' })).toBeDisabled()
+      finish(pdf)
+      await vi.waitFor(() => expect(saveBlob).toHaveBeenCalledTimes(1))
+      expect(buildTablePdf).toHaveBeenCalledTimes(1)
+    })
+
+    it('says so and stays open, saving nothing, when the PDF cannot be made', async () => {
+      vi.mocked(buildTablePdf).mockRejectedValue(new Error('boom'))
+      const { onClose, onExported } = open()
+      const dialog = await chooseDialogPdf()
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Download PDF' }))
+      expect(await within(dialog).findByText('The PDF could not be made.')).toBeInTheDocument()
+      expect(within(dialog).getByRole('button', { name: 'Download PDF' })).toBeEnabled()
+      expect(saveBlob).not.toHaveBeenCalled()
+      expect(onClose).not.toHaveBeenCalled()
+      expect(onExported).not.toHaveBeenCalled()
+    })
+
+    it('still will not download with every column unticked', async () => {
+      open()
+      const dialog = await chooseDialogPdf()
+      for (const label of ['Name', 'Email', 'Pay']) await userEvent.click(within(dialog).getByRole('checkbox', { name: label }))
+      expect(within(dialog).getByRole('button', { name: 'Download PDF' })).toBeDisabled()
+    })
   })
 })
