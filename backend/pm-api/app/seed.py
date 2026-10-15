@@ -10,8 +10,9 @@ import psycopg
 
 from app.config import get_settings
 from app.core import dates, security
-from app.db import MIGRATION_LOCK_ID
+from app.db import DEMO_SEED_LOCK_ID, MIGRATION_LOCK_ID
 from app.domains.users import repository as users_repo
+from app.seed_company import MARKER_EMAIL, seed_extended
 from app.seed_kit import DEMO_DOMAIN, SeedKit
 
 logger = logging.getLogger(__name__)
@@ -41,16 +42,13 @@ def ensure_bootstrap_admin(conn: psycopg.Connection[Any]) -> None:
     logger.info("Created bootstrap admin '%s' (password change required at first login)", settings.bootstrap_admin_username)
 
 
-def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
-    """Create two managers, six employees and four projects in different health states.
+def _exists(conn: psycopg.Connection[Any], email_pattern: str) -> bool:
+    """Is there a user with this email (archived ones count: they were created once)?"""
+    return conn.execute("SELECT 1 FROM users WHERE email LIKE %s LIMIT 1", (email_pattern,)).fetchone() is not None
 
-    Idempotent: if the demo accounts already exist nothing is created. The accounts get
-    random one-time passwords, returned once in the response.
-    """
-    existing = conn.execute("SELECT 1 FROM users WHERE email LIKE %s LIMIT 1", (f"%{DEMO_DOMAIN}",)).fetchone()
-    if existing:
-        return {"created": False, "message": "Demo data already exists", "accounts": []}
 
+def seed_core(conn: psycopg.Connection[Any], admin_id: Any) -> SeedKit:
+    """Create two managers, six employees and four projects in different health states (the original sample company)."""
     kit = SeedKit(conn, admin_id, dates.today())
     today, d = kit.today, dt.timedelta
     make_user, make_project = kit.make_user, kit.make_project
@@ -110,4 +108,29 @@ def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
     link("milestone", inventory, cutover)
     link("project", p1, p4)
 
-    return {"created": True, "message": "Demo data created", "accounts": kit.accounts}
+    return kit
+
+
+def seed_demo(conn: psycopg.Connection[Any], admin_id: Any) -> dict[str, Any]:
+    """Create the sample company: the original one, then the larger one on top. Each layer is created once.
+
+    Safe to call twice, and on a site that only has the original company it adds just the larger layer. The new accounts
+    get random one-time passwords, returned once in the response.
+    """
+    conn.execute("SELECT pg_advisory_xact_lock(%s)", (DEMO_SEED_LOCK_ID,))  # two admins pressing at once create one company
+    accounts: list[dict[str, str]] = []
+    made_core = not _exists(conn, f"%{DEMO_DOMAIN}")
+    if made_core:
+        accounts += seed_core(conn, admin_id).accounts
+    made_extended = not _exists(conn, MARKER_EMAIL)
+    if made_extended:
+        kit = SeedKit(conn, admin_id, dates.today())
+        seed_extended(kit)
+        accounts += kit.accounts
+    if not (made_core or made_extended):
+        return {"created": False, "message": "Demo data already exists", "accounts": []}
+    return {
+        "created": True,
+        "message": "Demo data created" if made_core else "Added the larger sample company",
+        "accounts": accounts,
+    }

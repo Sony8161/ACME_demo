@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 MIGRATIONS_DIR = Path(__file__).parent / "migrations"
 # Arbitrary application-wide lock id so concurrent cold starts migrate one at a time.
 MIGRATION_LOCK_ID = 727_001
+DEMO_SEED_LOCK_ID = 727_002
 
 _conn: psycopg.Connection[Any] | None = None
 _migrated = False

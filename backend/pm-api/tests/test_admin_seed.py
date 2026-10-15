@@ -1,4 +1,4 @@
-"""Demo data and the first-admin bootstrap."""
+"""Demo data and the first-admin bootstrap (the larger company has its own tests in test_seed_company.py)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def test_seed_demo_is_admin_only_and_idempotent(api, today):
     first = api.client.post("/admin/seed-demo", headers=api.admin.headers)
     assert first.status_code == 200 and first.json()["created"] is True
     accounts = first.json()["accounts"]
-    assert len(accounts) == 8 and {a["role"] for a in accounts} == {"manager", "employee"}
+    assert len(accounts) == 30 and {a["role"] for a in accounts} == {"manager", "employee"}
 
     second = api.client.post("/admin/seed-demo", headers=api.admin.headers).json()
     assert second["created"] is False and second["accounts"] == []
@@ -26,7 +26,8 @@ def test_demo_data_shows_every_health_state_and_available_people(api, today):
     api.client.post("/admin/seed-demo", headers=api.admin.headers)
     out = api.client.get("/reports/overview", headers=api.admin.headers).json()
     names = {p["name"]: p for p in out["projects"]}
-    assert set(names) == {"Website Redesign", "Mobile App Launch", "Data Platform Migration", "Customer Portal"}
+    assert {"Website Redesign", "Mobile App Launch", "Data Platform Migration", "Customer Portal"} <= set(names)  # the original four
+    assert len(names) == 12  # the larger company is checked in test_seed_company.py
     assert names["Website Redesign"]["summary"]["risk_level"] == "on_track"
     assert names["Mobile App Launch"]["summary"]["risk_level"] == "overdue"
     assert names["Data Platform Migration"]["summary"]["risk_level"] == "at_risk"
