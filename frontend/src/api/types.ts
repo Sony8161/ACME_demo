@@ -284,3 +284,8 @@ export interface DependencyList { blockedBy: DependencyRef[]; blocks: Dependency
 export interface ChatMessage { role: 'user' | 'assistant'; content: string }
 export interface ChatReply { reply: string; mode: 'ai' | 'offline'; toolsUsed: string[]; notice: string | null }
 export interface AssistantStatus { mode: 'ai' | 'offline'; model: string | null }
+
+export interface SearchProject { id: string; name: string; managerName: string; status: ProjectStatus; riskLevel: RiskLevel }
+export interface SearchPerson { id: string; name: string; jobTitle: string; role: Role }
+export interface SearchTask { id: string; name: string; projectId: string; projectName: string; milestoneName: string; status: TaskStatus; assigneeName: string | null }
+export interface SearchResults { query: string; projects: SearchProject[]; people: SearchPerson[]; tasks: SearchTask[] }
