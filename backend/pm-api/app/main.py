@@ -27,6 +27,7 @@ from app.domains.dependencies.router import project_router as project_dependenci
 from app.domains.milestones.router import router as milestones_router
 from app.domains.projects.router import router as projects_router
 from app.domains.reports.router import router as reports_router
+from app.domains.search.router import router as search_router
 from app.domains.tasks.router import my_tasks_router, project_tasks_router
 from app.domains.users.router import router as users_router
 from app.seed import ensure_bootstrap_admin
@@ -72,7 +73,7 @@ def create_app() -> FastAPI:
         auth_router, users_router, projects_router, milestones_router, deliverables_router, team_router,
         costs_router, reports_router, admin_router, audit_router, project_history_router,
         project_tasks_router, my_tasks_router, milestone_dependencies_router, project_dependencies_router,
-        assistant_router,
+        assistant_router, search_router,
     ):
         app.include_router(router)
 

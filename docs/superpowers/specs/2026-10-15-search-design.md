@@ -12,7 +12,7 @@ A **search box that is always visible in the top bar** and finds projects, peopl
 
 ### API: `GET /search?q=<text>&limit=<n>`
 
-- `q` 2 to 100 characters (shorter is a 422 with the usual error shape); `limit` 1 to 10 per group, default 5.
+- `q` 2 to 100 characters (shorter, or a limit outside 1-10, is a 400 with the usual error shape); `limit` 1 to 10 per group, default 5.
 - Returns `{ query, projects: [...], people: [...], tasks: [...] }`, each list at most `limit` long, each item the few fields a result row needs:
   project `{ id, name, manager_name, status, risk_level }`; person `{ id, name, job_title, role }`; task `{ id, name, project_id, project_name, milestone_name, status, assignee_name }`.
 - **What each role may find** (the same rules the screens already apply, reusing their queries):
@@ -43,7 +43,7 @@ Searching milestones, comments, history or costs; fuzzy matching or typo toleran
 ## Tests
 
 Backend (real DB): each role finds exactly what it may and nothing else (employee: no people, only own tasks; manager: not another
-manager's project or admins; admin: all); matching in names and the extra fields; `%` literal in tasks; limit and group caps; 422 for a
-one-letter query; archived things hidden; no salary field; unauthenticated 401. Postman: a "13 Search" folder. Frontend: debounce, minimum
+manager's project or admins; admin: all); matching in names and the extra fields; `%` literal in tasks; limit and group caps; 400 for a
+one-letter query (400); archived things hidden; no salary field; unauthenticated 401. Postman: a "13 Search" folder. Frontend: debounce, minimum
 length, grouping, the combobox keyboard model, navigation targets, stale responses ignored, error and empty states, phone overlay;
 browser: type, arrow, Enter on a project, a person and a task; axe on the open list.

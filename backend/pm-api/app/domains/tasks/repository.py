@@ -58,3 +58,35 @@ def list_mine(conn: psycopg.Connection[Any], user_id: uuid.UUID, today: dt.date)
         """
     ).format(base=sql.SQL(_SELECT))
     return conn.execute(query, {"today": today, "user": user_id}).fetchall()
+
+
+def search(
+    conn: psycopg.Connection[Any], *, today: dt.date, viewer_id: uuid.UUID, viewer_role: str, q: str, limit: int
+) -> list[dict[str, Any]]:
+    """Live tasks whose name contains ``q`` (typed ``%`` and ``_`` count as themselves), inside what the viewer may see.
+
+    Admin: every live task. Manager: tasks of their own projects. Employee: tasks they own, on milestones they still work on.
+    """
+    if viewer_role == "admin":
+        scope = "TRUE"
+    elif viewer_role == "manager":
+        scope = "p.manager_id = %(viewer)s"
+    else:
+        scope = (
+            "d.assignee_id = %(viewer)s AND EXISTS (SELECT 1 FROM milestone_assignments ma "
+            "WHERE ma.milestone_id = d.milestone_id AND ma.user_id = %(viewer)s "
+            "AND ma.archived_at IS NULL AND ma.end_date >= %(today)s)"
+        )
+    escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    query = sql.SQL(
+        """
+        {base}
+          AND p.archived_at IS NULL
+          AND d.name ILIKE %(like)s ESCAPE '\\'
+          AND {scope}
+        ORDER BY (d.name ILIKE %(prefix)s ESCAPE '\\') DESC, d.name
+        LIMIT %(limit)s
+        """
+    ).format(base=sql.SQL(_SELECT), scope=sql.SQL(scope))
+    params = {"today": today, "viewer": viewer_id, "like": f"%{escaped}%", "prefix": f"{escaped}%", "limit": limit}
+    return conn.execute(query, params).fetchall()

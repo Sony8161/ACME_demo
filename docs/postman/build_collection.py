@@ -554,6 +554,28 @@ SPEC: list[Folder] = [
           check=[("projects.0.id", "eq", "{{project_id}}"), ("current_work", "null", None)]),
     ]),
 
+    Folder("08b Search", "The search box in the top bar: one call finds projects, people and tasks, and each role only finds what it may already see.", [
+        R("Admin finds a project by name", "GET", "/search", query={"q": "Apollo"},
+          check=[("query", "eq", "Apollo"), ("projects.0.name", "eq", "Apollo {{run_id}}"), ("projects.0.risk_level", "type", "string"),
+                 ("people", "type", "array"), ("tasks", "type", "array")],
+          desc="Each group holds at most `limit` results (default 5, at most 10). A result row has only what is needed to draw it: no money, no salary."),
+        R("Admin finds a task", "GET", "/search", query={"q": "Homepage layout"},
+          check=[("tasks.0.name", "eq", "Homepage layout"), ("tasks.0.project_name", "eq", "Apollo {{run_id}}"), ("tasks.0.status", "type", "string")],
+          desc="Tasks of finished or cancelled milestones are not found, like on the board."),
+        R("A limit caps each group", "GET", "/search", query={"q": "Apollo", "limit": "1"},
+          check=[("projects", "len_eq", 1)]),
+        R("The project's manager finds their own project", "GET", "/search", query={"q": "Apollo"}, auth="manager_token",
+          check=[("projects.0.name", "eq", "Apollo {{run_id}}")]),
+        R("Another manager does not find it", "GET", "/search", query={"q": "Apollo"}, auth="manager2_token",
+          check=[("projects", "len_eq", 0), ("tasks", "len_eq", 0)]),
+        R("An employee finds the project they work on, and no people", "GET", "/search", query={"q": "Apollo"}, auth="employee_token",
+          check=[("projects.0.name", "eq", "Apollo {{run_id}}"), ("people", "len_eq", 0)],
+          desc="Employees cannot list people anywhere else, so a search must not be a way around that."),
+        R("One letter is too short", "GET", "/search", query={"q": "a"}, status=400, check=[ERR("validation_error")] + VALID_ENVELOPE),
+        R("A limit above ten is refused", "GET", "/search", query={"q": "Apollo", "limit": "11"}, status=400,
+          check=[ERR("validation_error")] + VALID_ENVELOPE),
+    ]),
+
     Folder("09 Completion and archive", "Managers complete milestones after review; completed work moves to the admin-only archive.", [
         R("Employees cannot complete a milestone", "POST", "/projects/{{project_id}}/milestones/{{milestone_id}}/complete",
           auth="employee_token", status=403, body={}, check=[ERR("forbidden")]),
@@ -683,6 +705,7 @@ SPEC: list[Folder] = [
         R("An employee cannot read a project's history", "GET", "/projects/{{project_id}}/history", auth="employee_token", status=403,
           check=[ERR("forbidden")]),
     ]),
+
 ]
 
 # ---------------------------------------------------------------------------------------

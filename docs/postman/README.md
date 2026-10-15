@@ -49,6 +49,7 @@ response saved as an example on every request.
 | 06c Dependencies | a milestone or project that waits for another: blocked from starting or completing, loops refused, who may link what, what a manager cannot see is named generically |
 | 07 Costs | non-labor costs, the budget maths, archiving instead of deleting |
 | 08 Reports | overview, allocation, personal dashboard and the timeline |
+| 08b Search | the top-bar search: projects, people and tasks in one call, scoped by role (an employee finds no people), limits and the length check |
 | 09 Completion and archive | complete a milestone after review (it moves to the admin-only archive), cancel one, complete/archive/restore a project, no DELETE exists |
 | 10 Admin | demo data |
 | 10b Assistant | the chat box's endpoint: built-in answers from read-only lookups, scoped to the caller; bad requests refused |
