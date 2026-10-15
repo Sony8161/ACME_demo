@@ -7,11 +7,11 @@ The structure follows the Testing Expectations in [full-stack.md](./full-stack.m
 
 | Layer | What | Command | Result |
 |---|---|---|---|
-| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **322 tests pass**, 97.5% coverage (gate 80%) |
+| Backend unit + integration + error tests | Business rules against a **real PostgreSQL** | `./bin/test-backend.sh` | **326 tests pass**, 97.7% coverage (gate 80%) |
 | Backend lint and security | `ruff` and `bandit` (same scan as CI) | `./bin/test-backend.sh` | clean |
-| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **731 tests pass**, 98.1% statements, 96.2% branches (gate 80%) |
+| Frontend component + API integration tests | React Testing Library with the API mocked | `cd frontend && npm run test:coverage` | **751 tests pass**, 98.2% statements, 96.2% branches (gate 80%) |
 | Frontend static checks | ESLint, TypeScript, production build, `npm audit` | `npm run lint && npm run typecheck && npm run build && npm audit` | clean, 0 vulnerabilities |
-| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **126 of 126 checks pass** (114 in the demo journey incl. 36 axe scans; 12 in `e2e/sample-data.mjs`, incl. 3 axe scans) |
+| End-to-end | The demo journey through browser, proxy, Lambda and PostgreSQL, plus accessibility scans | `cd frontend && npm run e2e` | **133 of 133 checks pass** (121 in the demo journey incl. 36 axe scans and 7 phone-width checks; 12 in `e2e/sample-data.mjs`, incl. 3 axe scans) |
 | API contract, every endpoint | 231 requests with 960 assertions (Postman/Newman); all 61 operations of the API | `npx newman run docs/postman/acme-pm-api.postman_collection.json -e docs/postman/localstack.postman_environment.json` | **0 failures** locally and on LocalStack; saved as `docs/postman/results/postman-results-localstack.json` |
 | Demo pictures | 57 pictures, one folder per MVP item (and the history, tasks, timeline and dependencies and assistant extras) | `cd frontend && npm run screenshots` | Retaken from the running demo; indexed in `docs/demo-screenshots/README.md` and `docs/MVP.md` |
 | Performance | Artillery load test | `npx artillery run docs/load/artillery.yml` | see Load test below |
@@ -37,7 +37,7 @@ and skip themselves if PostgreSQL is not reachable. "Today" is frozen to Wednesd
 | Rate limiting and the account lock | `test_ratelimit.py`: the limiter (window, per person, per address, forged forwarding header, health check exempt), the real app refusing a flood with 429 and `Retry-After`, five wrong passwords locking an account even for the right one, the count surviving the request's rollback, unlock after 15 minutes or by an admin reset |
 | Precalculated hours and cost | `test_precalculated.py`: the stored expected hours, cost and rate; recomputed when dates change; project and milestone totals add up the stored fields; a raise changes future work and never the past; and migration 003 run on data written by the old version |
 
-Coverage: 97.5% overall (the audit history is covered by `test_audit.py`: 22 tests). All nine router files and `app/core/errors.py` (the error handlers) are at 100%. The lowest files are
+Coverage: 97.7% overall (the audit history is covered by `test_audit.py`: 22 tests). All nine router files and `app/core/errors.py` (the error handlers) are at 100%. The lowest files are
 `app/main.py` (94%, the health check's database-down branch) and `app/domains/users/service.py` (95%).
 
 ## API contract: every endpoint (Postman)
@@ -67,7 +67,7 @@ npm run test:coverage       # with the 80% gate (statements, branches, functions
 npm run lint && npm run typecheck && npm run build
 ```
 
-731 tests in 70 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
+751 tests in 70 files, using Vitest and React Testing Library (the guide names Jest; Vitest is the same API on Vite). The API is
 mocked at the axios adapter (`src/test/mockApi.ts`), so tests exercise the real client code: key conversion, error mapping, the
 401 handler. Covered: every page, the dialogs (busy, error and success states), role differences (employees see no money, no manager
 buttons), route guards and redirects, the sliding session refresh, and the forced password change.
@@ -90,7 +90,7 @@ cd frontend && BASE_URL=http://localhost:3000 npm run e2e:sample
 ./bin/demo-local.sh ready                        # put the sample company back
 ```
 
-114 checks drive a real browser through: sign-in (with the show-password button), the People, Projects and task tables (sort, tick, filter, page, download a CSV and a PDF and read them back, bulk move, the project report, the search box as each role, the changes card, the workload heatmap, comments as three roles, and dark mode scanned on nine screens),  the dashboard ranking, an employee with no money visible, a manager seeing only
+121 checks (7 of them at phone width, 390 px: no page may scroll sideways) drive a real browser through: sign-in (with the show-password button), the People, Projects and task tables (sort, tick, filter, page, download a CSV and a PDF and read them back, bulk move, the project report, the search box as each role, the changes card, the workload heatmap, comments as three roles, and dark mode scanned on nine screens),  the dashboard ranking, an employee with no money visible, a manager seeing only
 their own projects, a refused double booking, a refused then accepted milestone sign-off, the forced first-login password change,
 an admin seeing the archived milestone, archive then restore, and the history page crediting each of those to the right person
 (with its filter and the project's own History tab), and the task board: a real drag of a card to In progress, the list view, an employee pausing and starting their own task, the timeline (every project on one calendar, then one project with its tasks as diamonds), and dependencies (a milestone that waits for another cannot be started and the refusal names it; finishing the first frees the second; a project that waits for another says so), and the assistant (a suggested question and a typed follow-up are answered from the real projects, and Escape closes it). The AI path is tested with a scripted stand-in for the model (the tool loop, the limits, the fallback) and the HTTP client with a patched network call; **no real AI request has been made**, so run it once with a key before relying on it. Thirty-nine scans with axe-core (in light and dark mode) (sign-in, dashboard,

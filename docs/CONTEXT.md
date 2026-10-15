@@ -50,19 +50,19 @@ and their status, dependency between deliverables (milestones), and budget consu
 ## What exists
 | Area | State |
 |---|---|
-| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 322 tests, 97.5% coverage, no DELETE endpoints |
+| `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 326 tests, 97.7% coverage, no DELETE endpoints |
 | `docs/postman` | Done: 231-request collection with saved example JSON, verified with Newman (960 assertions, all 61 operations) and a saved results file in `docs/postman/results/` |
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; applied to the workshop AWS account on 2026-10-14 (see `docs/DEPLOYMENT.md`) |
 | LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (161 requests, 654 assertions) |
 | AWS deploy | **Done 2026-10-14** (CloudFront + S3 + Lambda + Aurora, `docs/DEPLOYMENT.md`). It runs the build from that day; the later branches (export, search, comments, dark mode, migration 007) are not deployed there yet |
-| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 731 tests at 98.1% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
+| `frontend/` | Demo-scale web app for all three roles (React, TypeScript, MUI), 751 tests at 98.2% coverage and a saved end-to-end test; see `frontend/README.md` for what is missing |
 | Demo | `docs/DEMO.md`: rehearsed script; `./bin/demo-ready.sh` loads the sample company with memorable logins |
 | CI workflow (`.github/workflows/ci.yml`), READMEs, testing guide | Written; the workflow has not run on GitHub yet |
 
 ## Run it
 The whole demo without LocalStack (Linux or macOS; only Linux has been tested): `./bin/demo-local.sh`, see `docs/DEMO.md`.
 ```sh
-./bin/test-backend.sh                       # lint + security scan + 322 tests (needs local Postgres)
+./bin/test-backend.sh                       # lint + security scan + 326 tests (needs local Postgres)
 cd backend/pm-api && source .venv/bin/activate
 POSTGRES_NAME=pm_dev uvicorn app.main:app --port 8000   # then open http://localhost:8000/docs
 # first login: admin1 / ChangeMe123!  (you must change it); POST /admin/seed-demo loads sample data

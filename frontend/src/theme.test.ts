@@ -41,6 +41,16 @@ describe.each(['light', 'dark'] as const)('the %s theme', (mode) => {
     expect(contrast(hex(c.dark), hex(p.background.paper))).toBeGreaterThanOrEqual(4.5) // headings and warnings written in that colour
   })
 
+  it('makes a table container the home of the hidden labels inside it, so they cannot widen the page on a phone', () => {
+    const root = buildTheme(mode).components?.MuiTableContainer?.styleOverrides?.root as Record<string, string> | undefined
+    expect(root?.position).toBe('relative')
+  })
+
+  it('gives toggle buttons a 44 px touch target', () => {
+    const root = buildTheme(mode).components?.MuiToggleButton?.styleOverrides?.root as Record<string, unknown> | undefined
+    expect(root?.minHeight).toBe(44)
+  })
+
   it('keeps the main button readable', () => {
     const button = buildTheme(mode).components?.MuiButton?.styleOverrides?.root
     const style = typeof button === 'function' ? (button as (o: unknown) => Record<string, string>)({ ownerState: { variant: 'contained', color: 'primary' } }) : {}

@@ -81,10 +81,12 @@ export function buildTheme(mode: Mode) {
       MuiButtonGroup: { styleOverrides: { root: { borderRadius: 3 } } },
       MuiToggleButton: {
         styleOverrides: {
-          root: { borderRadius: 3, textTransform: 'none', fontWeight: 700, '&.Mui-selected': { backgroundColor: alpha(tealMid, 0.3), color: dark ? '#e6f4f1' : ink } },
+          root: { borderRadius: 3, minHeight: 44, textTransform: 'none', fontWeight: 700, '&.Mui-selected': { backgroundColor: alpha(tealMid, 0.3), color: dark ? '#e6f4f1' : ink } },
         },
       },
       MuiChip: { styleOverrides: { root: { fontWeight: 700, borderRadius: 3, height: 24 } } },
+      // Hidden labels inside a table (position: absolute) belong to the scrolling container, or they widen the whole page on a phone.
+      MuiTableContainer: { styleOverrides: { root: { position: 'relative' } } },
       MuiTableCell: {
         styleOverrides: {
           root: { borderColor: alpha(accent, 0.16) },

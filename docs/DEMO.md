@@ -191,7 +191,7 @@ costs, and whether it is late."**
 
 ### Close (30 seconds)
 
-"The API behind this passes 325 tests and a 231-request, 960-assertion Postman run with no failures; the web app has 700+ unit tests and a browser test with 126 checks including accessibility scans in light and dark. It is also deployed to AWS. What is left: moving the secrets to Secrets Manager and redeploying the newest branch."
+"The API behind this passes 326 tests and a 231-request, 960-assertion Postman run with no failures; the web app has 700+ unit tests and a browser test with 133 checks including accessibility scans in light and dark. It is also deployed to AWS. What is left: moving the secrets to Secrets Manager and redeploying the newest branch."
 
 ### 5-minute cut
 

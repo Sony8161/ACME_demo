@@ -527,6 +527,17 @@ await page.keyboard.press('Escape')
 await page.getByRole('button', { name: 'Account menu' }).click()
 await page.getByRole('menuitemradio', { name: 'System' }).click()
 ok('dark mode: System is a choice again and the page returns to the computer\'s setting', !(await isDark()))
+// A phone is 390 px wide: no screen may scroll sideways as a page (a wide table scrolls inside its own box).
+await page.getByRole('button', { name: 'Account menu' }).click()
+await page.getByRole('menuitemradio', { name: 'Light' }).click()
+await page.keyboard.press('Escape')
+await page.setViewportSize({ width: 390, height: 844 })
+for (const path of ['/', '/projects', '/projects?view=table', '/people', '/people?view=workload', '/people?view=availability', '/history']) {
+  await page.goto(`${URL}${path}`)
+  await page.getByRole('main').waitFor()
+  await page.waitForTimeout(800)
+  ok(`phone: ${path} does not scroll sideways`, await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), String(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)))
+}
 console.log(log.join('\n'))
 await browser.close()
 if (process.exitCode) console.error('E2E FAILED')
