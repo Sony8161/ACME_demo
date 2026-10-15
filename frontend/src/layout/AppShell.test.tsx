@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '../auth/AuthProvider'
+import { mockRoutes, restoreApi } from '../test/mockApi'
 import { AppShell } from './AppShell'
 
 let wide = true
@@ -12,6 +14,12 @@ const sessionFor = (role: string) => ({
   user: { id: '1', username: 'ab12cd', name: 'Alex Kim', email: 'a@x.test', jobTitle: '', role, managerId: null, mustChangePassword: false, archivedAt: null, salary: null },
 })
 
+let mounts = 0
+function Dashboard() {
+  useEffect(() => { mounts += 1 }, [])
+  return <p>dashboard content</p>
+}
+
 function renderShell(role: string | null, path = '/dashboard') {
   if (role) localStorage.setItem('pm.auth', JSON.stringify(sessionFor(role)))
   return render(
@@ -19,7 +27,7 @@ function renderShell(role: string | null, path = '/dashboard') {
       <AuthProvider>
         <Routes>
           <Route element={<AppShell />}>
-            <Route path="/dashboard" element={<p>dashboard content</p>} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/projects/:id" element={<p>project content</p>} />
             <Route path="/projects" element={<p>projects content</p>} />
             <Route path="/people" element={<p>people content</p>} />
@@ -34,7 +42,7 @@ function renderShell(role: string | null, path = '/dashboard') {
 }
 
 beforeEach(() => { wide = true })
-afterEach(() => localStorage.clear())
+afterEach(() => { localStorage.clear(); restoreApi() })
 
 const bottomBar = () => document.querySelector('.MuiBottomNavigation-root') as HTMLElement | null
 const barEntries = (bar: HTMLElement) => Array.from(bar.querySelectorAll('a, button')).map((e) => e.textContent)
@@ -91,7 +99,7 @@ describe('AppShell on a wide screen', () => {
       expect(within(menu).getAllByRole('link').map((l) => l.textContent)).toEqual(['Dashboard', 'Projects', 'People'])
       expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
       await userEvent.click(within(menu).getByRole('button', { name: 'More' }))
-      expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['History', 'Archive'])
+      expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['History', 'Archive', 'Sample data'])
     })
 
     it('opens the page picked from the menu and closes the menu', async () => {
@@ -112,6 +120,19 @@ describe('AppShell on a wide screen', () => {
       unmount()
       renderShell('admin', '/people')
       expect(screen.getByRole('button', { name: 'More' })).not.toHaveClass('Mui-selected')
+    })
+
+    it('opens the sample-data question from the menu, and a created company reloads the page behind it', async () => {
+      mounts = 0
+      mockRoutes({ 'POST /admin/seed-demo': { created: true, message: 'ok', accounts: [{ name: 'Hannah Weiss', role: 'manager', username: 'ha12ab', temporary_password: 'Temp-Pass-1' }] } })
+      renderShell('admin')
+      expect(mounts).toBe(1)
+      await userEvent.click(screen.getByRole('button', { name: 'More' }))
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Sample data' }))
+      expect(await screen.findByRole('dialog', { name: 'Add sample people and projects?' })).toBeInTheDocument()
+      await userEvent.click(screen.getByRole('button', { name: 'Add sample data' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'I have saved them' }))
+      await waitFor(() => expect(mounts).toBe(2))
     })
 
     it.each(['manager', 'employee'])('is absent for a %s', (role) => {
@@ -176,12 +197,12 @@ describe('AppShell on a narrow screen', () => {
     expect(barEntries(bar as HTMLElement).length).toBeLessThanOrEqual(4)
   })
 
-  it('shows an admin three places and More, which opens History and Archive', async () => {
+  it('shows an admin three places and More, which opens History, Archive and Sample data', async () => {
     renderShell('admin')
     const bar = bottomBar() as HTMLElement
     expect(barEntries(bar)).toEqual(['Dashboard', 'Projects', 'People', 'More'])
     await userEvent.click(within(bar).getByRole('button', { name: 'More' }))
-    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['History', 'Archive'])
+    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['History', 'Archive', 'Sample data'])
     await userEvent.click(screen.getByRole('menuitem', { name: 'History' }))
     expect(await screen.findByText('history content')).toBeInTheDocument()
   })

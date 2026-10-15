@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react'
 import {
-  AppBar, BottomNavigation, BottomNavigationAction, Box, List, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Paper, Toolbar,
+  AppBar, BottomNavigation, BottomNavigationAction, Box, Divider, List, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Paper, Toolbar,
   Typography,
 } from '@mui/material'
 import DashboardIcon from '@mui/icons-material/SpaceDashboardOutlined'
@@ -9,12 +9,14 @@ import PeopleIcon from '@mui/icons-material/PeopleAltOutlined'
 import ArchiveIcon from '@mui/icons-material/Inventory2Outlined'
 import HistoryIcon from '@mui/icons-material/HistoryOutlined'
 import MoreIcon from '@mui/icons-material/MoreHoriz'
+import SampleDataIcon from '@mui/icons-material/GroupAddOutlined'
 import WorkIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
 import { useMediaQuery } from 'react-responsive'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/context'
 import { AccountMenu } from '../components/AccountMenu'
 import { AssistantChat } from '../components/AssistantChat'
+import { SampleDataFlow } from '../components/SampleDataFlow'
 import { ToastProvider } from '../components/ToastProvider'
 import { moreFor, navFor, type NavItem } from './nav'
 
@@ -34,6 +36,8 @@ export function AppShell() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null)
+  const [sampleOpen, setSampleOpen] = useState(false)
+  const [reloads, setReloads] = useState(0) // bumping it remounts the open page so it fetches again
   if (!user) return null
   const items = navFor(user.role)
   const more = moreFor(user.role)
@@ -49,6 +53,13 @@ export function AppShell() {
           {m.label}
         </MenuItem>
       ))}
+      {user.role === 'admin' && <Divider component="li" />}
+      {user.role === 'admin' && (
+        <MenuItem onClick={() => { closeMore(); setSampleOpen(true) }}>
+          <ListItemIcon><SampleDataIcon /></ListItemIcon>
+          Sample data
+        </MenuItem>
+      )}
     </Menu>
   )
 
@@ -91,10 +102,11 @@ export function AppShell() {
           </Toolbar>
         </AppBar>
         {moreMenu}
+        <SampleDataFlow open={sampleOpen} onClose={() => setSampleOpen(false)} onDone={() => setReloads((n) => n + 1)} />
 
         <Box component="main" sx={{ pt: { xs: 9.5, md: 11 }, pb: isDesktop ? 6 : 12, px: { xs: 2, md: 4 } }}>
           <Box sx={{ maxWidth: 1180, mx: 'auto' }}>
-            <Outlet />
+            <Outlet key={reloads} />
           </Box>
         </Box>
 
