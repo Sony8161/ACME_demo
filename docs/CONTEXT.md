@@ -51,7 +51,7 @@ and their status, dependency between deliverables (milestones), and budget consu
 | Area | State |
 |---|---|
 | `backend/pm-api` | Done: auth, users, projects, milestones, deliverables, milestone teams, costs, reports, audit history, demo-data. 289 tests, 97.5% coverage, no DELETE endpoints |
-| `docs/postman` | Done: 203-request collection with saved example JSON, verified with Newman (839 assertions, all 55 operations) and a saved results file in `docs/postman/results/` |
+| `docs/postman` | Done: 211-request collection with saved example JSON, verified with Newman (875 assertions, all 56 operations) and a saved results file in `docs/postman/results/` |
 | `infra/`, `bin/` | Fixed for the app (auth header, CloudFront, Aurora, secrets); `terraform validate` passes; not applied to AWS |
 | LocalStack deploy | **Done**: `./bin/demo-postgres.sh` then `./bin/start-dev.sh`; Postman run passes there (161 requests, 654 assertions) |
 | AWS deploy | **Not done** (`./bin/deploy-backend.sh` and `./bin/deploy-frontend.sh`) |

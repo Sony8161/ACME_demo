@@ -2,7 +2,7 @@
 
 Each row is one minimum viable product item: why it matters, its status, and the evidence for it. The pictures are in
 [`demo-screenshots/`](./demo-screenshots) (taken by `cd frontend && npm run screenshots` on the running demo). The API results
-are in [`postman/results/`](./postman/results) (203 requests, 839 assertions, 55 of 55 API operations, all passing on LocalStack).
+are in [`postman/results/`](./postman/results) (211 requests, 875 assertions, 56 of 56 API operations, all passing against the API under uvicorn; the LocalStack run in `postman-results-localstack.json` is the earlier 203-request version).
 
 | # | MVP item | Why it matters | Status | Pictures | API (see `/docs`) | Proven by |
 |---|---|---|---|---|---|---|

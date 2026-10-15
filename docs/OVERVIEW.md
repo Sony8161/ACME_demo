@@ -33,7 +33,7 @@ but has never been applied; the demo runs on LocalStack).
 |---|---|
 | Backend, on a real PostgreSQL (rules through HTTP, plus unit tests) | **289 pass**, 97.5% coverage (gate 80%); ruff and bandit clean |
 | Frontend (every page, dialog and role difference, API mocked at the axios adapter) | **660 pass**, 98.1% statements, 96.2% branches (gate 80%); lint, types, build and `npm audit` clean |
-| API contract, every endpoint (Postman/Newman on LocalStack) | **203 requests, 839 assertions, 0 failed, 55 of 55 operations** (run against the API under uvicorn on this branch) |
+| API contract, every endpoint (Postman/Newman on LocalStack) | **211 requests, 875 assertions, 0 failed, 56 of 56 operations** (run against the API under uvicorn on this branch) |
 | End to end in a real browser (browser, proxy, Lambda, PostgreSQL) | **101 of 101 checks** (89 in the demo journey, 12 in the sample-data run), including 27 accessibility scans |
 | Load, realistic (about 19 requests a second across three people) | 1,197 requests, **0 failed**, median 20 ms, 95th percentile 35 ms |
 
